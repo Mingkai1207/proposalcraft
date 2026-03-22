@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import Footer from "@/components/Footer";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
@@ -261,6 +262,7 @@ export default function Pricing() {
           </Button>
         </div>
       </div>
+    <Footer />
     </div>
   );
 }

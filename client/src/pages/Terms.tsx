@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import Footer from "@/components/Footer";
 import { ArrowLeft } from "lucide-react";
 
 export default function Terms() {
@@ -75,6 +76,7 @@ export default function Terms() {
           </section>
         </div>
       </div>
+    <Footer />
     </div>
   );
 }

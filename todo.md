@@ -97,3 +97,9 @@
 - [x] Add Paddle.js to frontend with client-side token
 - [x] Update Pricing page to use Paddle.js inline checkout overlay
 - [x] Test checkout flow end-to-end
+
+## Footer & Legal Links (Paddle verification fix)
+- [x] Create shared Footer component with links to /terms, /privacy, /refund, /pricing
+- [x] Add Footer to Home page
+- [x] Add Footer to Pricing page
+- [x] Add Footer to Terms, Privacy, Refund pages

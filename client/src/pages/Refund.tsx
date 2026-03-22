@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import Footer from "@/components/Footer";
 import { ArrowLeft } from "lucide-react";
 
 export default function Refund() {
@@ -47,6 +48,7 @@ export default function Refund() {
           </section>
         </div>
       </div>
+    <Footer />
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
+import Footer from "@/components/Footer";
 import {
   Zap, FileText, Mail, Eye, Shield, Star,
   CheckCircle, ArrowRight, Wrench, Droplets,
@@ -225,18 +226,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-white py-8">
-        <div className="container flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-              <FileText className="w-3 h-3 text-white" />
-            </div>
-            <span className="font-semibold text-sm text-foreground">ProposAI</span>
-          </div>
-          <p className="text-xs text-muted-foreground">(c) 2026 ProposAI. Built for tradespeople who want to win.</p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
