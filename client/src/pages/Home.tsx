@@ -554,12 +554,12 @@ export default function Home() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10">
             <img
               src={GUARANTEE_BADGE_URL}
-              alt="14-day money-back guarantee, no questions asked"
+              alt="14-day value guarantee"
               className="w-24 h-24 object-contain"
             />
             <div className="text-center sm:text-left">
-              <p className="font-bold text-foreground text-lg">14-Day Money-Back Guarantee</p>
-              <p className="text-muted-foreground text-sm max-w-xs">Not happy in the first 14 days? We'll refund you in full, no questions asked. Zero risk.</p>
+              <p className="font-bold text-foreground text-lg">14-Day Value Guarantee</p>
+              <p className="text-muted-foreground text-sm max-w-xs">Use ProposAI for 14 days and win just one extra job — the tool pays for itself many times over. We're that confident.</p>
             </div>
           </div>
         </div>
