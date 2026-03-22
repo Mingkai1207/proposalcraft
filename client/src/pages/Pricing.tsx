@@ -5,6 +5,10 @@ import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { CheckCircle, ArrowLeft, Zap, Crown, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
+import type { Paddle } from "@paddle/paddle-js";
+import { initializePaddle } from "@paddle/paddle-js";
+import type { Environments } from "@paddle/paddle-js";
 
 const PLANS = [
   {
@@ -60,24 +64,35 @@ const PLANS = [
 ];
 
 export default function Pricing() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, user } = useAuth();
   const [, navigate] = useLocation();
+  const [paddle, setPaddle] = useState<Paddle | undefined>(undefined);
+  const [checkingOut, setCheckingOut] = useState<string | null>(null);
 
   const { data: subscription } = trpc.subscription.get.useQuery(undefined, {
     enabled: isAuthenticated,
   });
 
+  const { data: serverPlans } = trpc.billing.getPlans.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+
   const currentPlan = subscription?.plan || "free";
 
-  const checkoutMutation = trpc.billing.createCheckout.useMutation({
-    onSuccess: (data) => {
-      if (data.url) {
-        toast.info("Redirecting to secure checkout...");
-        window.open(data.url, "_blank");
-      }
-    },
-    onError: (e) => toast.error(e.message),
-  });
+  // Initialize Paddle.js with client-side token
+  useEffect(() => {
+    const token = import.meta.env.VITE_PADDLE_CLIENT_TOKEN;
+    if (!token) return;
+    const isLive = token.startsWith("live_");
+    initializePaddle({
+      environment: (isLive ? 'production' : 'sandbox') as Environments,
+      token,
+    }).then((paddleInstance) => {
+      if (paddleInstance) setPaddle(paddleInstance);
+    }).catch((err) => {
+      console.error("[Paddle] Failed to initialize:", err);
+    });
+  }, []);
 
   const portalMutation = trpc.billing.createPortal.useMutation({
     onSuccess: (data) => {
@@ -86,25 +101,74 @@ export default function Pricing() {
     onError: (e) => toast.error(e.message),
   });
 
-  const handleUpgrade = (planId: string) => {
+  const handleUpgrade = async (planId: string) => {
     if (!isAuthenticated) {
       window.location.href = getLoginUrl();
       return;
     }
-    if (planId === "starter" || planId === "pro") {
-      checkoutMutation.mutate({ plan: planId });
+    if (planId !== "starter" && planId !== "pro") return;
+
+    // Find the Paddle price ID for this plan from server
+    const planData = serverPlans?.find(p => p.id === planId);
+    if (!planData?.available) {
+      toast.error("Payment not yet configured. Please contact support.");
+      return;
+    }
+
+    if (!paddle) {
+      toast.error("Payment system is loading. Please try again in a moment.");
+      return;
+    }
+
+    setCheckingOut(planId);
+    try {
+      // Use Paddle.js inline checkout overlay
+      const priceId = planId === "starter"
+        ? import.meta.env.VITE_PADDLE_STARTER_PRICE_ID
+        : import.meta.env.VITE_PADDLE_PRO_PRICE_ID;
+
+      if (!priceId) {
+        toast.error("Price configuration error. Please contact support.");
+        return;
+      }
+
+      paddle.Checkout.open({
+        items: [{ priceId, quantity: 1 }],
+        customer: user?.email ? { email: user.email } : undefined,
+        customData: {
+          user_id: user?.id?.toString() || "",
+          plan: planId,
+        },
+        settings: {
+          successUrl: `${window.location.origin}/dashboard?upgraded=1`,
+          displayMode: "overlay",
+          theme: "light",
+          locale: "en",
+        },
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to open checkout. Please try again.");
+    } finally {
+      setCheckingOut(null);
     }
   };
 
   if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar */}
       <div className="border-b border-border bg-white px-6 py-4 flex items-center gap-4">
-        <button onClick={() => navigate(isAuthenticated ? "/dashboard" : "/")} className="text-muted-foreground hover:text-foreground transition-colors">
+        <button
+          onClick={() => navigate(isAuthenticated ? "/dashboard" : "/")}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <h1 className="font-semibold text-foreground">Plans & Pricing</h1>
@@ -117,7 +181,7 @@ export default function Pricing() {
           {isAuthenticated && (
             <div className="mt-4 inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
               <CheckCircle className="w-4 h-4" />
-              You are on the <span className="capitalize font-bold">{currentPlan}</span> plan
+              You are on the <span className="capitalize font-bold ml-1">{currentPlan}</span> plan
             </div>
           )}
         </div>
@@ -125,6 +189,7 @@ export default function Pricing() {
         <div className="grid md:grid-cols-3 gap-6">
           {PLANS.map(({ id, name, price, period, proposals, features, cta, highlight, icon: Icon }) => {
             const isCurrent = currentPlan === id;
+            const isLoading = checkingOut === id;
             return (
               <div
                 key={id}
@@ -159,11 +224,16 @@ export default function Pricing() {
 
                 <Button
                   onClick={() => !isCurrent && handleUpgrade(id)}
-                  disabled={isCurrent}
+                  disabled={isCurrent || isLoading}
                   variant={highlight ? "secondary" : "default"}
                   className={`w-full ${highlight ? "bg-white text-primary hover:bg-white/90" : ""} ${isCurrent ? "opacity-60 cursor-not-allowed" : ""}`}
                 >
-                  {isCurrent ? "Current Plan" : cta}
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      Opening checkout...
+                    </span>
+                  ) : isCurrent ? "Current Plan" : cta}
                 </Button>
               </div>
             );
@@ -172,7 +242,11 @@ export default function Pricing() {
 
         {isAuthenticated && currentPlan !== "free" && (
           <div className="mt-6 text-center">
-            <Button variant="outline" onClick={() => portalMutation.mutate()} disabled={portalMutation.isPending}>
+            <Button
+              variant="outline"
+              onClick={() => portalMutation.mutate()}
+              disabled={portalMutation.isPending}
+            >
               <ExternalLink className="w-4 h-4 mr-1" />
               {portalMutation.isPending ? "Loading..." : "Manage Subscription & Billing"}
             </Button>

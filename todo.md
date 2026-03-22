@@ -90,3 +90,10 @@
 - [x] Replace all "ProposalCraft AI" and "ProposalCraft" text with "ProposAI" in all .tsx/.ts files
 - [x] Update app title in index.html and VITE_APP_TITLE
 - [x] Update Paddle product names to ProposAI Starter / ProposAI Pro
+
+## Paddle Live Integration
+- [x] Store PADDLE_CLIENT_TOKEN, PADDLE_STARTER_PRICE_ID, PADDLE_PRO_PRICE_ID as secrets
+- [x] Update products.ts with real Paddle Price IDs
+- [x] Add Paddle.js to frontend with client-side token
+- [x] Update Pricing page to use Paddle.js inline checkout overlay
+- [x] Test checkout flow end-to-end

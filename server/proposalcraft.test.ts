@@ -134,6 +134,30 @@ describe("proposals", () => {
   });
 });
 
+describe("paddle", () => {
+  it("has Paddle Price IDs configured", () => {
+    // Validate that Paddle Price IDs are set and match expected format
+    const starterPriceId = process.env.PADDLE_STARTER_PRICE_ID || "";
+    const proPriceId = process.env.PADDLE_PRO_PRICE_ID || "";
+    expect(starterPriceId).toMatch(/^pri_/);
+    expect(proPriceId).toMatch(/^pri_/);
+    expect(starterPriceId).not.toBe(proPriceId);
+  });
+
+  it("billing.getPlans returns both plans with price IDs", async () => {
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+    const plans = await caller.billing.getPlans();
+    expect(plans).toHaveLength(2);
+    const starter = plans.find(p => p.id === "starter");
+    const pro = plans.find(p => p.id === "pro");
+    expect(starter).toBeDefined();
+    expect(pro).toBeDefined();
+    expect(starter?.available).toBe(true);
+    expect(pro?.available).toBe(true);
+  });
+});
+
 describe("tracking", () => {
   it("returns false for unknown tracking token", async () => {
     const ctx = createMockContext();
