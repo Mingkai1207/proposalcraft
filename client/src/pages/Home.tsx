@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
 import Footer from "@/components/Footer";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import {
   Zap, FileText, Mail, Eye, Shield, Star,
   CheckCircle, ArrowRight, Wrench, Droplets,
@@ -59,8 +59,6 @@ const TRADES = [
   {icon: BarChart3, label: "Roofing", color: "bg-orange-50 text-orange-700 border border-orange-100" },
 ];
 
-const DEMO_VIDEO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposai-demo-final_64d21b3b.mp4";
-const DEMO_THUMBNAIL_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposai-demo-thumbnail-gLfzFzj36qxteFgTwXhQN3.webp";
 const GUARANTEE_BADGE_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposai-guarantee-badge-iVr29Hp4v4FN5DhPsDtUwF.webp";
 
 const TESTIMONIALS = [
@@ -192,53 +190,6 @@ const COMPARISON = [
   { feature: "Custom branding", manual: "DIY in Word/PDF", proposai: "Auto-applied to every proposal" },
   { feature: "Cost", manual: "Your time = $$$", proposai: "From $0/month" },
 ];
-
-function DemoVideo() {
-  const [playing, setPlaying] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  const handlePlay = () => {
-    setPlaying(true);
-    setTimeout(() => videoRef.current?.play(), 50);
-  };
-
-  return (
-    <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border bg-black max-w-4xl mx-auto">
-      {!playing ? (
-        <div
-          className="relative cursor-pointer group"
-          onClick={handlePlay}
-        >
-          <img
-            src={DEMO_THUMBNAIL_URL}
-            alt="Watch ProposAI demo — proposal generated in 47 seconds"
-            className="w-full h-auto"
-          />
-          {/* Play button overlay */}
-          <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
-            <div className="w-20 h-20 bg-orange-500 rounded-full flex items-center justify-center shadow-2xl shadow-orange-500/50 group-hover:scale-110 transition-transform">
-              <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-            </div>
-          </div>
-          <div className="absolute bottom-4 left-4 bg-black/60 text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm">
-            0:27 — Full demo
-          </div>
-        </div>
-      ) : (
-        <video
-          ref={videoRef}
-          src={DEMO_VIDEO_URL}
-          controls
-          autoPlay
-          className="w-full h-auto"
-          poster={DEMO_THUMBNAIL_URL}
-        />
-      )}
-    </div>
-  );
-}
 
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
@@ -422,11 +373,6 @@ export default function Home() {
             <Badge className="mb-4 bg-blue-50 text-blue-700 border-blue-100">How It Works</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">From job site to proposal in 3 steps</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">No learning curve. No complicated setup. Just describe the job and let the AI do the work.</p>
-          </div>
-
-          {/* Demo video */}
-          <div className="mb-16">
-            <DemoVideo />
           </div>
 
           {/* Workflow illustration */}
