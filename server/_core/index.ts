@@ -31,53 +31,65 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
-  // Stripe webhook MUST be registered before express.json() to receive raw body
-  app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), async (req, res) => {
-    const sig = req.headers["stripe-signature"];
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
-    let event: import("stripe").Stripe.Event;
+  // Paddle webhook endpoint — registered before express.json() to receive raw body for signature verification
+  app.post("/api/paddle/webhook", express.raw({ type: "application/json" }), async (req, res) => {
+    const signature = req.headers["paddle-signature"] as string;
+    const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET || "";
+
+    let eventData: any;
     try {
-      const { default: Stripe } = await import("stripe");
-      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", { apiVersion: "2026-02-25.clover" });
-      event = stripe.webhooks.constructEvent(req.body, sig as string, webhookSecret);
+      const rawBody = req.body.toString("utf8");
+      eventData = JSON.parse(rawBody);
+
+      // Verify signature if webhook secret is configured
+      if (webhookSecret && signature) {
+        const { Paddle, Environment } = await import("@paddle/paddle-node-sdk");
+        const paddleApiKey = process.env.PADDLE_API_KEY || "";
+        const paddleClient = new Paddle(paddleApiKey, {
+          environment: paddleApiKey.includes("live") ? Environment.production : Environment.sandbox,
+        });
+        const isValid = paddleClient.webhooks.isSignatureValid(rawBody, webhookSecret, signature);
+        if (!isValid) {
+          console.error("[Paddle Webhook] Invalid signature");
+          res.status(400).json({ error: "Invalid signature" });
+          return;
+        }
+      }
     } catch (err: any) {
-      console.error("[Stripe Webhook] Signature verification failed:", err.message);
-      res.status(400).send(`Webhook Error: ${err.message}`);
+      console.error("[Paddle Webhook] Parse error:", err.message);
+      res.status(400).json({ error: "Invalid payload" });
       return;
     }
 
-    // Handle test events
-    if (event.id.startsWith("evt_test_")) {
-      console.log("[Webhook] Test event detected, returning verification response");
-      res.json({ verified: true });
-      return;
-    }
-
-    console.log("[Stripe Webhook] Event:", event.type, event.id);
+    const eventType = eventData?.event_type || "";
+    console.log("[Paddle Webhook] Event:", eventType);
 
     try {
-      const { getDb } = await import("../db");
       const { updateSubscription } = await import("../db");
+      const { getDb } = await import("../db");
 
-      if (event.type === "checkout.session.completed") {
-        const session = event.data.object as import("stripe").Stripe.Checkout.Session;
-        const userId = parseInt(session.metadata?.user_id || session.client_reference_id || "0");
-        const plan = (session.metadata?.plan || "starter") as "starter" | "pro";
+      // subscription.activated or transaction.completed — user upgraded
+      if (eventType === "subscription.activated" || eventType === "transaction.completed") {
+        const customData = eventData?.data?.custom_data || {};
+        const userId = parseInt(customData.user_id || "0");
+        const plan = (customData.plan || "starter") as "starter" | "pro";
+        const customerId = eventData?.data?.customer_id || null;
+        const subscriptionId = eventData?.data?.id || null;
+
         if (userId) {
           await updateSubscription(userId, {
             plan,
-            stripeCustomerId: typeof session.customer === "string" ? session.customer : session.customer?.id,
-            stripeSubscriptionId: typeof session.subscription === "string" ? session.subscription : session.subscription?.id,
+            stripeCustomerId: customerId,   // reusing this field for Paddle customer ID
+            stripeSubscriptionId: subscriptionId,
           });
-          console.log(`[Stripe] User ${userId} upgraded to ${plan}`);
+          console.log(`[Paddle] User ${userId} upgraded to ${plan}`);
         }
       }
 
-      if (event.type === "customer.subscription.deleted" || event.type === "customer.subscription.updated") {
-        const sub = event.data.object as import("stripe").Stripe.Subscription;
-        const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
-        // Find user by customer ID and downgrade if cancelled
-        if (sub.status === "canceled") {
+      // subscription.canceled — downgrade user to free
+      if (eventType === "subscription.canceled") {
+        const customerId = eventData?.data?.customer_id || null;
+        if (customerId) {
           const db = await getDb();
           if (db) {
             const { subscriptions } = await import("../../drizzle/schema");
@@ -85,13 +97,13 @@ async function startServer() {
             const rows = await db.select().from(subscriptions).where(eq(subscriptions.stripeCustomerId, customerId)).limit(1);
             if (rows[0]) {
               await updateSubscription(rows[0].userId, { plan: "free" });
-              console.log(`[Stripe] User ${rows[0].userId} downgraded to free`);
+              console.log(`[Paddle] User ${rows[0].userId} downgraded to free`);
             }
           }
         }
       }
     } catch (err) {
-      console.error("[Stripe Webhook] Processing error:", err);
+      console.error("[Paddle Webhook] Processing error:", err);
     }
 
     res.json({ received: true });

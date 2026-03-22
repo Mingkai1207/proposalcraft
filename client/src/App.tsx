@@ -10,6 +10,9 @@ import NewProposal from "./pages/NewProposal";
 import ProposalDetail from "./pages/ProposalDetail";
 import Settings from "./pages/Settings";
 import Pricing from "./pages/Pricing";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Refund from "./pages/Refund";
 
 function Router() {
   return (
@@ -20,6 +23,9 @@ function Router() {
       <Route path="/proposals/:id" component={ProposalDetail} />
       <Route path="/settings" component={Settings} />
       <Route path="/pricing" component={Pricing} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/privacy" component={Privacy} />
+      <Route path="/refund" component={Refund} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

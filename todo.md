@@ -64,3 +64,19 @@
 - [x] Vitest: proposal CRUD operations
 - [x] Vitest: tracking token lookup
 - [x] Vitest: profile update
+
+## Paddle Integration (replacing Stripe)
+- [x] Install @paddle/paddle-node-sdk
+- [x] Create Starter and Pro subscription products in Paddle dashboard via API (pending account verification)
+- [x] Store PADDLE_API_KEY and PADDLE_WEBHOOK_SECRET as secrets
+- [x] Replace billing router: Stripe checkout -> Paddle checkout sessions
+- [x] Replace Stripe webhook handler -> Paddle webhook handler
+- [x] Update Pricing page to use Paddle checkout
+- [x] Update subscription router to remove Stripe references
+- [x] Write tests for Paddle billing router
+
+## Legal Pages (required for Paddle verification)
+- [x] Terms of Service page (/terms)
+- [x] Privacy Policy page (/privacy)
+- [x] Refund Policy page (/refund)
+- [x] Register all three routes in App.tsx
