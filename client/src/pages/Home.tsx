@@ -59,7 +59,7 @@ const TRADES = [
   {icon: BarChart3, label: "Roofing", color: "bg-orange-50 text-orange-700 border border-orange-100" },
 ];
 
-const DEMO_VIDEO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposai-demo-overlaid_0ebb62fa.mp4";
+const DEMO_VIDEO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposai-demo-final_64d21b3b.mp4";
 const DEMO_THUMBNAIL_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposai-demo-thumbnail-gLfzFzj36qxteFgTwXhQN3.webp";
 const GUARANTEE_BADGE_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposai-guarantee-badge-iVr29Hp4v4FN5DhPsDtUwF.webp";
 
