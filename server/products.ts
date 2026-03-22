@@ -1,4 +1,4 @@
-// ProposalCraft AI - Paddle Product & Price Configuration
+// ProposAI - Paddle Product & Price Configuration
 // Paddle Price IDs are set as environment variables after creating products
 // in the Paddle Dashboard (Catalog > Products).
 

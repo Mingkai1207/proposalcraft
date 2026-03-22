@@ -85,3 +85,8 @@
 - [x] Update all hardcoded domain references to proposai.org
 - [x] Update Paddle fallback origin URL in billing router
 - [x] Update legal pages contact email to use proposai.org
+
+## Rebrand to ProposAI
+- [x] Replace all "ProposalCraft AI" and "ProposalCraft" text with "ProposAI" in all .tsx/.ts files
+- [x] Update app title in index.html and VITE_APP_TITLE
+- [x] Update Paddle product names to ProposAI Starter / ProposAI Pro

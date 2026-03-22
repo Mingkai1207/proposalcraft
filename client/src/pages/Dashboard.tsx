@@ -75,7 +75,7 @@ export default function Dashboard() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <FileText className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-sidebar-foreground">ProposalCraft AI</span>
+            <span className="font-bold text-sidebar-foreground">ProposAI</span>
           </div>
         </div>
 

@@ -15,7 +15,7 @@ const FEATURES = [
   { icon: Mail, title: "Send Directly to Clients", desc: "Email proposals to homeowners and GCs right from the platform. No copy-pasting into Gmail." },
   { icon: Eye, title: "Read Receipt Tracking", desc: "Know the moment your client opens your proposal. Follow up at exactly the right time." },
   { icon: Shield, title: "Trade-Specific Templates", desc: "Pre-built templates for HVAC, plumbing, electrical, and roofing - trained on real contractor language." },
-  { icon: Star, title: "Win More Jobs", desc: "Contractors who respond faster win more work. ProposalCraft AI gets you there first." },
+  { icon: Star, title: "Win More Jobs", desc: "Contractors who respond faster win more work. ProposAI gets you there first." },
 ];
 
 const TRADES = [
@@ -58,7 +58,7 @@ export default function Home() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <FileText className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-lg text-foreground">ProposalCraft AI</span>
+            <span className="font-bold text-lg text-foreground">ProposAI</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
             <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
@@ -99,7 +99,7 @@ export default function Home() {
               in 60 Seconds.
             </h1>
             <p className="text-lg md:text-xl text-slate-300 mb-8 max-w-2xl">
-              ProposalCraft AI generates professional, branded proposals for HVAC, plumbing, electrical, and roofing contractors. Stop losing jobs to contractors who respond faster.
+              ProposAI generates professional, branded proposals for HVAC, plumbing, electrical, and roofing contractors. Stop losing jobs to contractors who respond faster.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" onClick={handleCTA} className="text-base px-8 py-6">
@@ -154,7 +154,7 @@ export default function Home() {
       <section id="testimonials" className="py-20 bg-slate-50">
         <div className="container">
           <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Contractors love ProposalCraft AI</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Contractors love ProposAI</h2>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {TESTIMONIALS.map(({ name, trade, quote, stars }) => (
@@ -232,9 +232,9 @@ export default function Home() {
             <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
               <FileText className="w-3 h-3 text-white" />
             </div>
-            <span className="font-semibold text-sm text-foreground">ProposalCraft AI</span>
+            <span className="font-semibold text-sm text-foreground">ProposAI</span>
           </div>
-          <p className="text-xs text-muted-foreground">(c) 2026 ProposalCraft AI. Built for tradespeople who want to win.</p>
+          <p className="text-xs text-muted-foreground">(c) 2026 ProposAI. Built for tradespeople who want to win.</p>
         </div>
       </footer>
     </div>

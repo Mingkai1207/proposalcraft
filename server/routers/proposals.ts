@@ -232,7 +232,7 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
   ${profile?.email ? `<p>✉️ ${profile.email}</p>` : ""}
 </div>
 <div class="footer">
-  <p>This proposal was sent via ProposalCraft AI</p>
+  <p>This proposal was sent via ProposAI</p>
   <img src="${trackingUrl}" width="1" height="1" style="display:none" alt="" />
 </div>
 </body>
