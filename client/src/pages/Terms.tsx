@@ -36,7 +36,7 @@ export default function Terms() {
 
           <section>
             <h2 className="text-lg font-semibold mb-2">4. Refund Policy</h2>
-            <p>We offer a 7-day money-back guarantee on your first payment for any paid plan. If you are not satisfied within 7 days of your first charge, contact us at support@proposalcraft.ai for a full refund. After 7 days, subscription fees are non-refundable except where required by applicable law.</p>
+            <p>We offer a 7-day money-back guarantee on your first payment for any paid plan. If you are not satisfied within 7 days of your first charge, contact us at support@proposai.org for a full refund. After 7 days, subscription fees are non-refundable except where required by applicable law.</p>
           </section>
 
           <section>
@@ -61,7 +61,7 @@ export default function Terms() {
 
           <section>
             <h2 className="text-lg font-semibold mb-2">9. Termination</h2>
-            <p>We reserve the right to suspend or terminate your account at any time if you violate these Terms. You may delete your account at any time by contacting support@proposalcraft.ai.</p>
+            <p>We reserve the right to suspend or terminate your account at any time if you violate these Terms. You may delete your account at any time by contacting support@proposai.org.</p>
           </section>
 
           <section>
@@ -71,7 +71,7 @@ export default function Terms() {
 
           <section>
             <h2 className="text-lg font-semibold mb-2">11. Contact</h2>
-            <p>For questions about these Terms, contact us at: <a href="mailto:support@proposalcraft.ai" className="text-primary underline">support@proposalcraft.ai</a></p>
+            <p>For questions about these Terms, contact us at: <a href="mailto:support@proposai.org" className="text-primary underline">support@proposai.org</a></p>
           </section>
         </div>
       </div>

@@ -46,7 +46,7 @@ export default function Privacy() {
 
           <section>
             <h2 className="text-lg font-semibold mb-2">6. Data Storage and Security</h2>
-            <p>Your data is stored on secure cloud servers. We use industry-standard encryption for data in transit (HTTPS/TLS) and at rest. We retain your data for as long as your account is active. You may request deletion of your account and associated data at any time by contacting support@proposalcraft.ai.</p>
+            <p>Your data is stored on secure cloud servers. We use industry-standard encryption for data in transit (HTTPS/TLS) and at rest. We retain your data for as long as your account is active. You may request deletion of your account and associated data at any time by contacting support@proposai.org.</p>
           </section>
 
           <section>
@@ -56,7 +56,7 @@ export default function Privacy() {
 
           <section>
             <h2 className="text-lg font-semibold mb-2">8. Your Rights</h2>
-            <p>You have the right to access, correct, or delete your personal information at any time. To exercise these rights, contact us at support@proposalcraft.ai. If you are located in the European Economic Area, you have additional rights under GDPR including the right to data portability and the right to lodge a complaint with your local supervisory authority.</p>
+            <p>You have the right to access, correct, or delete your personal information at any time. To exercise these rights, contact us at support@proposai.org. If you are located in the European Economic Area, you have additional rights under GDPR including the right to data portability and the right to lodge a complaint with your local supervisory authority.</p>
           </section>
 
           <section>
@@ -66,7 +66,7 @@ export default function Privacy() {
 
           <section>
             <h2 className="text-lg font-semibold mb-2">10. Contact</h2>
-            <p>For privacy-related questions, contact us at: <a href="mailto:support@proposalcraft.ai" className="text-primary underline">support@proposalcraft.ai</a></p>
+            <p>For privacy-related questions, contact us at: <a href="mailto:support@proposai.org" className="text-primary underline">support@proposai.org</a></p>
           </section>
         </div>
       </div>

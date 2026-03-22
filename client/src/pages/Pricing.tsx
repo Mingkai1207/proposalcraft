@@ -182,7 +182,7 @@ export default function Pricing() {
         <div className="mt-8 bg-card border border-border rounded-xl p-6 text-center">
           <h3 className="font-semibold text-foreground mb-2">Need a custom plan?</h3>
           <p className="text-muted-foreground text-sm mb-4">For large teams or enterprise use, contact us for custom pricing.</p>
-          <Button variant="outline" onClick={() => toast.info("Contact us at hello@proposalcraft.ai")}>
+          <Button variant="outline" onClick={() => toast.info("Contact us at hello@proposai.org")}>
             Contact Sales
           </Button>
         </div>

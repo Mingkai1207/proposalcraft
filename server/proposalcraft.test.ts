@@ -53,7 +53,7 @@ function createMockContext(overrides?: Partial<TrpcContext>): TrpcContext {
     },
     req: {
       protocol: "https",
-      headers: { origin: "https://test.proposalcraft.ai" },
+      headers: { origin: "https://test.proposai.org" },
       ip: "127.0.0.1",
       socket: { remoteAddress: "127.0.0.1" },
     } as TrpcContext["req"],

@@ -22,7 +22,7 @@ export const billingRouter = router({
         });
       }
 
-      const origin = (ctx.req.headers.origin as string) || "https://proposalcraft.manus.space";
+      const origin = (ctx.req.headers.origin as string) || "https://proposai.org";
 
       const transaction = await paddle.transactions.create({
         items: [{ priceId: plan.paddlePriceId, quantity: 1 }],

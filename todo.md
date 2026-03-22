@@ -80,3 +80,8 @@
 - [x] Privacy Policy page (/privacy)
 - [x] Refund Policy page (/refund)
 - [x] Register all three routes in App.tsx
+
+## Domain Update
+- [x] Update all hardcoded domain references to proposai.org
+- [x] Update Paddle fallback origin URL in billing router
+- [x] Update legal pages contact email to use proposai.org

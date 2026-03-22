@@ -22,7 +22,7 @@ export default function Refund() {
           <section>
             <h2 className="text-lg font-semibold mb-2">7-Day Money-Back Guarantee</h2>
             <p>We stand behind ProposalCraft AI. If you subscribe to a paid plan and are not satisfied for any reason, you may request a full refund within <strong>7 days of your first payment</strong>. No questions asked.</p>
-            <p className="mt-2">To request a refund within this window, email us at <a href="mailto:support@proposalcraft.ai" className="text-primary underline">support@proposalcraft.ai</a> with the subject line "Refund Request" and include the email address associated with your account. We will process your refund within 5 business days.</p>
+            <p className="mt-2">To request a refund within this window, email us at <a href="mailto:support@proposai.org" className="text-primary underline">support@proposai.org</a> with the subject line "Refund Request" and include the email address associated with your account. We will process your refund within 5 business days.</p>
           </section>
 
           <section>
@@ -42,7 +42,7 @@ export default function Refund() {
 
           <section>
             <h2 className="text-lg font-semibold mb-2">Contact Us</h2>
-            <p>For refund requests or billing questions, contact us at: <a href="mailto:support@proposalcraft.ai" className="text-primary underline">support@proposalcraft.ai</a></p>
+            <p>For refund requests or billing questions, contact us at: <a href="mailto:support@proposai.org" className="text-primary underline">support@proposai.org</a></p>
             <p className="mt-2">We aim to respond to all refund requests within 1 business day.</p>
           </section>
         </div>
