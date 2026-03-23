@@ -182,3 +182,11 @@
 ## Walkthrough UX Improvements
 - [x] Add visual cues (pulse animation, helper text) to guide users to click "Generate Proposal with AI" button
 - [x] Fix sample proposal PDF — remove overlapping text in header, ensure clean professional layout
+
+
+## Phase 3: Trade-Specific Features & Analytics
+- [x] Generate sample PDFs for Plumbing, Electrical, and Roofing trades
+- [x] Upload all trade-specific PDFs to CDN
+- [x] Wire trade selector to switch between trade-specific PDFs in walkthrough
+- [x] Add "Copy to clipboard" button for demo form data
+- [x] Integrate analytics event tracking for walkthrough steps (form start, AI generation, PDF view)

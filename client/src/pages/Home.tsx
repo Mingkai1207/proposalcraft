@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { trackWalkthroughStep, trackCopyToClipboard, trackPdfDownload, trackCtaClick } from "@/lib/analytics";
 import {
   Zap, FileText, Mail, Eye, Shield,
   CheckCircle, ArrowRight, Wrench, Droplets,
@@ -65,7 +66,15 @@ const TRADES = [
 ];
 
 const GUARANTEE_BADGE_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposai-guarantee-badge-iVr29Hp4v4FN5DhPsDtUwF.webp";
-const SAMPLE_PDF_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_773a9876.pdf";
+
+const TRADE_SAMPLE_PDFS: Record<string, string> = {
+  HVAC: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_773a9876.pdf",
+  Plumbing: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_plumbing_40285acc.pdf",
+  Electrical: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_electrical_1d77f8cd.pdf",
+  Roofing: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_roofing_3c570a20.pdf",
+};
+
+const SAMPLE_PDF_URL = TRADE_SAMPLE_PDFS.HVAC;
 
 const STATS = [
   { value: "60s", label: "Average proposal time", icon: Timer },
@@ -227,6 +236,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
     address: "4412 Meadowbrook Lane, Austin TX",
     estimatedCost: "8175",
   });
+  const [currentPdfUrl, setCurrentPdfUrl] = useState(TRADE_SAMPLE_PDFS.HVAC);
   const [aiLines, setAiLines] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationDone, setGenerationDone] = useState(false);
@@ -243,6 +253,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
     setGenerationDone(false);
     lineIndexRef.current = 0;
     charIndexRef.current = 0;
+    trackWalkthroughStep("ai_generation_start", { trade: formData.trade });
     typeNextChar();
   };
 
@@ -252,6 +263,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
     if (li >= PROPOSAL_PREVIEW_LINES.length) {
       setIsGenerating(false);
       setGenerationDone(true);
+      trackWalkthroughStep("ai_generation_complete", { trade: formData.trade });
       return;
     }
     const line = PROPOSAL_PREVIEW_LINES[li];
@@ -283,6 +295,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
 
   const handleViewPDF = () => {
     setActiveStep(2);
+    trackWalkthroughStep("pdf_view", { trade: formData.trade });
   };
 
   const steps = [
@@ -359,7 +372,10 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                       <button
                         key={t}
                         id={t === "HVAC" ? "demo-trade" : undefined}
-                        onClick={() => setFormData(f => ({ ...f, trade: t }))}
+                        onClick={() => {
+                          setFormData(f => ({ ...f, trade: t }));
+                          setCurrentPdfUrl(TRADE_SAMPLE_PDFS[t as keyof typeof TRADE_SAMPLE_PDFS]);
+                        }}
                         aria-pressed={formData.trade === t}
                         className={`py-2 px-2 rounded-lg text-xs font-semibold border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
                           formData.trade === t
@@ -436,14 +452,30 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
               </div>
               <div className="mt-8 pt-6 border-t border-border">
                 <p className="text-sm font-semibold text-foreground mb-3">Ready to see the magic? 🚀</p>
-                <Button
-                  onClick={handleGenerate}
-                  size="lg"
-                  className="w-full h-12 bg-primary hover:bg-primary/90 font-semibold text-base shadow-md shadow-primary/20 animate-pulse hover:animate-none transition-all"
-                >
-                  <Sparkles className="w-5 h-5 mr-2" />
-                  Generate Proposal with AI
-                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleGenerate}
+                    size="lg"
+                    className="flex-1 h-12 bg-primary hover:bg-primary/90 font-semibold text-base shadow-md shadow-primary/20 animate-pulse hover:animate-none transition-all"
+                  >
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Generate Proposal with AI
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const text = `Trade: ${formData.trade}\nClient: ${formData.clientName}\nAddress: ${formData.address}\nScope: ${formData.jobScope}\nEstimated Cost: $${formData.estimatedCost}`;
+                      navigator.clipboard.writeText(text);
+                      trackCopyToClipboard();
+                      toast.success("Form data copied to clipboard!");
+                    }}
+                    size="lg"
+                    variant="outline"
+                    className="h-12 px-4 font-semibold text-base"
+                    title="Copy form data to clipboard"
+                  >
+                    <FileCheck className="w-5 h-5" />
+                  </Button>
+                </div>
                 <p className="text-xs text-muted-foreground text-center mt-3">Watch the AI write your proposal in real-time →</p>
               </div>
             </div>
@@ -575,7 +607,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
         {activeStep === 2 && (
           <div className="grid lg:grid-cols-5 min-h-[520px]">
             {/* Left: actions sidebar */}
-            <div className="lg:col-span-2 p-8 lg:p-10 flex flex-col border-r border-border">
+              <div className="lg:col-span-2 p-8 lg:p-10 flex flex-col border-r border-border">
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -583,8 +615,8 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   </div>
                   <span className="text-sm font-semibold text-green-700">Proposal Ready</span>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-1">HVAC System Replacement</h3>
-                <p className="text-sm text-muted-foreground">Johnson Residence · Austin, TX</p>
+                <h3 className="text-xl font-bold text-foreground mb-1">{formData.trade} Proposal</h3>
+                <p className="text-sm text-muted-foreground">{formData.clientName} · {formData.address.split(",").pop()}</p>
               </div>
 
               <div className="space-y-3 mb-6">
@@ -606,7 +638,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
 
               <div className="space-y-3 flex-1">
                 <a
-                  href={SAMPLE_PDF_URL}
+                  href={currentPdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full h-11 bg-primary text-white rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 shadow-md shadow-primary/20"
@@ -616,8 +648,9 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   Open Full PDF Sample
                 </a>
                 <a
-                  href={SAMPLE_PDF_URL}
-                  download="ProposAI-Sample-Proposal.pdf"
+                  href={currentPdfUrl}
+                  download={`ProposAI-Sample-${formData.trade}-Proposal.pdf`}
+                  onClick={() => trackPdfDownload(formData.trade)}
                   className="flex items-center justify-center gap-2 w-full h-11 bg-white border border-border text-foreground rounded-lg font-semibold text-sm hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   aria-label="Download sample proposal PDF"
                 >
@@ -625,7 +658,10 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   Download PDF
                 </a>
                 <button
-                  onClick={onCTA}
+                  onClick={() => {
+                    trackCtaClick("get_started");
+                    onCTA();
+                  }}
                   className="flex items-center justify-center gap-2 w-full h-11 bg-orange-500 text-white rounded-lg font-semibold text-sm hover:bg-orange-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 shadow-md shadow-orange-500/20"
                 >
                   <Send className="w-4 h-4" />
@@ -648,10 +684,10 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   <div className="w-3 h-3 rounded-full bg-green-400" />
                 </div>
                 <div className="flex-1 mx-3 bg-slate-100 rounded-md px-3 py-1 text-xs text-muted-foreground font-mono truncate">
-                  ProposAI-Sample-Proposal.pdf
+                  ProposAI-{formData.trade}-Proposal.pdf
                 </div>
                 <a
-                  href={SAMPLE_PDF_URL}
+                  href={currentPdfUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
@@ -662,8 +698,8 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
               </div>
               <div className="flex-1 relative min-h-[400px]">
                 <iframe
-                  src={`${SAMPLE_PDF_URL}#view=FitH`}
-                  title="Sample HVAC proposal generated by ProposAI"
+                  src={`${currentPdfUrl}#view=FitH`}
+                  title={`Sample ${formData.trade} proposal generated by ProposAI`}
                   className="absolute inset-0 w-full h-full"
                   aria-label="Sample proposal PDF preview"
                 />
@@ -672,7 +708,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 gap-4">
                     <FileText className="w-12 h-12 text-muted-foreground" />
                     <p className="text-sm text-muted-foreground">PDF preview requires JavaScript.</p>
-                    <a href={SAMPLE_PDF_URL} target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">Open PDF directly</a>
+                    <a href={currentPdfUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">Open PDF directly</a>
                   </div>
                 </noscript>
               </div>
