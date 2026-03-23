@@ -161,3 +161,6 @@
 
 ## Bug Fixes
 - [x] Fix "Failed to fetch" TRPCClientError on /settings page — added retry logic (3 retries, exponential backoff)
+
+## PayPal Checkout Fix
+- [x] Fix PayPal subscription buttons — replaced embedded JS buttons with server-side redirect flow

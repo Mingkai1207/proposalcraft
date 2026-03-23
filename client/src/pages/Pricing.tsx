@@ -4,9 +4,9 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
-import { CheckCircle, ArrowLeft, Zap, Crown, ExternalLink, Lock } from "lucide-react";
+import { CheckCircle, ArrowLeft, Zap, Crown, ExternalLink, Lock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const PLANS = [
   {
@@ -87,77 +87,11 @@ const PLANS = [
   },
 ];
 
-// PayPal subscription button component
-function PayPalButton({ planId, onSuccess }: { planId: string; onSuccess: () => void }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [rendered, setRendered] = useState(false);
-  const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
-
-  useEffect(() => {
-    if (!clientId || !containerRef.current || rendered) return;
-
-    // Load PayPal JS SDK dynamically
-    const scriptId = "paypal-js-sdk";
-    const existing = document.getElementById(scriptId);
-
-    const renderButton = () => {
-      if (!(window as any).paypal || !containerRef.current) return;
-      const planEnvKey = planId === "starter" ? "VITE_PAYPAL_STARTER_PLAN_ID" : "VITE_PAYPAL_PRO_PLAN_ID";
-      const paypalPlanId = planId === "starter"
-        ? import.meta.env.VITE_PAYPAL_STARTER_PLAN_ID
-        : import.meta.env.VITE_PAYPAL_PRO_PLAN_ID;
-
-      if (!paypalPlanId) return;
-
-      try {
-        (window as any).paypal.Buttons({
-          style: {
-            shape: "pill",
-            color: "gold",
-            layout: "vertical",
-            label: "subscribe",
-          },
-          createSubscription: (_data: any, actions: any) => {
-            return actions.subscription.create({ plan_id: paypalPlanId });
-          },
-          onApprove: (_data: any, _actions: any) => {
-            toast.success("Subscription activated! Refreshing your plan...");
-            onSuccess();
-          },
-          onError: (err: any) => {
-            console.error("[PayPal] Error:", err);
-            toast.error("PayPal checkout failed. Please try again.");
-          },
-          onCancel: () => {
-            toast.info("Checkout cancelled.");
-          },
-        }).render(containerRef.current);
-        setRendered(true);
-      } catch (e) {
-        console.error("[PayPal] Render error:", e);
-      }
-    };
-
-    if (existing) {
-      if ((window as any).paypal) renderButton();
-      else existing.addEventListener("load", renderButton);
-    } else {
-      const script = document.createElement("script");
-      script.id = scriptId;
-      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&vault=true&intent=subscription`;
-      script.setAttribute("data-sdk-integration-source", "button-factory");
-      script.onload = renderButton;
-      document.body.appendChild(script);
-    }
-  }, [clientId, planId, rendered, onSuccess]);
-
-  return <div ref={containerRef} className="mt-4 min-h-[45px]" />;
-}
-
 export default function Pricing() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [, navigate] = useLocation();
   const utils = trpc.useUtils();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const { data: subscription, refetch: refetchSub } = trpc.subscription.get.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -170,15 +104,57 @@ export default function Pricing() {
     onError: (e) => toast.error(e.message),
   });
 
+  const checkoutMutation = trpc.billing.createCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        toast.success("Redirecting to PayPal checkout...");
+        window.location.href = data.url;
+      }
+    },
+    onError: (e) => {
+      toast.error(e.message || "Failed to start checkout. Please try again.");
+      setLoadingPlan(null);
+    },
+  });
+
   const currentPlan = subscription?.plan || "free";
 
-  const handlePayPalSuccess = () => {
-    // Give PayPal webhook a moment to fire, then refetch
-    setTimeout(() => {
+  // Handle return from PayPal with subscription_id in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const upgraded = params.get("upgraded");
+    const plan = params.get("plan");
+    const subscriptionId = params.get("subscription_id");
+
+    if (upgraded === "1" && plan && subscriptionId) {
+      // Activate the subscription via the backend
+      activateSubscriptionMutation.mutate({ subscriptionId, plan: plan as "starter" | "pro" });
+    }
+  }, []);
+
+  const activateSubscriptionMutation = trpc.billing.activateSubscription.useMutation({
+    onSuccess: () => {
+      toast.success("🎉 Subscription activated! Welcome to your new plan.");
       refetchSub();
       utils.subscription.get.invalidate();
-      navigate("/dashboard?upgraded=1");
-    }, 3000);
+      // Clean up URL params
+      window.history.replaceState({}, "", "/pricing");
+    },
+    onError: (e) => {
+      // Webhook may have already activated it — just refetch
+      refetchSub();
+      utils.subscription.get.invalidate();
+    },
+  });
+
+  const handleUpgrade = (planId: string) => {
+    if (!isAuthenticated) {
+      window.location.href = getLoginUrl();
+      return;
+    }
+    if (planId !== "starter" && planId !== "pro") return;
+    setLoadingPlan(planId);
+    checkoutMutation.mutate({ plan: planId as "starter" | "pro" });
   };
 
   if (authLoading) {
@@ -218,8 +194,7 @@ export default function Pricing() {
           {PLANS.map(({ id, name, price, period, proposals, features, locked, badge, cta, highlight, icon: Icon }) => {
             const isCurrent = currentPlan === id;
             const isPaid = id === "starter" || id === "pro";
-            const showPayPal = isAuthenticated && isPaid && !isCurrent;
-            const needsLogin = !isAuthenticated && isPaid;
+            const isLoading = loadingPlan === id && checkoutMutation.isPending;
 
             return (
               <div
@@ -275,24 +250,42 @@ export default function Pricing() {
 
                 {/* CTA */}
                 {isCurrent ? (
-                  <Button disabled variant={highlight ? "secondary" : "default"} className={`w-full mt-4 opacity-60 cursor-not-allowed ${highlight ? "bg-white text-primary" : ""}`}>
+                  <Button
+                    disabled
+                    variant={highlight ? "secondary" : "default"}
+                    className={`w-full mt-4 opacity-60 cursor-not-allowed ${highlight ? "bg-white text-primary" : ""}`}
+                  >
                     ✓ Current Plan
                   </Button>
-                ) : needsLogin ? (
+                ) : isPaid ? (
                   <Button
-                    onClick={() => { window.location.href = getLoginUrl(); }}
+                    onClick={() => handleUpgrade(id)}
+                    disabled={isLoading || checkoutMutation.isPending}
                     variant={highlight ? "secondary" : "default"}
                     className={`w-full mt-4 ${highlight ? "bg-white text-primary hover:bg-white/90" : ""}`}
                   >
-                    Sign in to {cta}
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Redirecting to PayPal...
+                      </>
+                    ) : (
+                      <>
+                        {!isAuthenticated ? "Sign in to " : ""}{cta}
+                      </>
+                    )}
                   </Button>
-                ) : showPayPal ? (
-                  <PayPalButton planId={id} onSuccess={handlePayPalSuccess} />
-                ) : id === "free" ? (
+                ) : (
                   <Button disabled variant="outline" className="w-full mt-4 opacity-60 cursor-not-allowed">
                     {cta}
                   </Button>
-                ) : null}
+                )}
+
+                {isPaid && !isCurrent && (
+                  <p className={`text-xs text-center mt-2 ${highlight ? "text-white/60" : "text-muted-foreground"}`}>
+                    Secure checkout via PayPal
+                  </p>
+                )}
               </div>
             );
           })}
