@@ -58,6 +58,7 @@ export const proposalRouter = router({
         laborCost: z.string().optional(),
         materialsCost: z.string().optional(),
         totalCost: z.string().optional(),
+        language: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -79,8 +80,18 @@ export const proposalRouter = router({
       const tradeName = TRADE_TEMPLATES[input.tradeType] || "General Contracting";
 
       // Build AI prompt
+      const langMap: Record<string, string> = {
+        english: "English",
+        chinese: "Simplified Chinese (简体中文)",
+        spanish: "Spanish (Español)",
+        french: "French (Français)",
+        auto: "the same language as the job description",
+      };
+      const outputLang = langMap[input.language || "english"] || "English";
+
       const systemPrompt = `You are an expert proposal writer for ${tradeName} contractors. 
 Write professional, persuasive job proposals that win contracts. 
+IMPORTANT: Write the entire proposal in ${outputLang}. All section headers, body text, and pricing must be in ${outputLang}.
 Use clear, confident language. Structure proposals with these sections:
 1. Executive Summary (2-3 sentences)
 2. Scope of Work (detailed breakdown)

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Zap, FileText, Wrench, Droplets, Bolt, Home as HomeIcon, HardHat } from "lucide-react";
+import { ArrowLeft, ArrowRight, Zap, FileText, Wrench, Droplets, Bolt, Home as HomeIcon, HardHat, Globe } from "lucide-react";
 
 const TRADE_OPTIONS = [
   { value: "hvac", label: "HVAC", icon: Wrench, desc: "Heating, ventilation & air conditioning" },
@@ -17,6 +17,14 @@ const TRADE_OPTIONS = [
   { value: "electrical", label: "Electrical", icon: Bolt, desc: "Wiring, panels & electrical systems" },
   { value: "roofing", label: "Roofing", icon: HomeIcon, desc: "Roof installation, repair & replacement" },
   { value: "general", label: "General Contracting", icon: HardHat, desc: "General construction & renovation" },
+];
+
+const LANGUAGE_OPTIONS = [
+  { value: "english", label: "English", flag: "🇺🇸" },
+  { value: "chinese", label: "Chinese (中文)", flag: "🇨🇳" },
+  { value: "spanish", label: "Spanish (Español)", flag: "🇪🇸" },
+  { value: "french", label: "French (Français)", flag: "🇫🇷" },
+  { value: "auto", label: "Auto (match job description)", flag: "🌐" },
 ];
 
 type FormData = {
@@ -30,6 +38,7 @@ type FormData = {
   laborCost: string;
   materialsCost: string;
   totalCost: string;
+  language: string;
 };
 
 export default function NewProposal() {
@@ -40,6 +49,7 @@ export default function NewProposal() {
     title: "", tradeType: "", clientName: "", clientEmail: "",
     clientAddress: "", jobScope: "", materials: "",
     laborCost: "", materialsCost: "", totalCost: "",
+    language: "english",
   });
 
   const generateMutation = trpc.proposals.generate.useMutation({
@@ -78,6 +88,7 @@ export default function NewProposal() {
       laborCost: form.laborCost || undefined,
       materialsCost: form.materialsCost || undefined,
       totalCost: form.totalCost || undefined,
+      language: form.language || undefined,
     });
   };
 
@@ -207,6 +218,28 @@ export default function NewProposal() {
                 rows={3}
                 className="resize-none"
               />
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium mb-2 block flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5" /> Proposal Language
+              </Label>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {LANGUAGE_OPTIONS.map(({ value, label, flag }) => (
+                  <button
+                    key={value}
+                    onClick={() => update("language", value)}
+                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 text-sm transition-all ${
+                      form.language === value
+                        ? "border-primary bg-primary/5 text-foreground font-medium"
+                        : "border-border hover:border-primary/40 text-muted-foreground"
+                    }`}
+                  >
+                    <span>{flag}</span>
+                    <span className="truncate">{label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className="flex gap-3">

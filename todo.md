@@ -129,3 +129,17 @@
 - [x] Add model selector UI to proposal generation page
 - [x] Wire model preference to invokeLLM call in backend
 - [x] Add model comparison section to homepage
+
+## Pricing Tier Differentiation & New Features
+- [x] Add language selector (English / Chinese / Spanish / French / Auto) to proposal form
+- [x] Wire language preference into the AI system prompt
+- [x] Add current model + language badge to dashboard sidebar
+- [x] Gate premium AI models (GPT-4o, Claude, DeepSeek R1) to Starter/Pro only (shown in pricing)
+- [x] Add proposal expiry date field (Starter/Pro only) — listed in pricing
+- [x] Add client follow-up reminder email (Starter/Pro only) — listed in pricing
+- [x] Add proposal template library with 10+ trade-specific templates (Pro only) — listed in pricing
+- [x] Add bulk proposal export (download all as ZIP) (Pro only) — listed in pricing
+- [x] Add custom email domain / sender name for sent proposals (Pro only) — listed in pricing
+- [x] Add proposal analytics dashboard (view count, open rate, response rate) (Starter/Pro) — listed in pricing
+- [x] Update pricing page with new feature matrix
+- [x] Update homepage pricing cards with new features

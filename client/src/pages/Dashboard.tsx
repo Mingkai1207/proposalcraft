@@ -41,6 +41,9 @@ export default function Dashboard() {
   const { data: subscription } = trpc.subscription.get.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+  const { data: profile } = trpc.profile.get.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
   const deleteMutation = trpc.proposals.delete.useMutation({
     onSuccess: () => { toast.success("Proposal deleted"); refetch(); setDeleteId(null); },
     onError: (e) => toast.error(e.message),
@@ -137,6 +140,41 @@ export default function Dashboard() {
               </button>
             )}
           </div>
+          {/* Current AI model & language indicator */}
+          <button
+            onClick={() => navigate("/settings")}
+            className="w-full bg-sidebar-accent rounded-lg p-3 mb-3 text-left hover:opacity-80 transition-opacity"
+          >
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs text-sidebar-foreground/70 uppercase tracking-wide">AI Model</span>
+              <span className="text-xs text-primary font-medium">Change &rarr;</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-sm">
+                {(() => {
+                  const m = profile?.preferredModel || "gemini-2.5-flash";
+                  if (m.includes("deepseek")) return "🇨🇳";
+                  if (m.includes("gpt") || m.includes("o4") || m.includes("o3")) return "🇺🇸";
+                  if (m.includes("claude")) return "🇺🇸";
+                  if (m.includes("qwen")) return "🇨🇳";
+                  return "🌐";
+                })()}
+              </span>
+              <span className="text-xs font-medium text-sidebar-foreground truncate">
+                {(() => {
+                  const m = profile?.preferredModel || "gemini-2.5-flash";
+                  if (m === "gemini-2.5-flash") return "Gemini 2.5 Flash";
+                  if (m === "deepseek-v3") return "DeepSeek V3";
+                  if (m === "deepseek-r1") return "DeepSeek R1";
+                  if (m === "gpt-4o") return "GPT-4o";
+                  if (m === "gpt-4o-mini") return "GPT-4o Mini";
+                  if (m === "claude-3-7-sonnet-20250219") return "Claude 3.7 Sonnet";
+                  if (m === "qwen-max") return "Qwen Max";
+                  return m;
+                })()}
+              </span>
+            </div>
+          </button>
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center text-xs font-bold text-primary">
               {user?.name?.charAt(0)?.toUpperCase() || "U"}

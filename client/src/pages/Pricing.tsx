@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
-import { CheckCircle, ArrowLeft, Zap, Crown, ExternalLink } from "lucide-react";
+import { CheckCircle, ArrowLeft, Zap, Crown, ExternalLink, Lock, X } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
 import type { Paddle } from "@paddle/paddle-js";
@@ -18,11 +18,20 @@ const PLANS = [
     price: "$0",
     period: "/month",
     proposals: "3 proposals/month",
+    badge: null,
     features: [
-      "AI proposal generation",
+      "AI proposal generation (Gemini 2.5 Flash only)",
       "PDF download",
-      "HVAC, Plumbing, Electrical, Roofing templates",
-      "Basic branding",
+      "5 trade templates (HVAC, Plumbing, Electrical, Roofing, General)",
+      "English language only",
+      "ProposAI watermark on PDF",
+    ],
+    locked: [
+      "Email delivery to clients",
+      "Proposal open & read tracking",
+      "Custom logo & branding",
+      "Multi-language proposals",
+      "Premium AI models (GPT-4o, Claude, DeepSeek)",
     ],
     cta: "Current Plan",
     highlight: false,
@@ -34,12 +43,23 @@ const PLANS = [
     price: "$29",
     period: "/month",
     proposals: "20 proposals/month",
+    badge: "Most Popular",
     features: [
-      "Everything in Free",
-      "Email delivery to clients",
-      "Proposal open tracking",
-      "Custom logo & branding",
+      "Everything in Free — no watermark",
+      "Email delivery directly to clients",
+      "Proposal open & read tracking",
+      "Custom logo & branding on every PDF",
       "Custom terms & conditions",
+      "Multi-language proposals (EN, ZH, ES, FR)",
+      "All 7 AI models including GPT-4o Mini & DeepSeek V3",
+      "Proposal expiry date (urgency for clients)",
+      "Auto follow-up email if client hasn't opened in 48h",
+    ],
+    locked: [
+      "Proposal template library (10+ trade templates)",
+      "Bulk export all proposals as ZIP",
+      "Custom sender email domain",
+      "Analytics dashboard (open rate, win rate)",
     ],
     cta: "Upgrade to Starter",
     highlight: false,
@@ -51,13 +71,19 @@ const PLANS = [
     price: "$59",
     period: "/month",
     proposals: "Unlimited proposals",
+    badge: "Best Value",
     features: [
       "Everything in Starter",
       "Unlimited proposal generation",
-      "Priority AI generation",
-      "Advanced tracking & analytics",
-      "Priority support",
+      "All 7 AI models including GPT-4o, Claude 3.7 & DeepSeek R1",
+      "10+ trade-specific proposal templates",
+      "Bulk export all proposals as ZIP",
+      "Custom sender email domain & name",
+      "Analytics dashboard — open rate, win rate, revenue tracked",
+      "Client portal — clients can accept/decline online",
+      "Priority support (response within 4 hours)",
     ],
+    locked: [],
     cta: "Upgrade to Pro",
     highlight: true,
     icon: Crown,
@@ -187,20 +213,29 @@ export default function Pricing() {
           )}
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {PLANS.map(({ id, name, price, period, proposals, features, cta, highlight, icon: Icon }) => {
+        <div className="grid md:grid-cols-3 gap-6 items-start">
+          {PLANS.map(({ id, name, price, period, proposals, features, locked, badge, cta, highlight, icon: Icon }) => {
             const isCurrent = currentPlan === id;
             const isLoading = checkingOut === id;
             return (
               <div
                 key={id}
-                className={`rounded-2xl border p-6 flex flex-col transition-all ${
+                className={`rounded-2xl border p-6 flex flex-col transition-all relative ${
                   highlight
-                    ? "border-primary bg-primary text-white shadow-xl scale-105"
+                    ? "border-primary bg-primary text-white shadow-xl"
                     : "border-border bg-card"
                 }`}
               >
-                <div className="mb-6">
+                {/* Badge */}
+                {badge && (
+                  <div className={`absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-bold ${
+                    highlight ? "bg-white text-primary" : "bg-primary text-white"
+                  }`}>
+                    {badge}
+                  </div>
+                )}
+
+                <div className="mb-5">
                   <div className="flex items-center gap-2 mb-2">
                     {Icon && <Icon className={`w-4 h-4 ${highlight ? "text-white" : "text-primary"}`} />}
                     <p className={`text-sm font-semibold uppercase tracking-wide ${highlight ? "text-white/80" : "text-muted-foreground"}`}>
@@ -214,27 +249,38 @@ export default function Pricing() {
                   <p className={`text-sm mt-1 font-medium ${highlight ? "text-white/80" : "text-primary"}`}>{proposals}</p>
                 </div>
 
-                <ul className="space-y-3 mb-8 flex-1">
+                <ul className="space-y-2.5 mb-4 flex-1">
                   {features.map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-sm">
                       <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${highlight ? "text-white" : "text-primary"}`} />
                       <span className={highlight ? "text-white" : "text-foreground"}>{f}</span>
                     </li>
                   ))}
+                  {locked && locked.length > 0 && (
+                    <>
+                      <li className={`text-xs font-semibold uppercase tracking-wide mt-3 mb-1 ${highlight ? "text-white/50" : "text-muted-foreground/60"}`}>Not included:</li>
+                      {locked.map((f) => (
+                        <li key={f} className="flex items-start gap-2.5 text-sm">
+                          <Lock className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${highlight ? "text-white/30" : "text-muted-foreground/40"}`} />
+                          <span className={`line-through ${highlight ? "text-white/40" : "text-muted-foreground/50"}`}>{f}</span>
+                        </li>
+                      ))}
+                    </>
+                  )}
                 </ul>
 
                 <Button
                   onClick={() => !isCurrent && handleUpgrade(id)}
                   disabled={isCurrent || isLoading}
                   variant={highlight ? "secondary" : "default"}
-                  className={`w-full ${highlight ? "bg-white text-primary hover:bg-white/90" : ""} ${isCurrent ? "opacity-60 cursor-not-allowed" : ""}`}
+                  className={`w-full mt-4 ${highlight ? "bg-white text-primary hover:bg-white/90" : ""} ${isCurrent ? "opacity-60 cursor-not-allowed" : ""}`}
                 >
                   {isLoading ? (
                     <span className="flex items-center gap-2">
                       <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                       Opening checkout...
                     </span>
-                  ) : isCurrent ? "Current Plan" : cta}
+                  ) : isCurrent ? "✓ Current Plan" : cta}
                 </Button>
               </div>
             );
