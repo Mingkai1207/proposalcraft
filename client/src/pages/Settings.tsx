@@ -28,6 +28,7 @@ export default function Settings() {
     smtpHost: "", smtpPort: 587, smtpUsername: "", smtpPassword: "",
     smtpFromEmail: "", smtpFromName: "",
   });
+  const [followUpTemplate, setFollowUpTemplate] = useState("");
 
   const AI_MODELS = [
     { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "Google", flag: "🌐", badge: "Default", badgeColor: "bg-blue-100 text-blue-700", desc: "Fast, capable, and great for English proposals. Best all-around choice.", bestFor: "English · Fast · Free tier" },
@@ -60,6 +61,7 @@ export default function Settings() {
         smtpFromEmail: profile.smtpFromEmail || "",
         smtpFromName: profile.smtpFromName || "",
       });
+      setFollowUpTemplate(profile.followUpTemplate || "");
     }
   }, [profile]);
 
@@ -86,6 +88,7 @@ export default function Settings() {
       email: form.email || undefined,
       preferredModel,
       ...smtpForm,
+      followUpTemplate: followUpTemplate || undefined,
     });
   };
 
@@ -273,6 +276,20 @@ export default function Settings() {
             </div>
             <p className="text-xs text-muted-foreground">💡 Tip: For Gmail, use App Passwords instead of your regular password. Enable 2FA and generate an app-specific password.</p>
           </div>
+        </div>
+
+        <div className="border border-border rounded-lg p-4 space-y-4">
+          <div className="flex items-center gap-2">
+            <Mail className="w-5 h-5 text-primary" />
+            <h3 className="font-semibold">Follow-up Email Template</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">Customize the email sent to clients 48 hours after they receive a proposal (if unopened). Use placeholders: {'{clientName}'}, {'{proposalTitle}'}, {'{businessName}'}, {'{sentDate}'}.</p>
+          <Textarea
+            placeholder="Hi {clientName},\n\nI wanted to follow up on the proposal I sent you for {proposalTitle}. I haven't heard back yet, and I wanted to make sure you received it and had a chance to review it.\n\nIf you have any questions or would like to discuss the proposal further, I'm happy to help. Feel free to reach out anytime.\n\nBest regards,\n{businessName}\n\n---\nThis is a follow-up to your proposal sent on {sentDate}."
+            value={followUpTemplate}
+            onChange={e => setFollowUpTemplate(e.target.value)}
+            className="min-h-[200px] font-mono text-sm"
+          />
         </div>
 
         <Button onClick={handleSave} disabled={updateMutation.isPending} className="w-full">

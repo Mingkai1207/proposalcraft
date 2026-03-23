@@ -22,6 +22,13 @@ export const profileRouter = router({
         defaultTerms: z.string().optional(),
         logoUrl: z.string().optional(),
         preferredModel: z.string().optional(),
+        smtpHost: z.string().optional(),
+        smtpPort: z.number().optional(),
+        smtpUsername: z.string().optional(),
+        smtpPassword: z.string().optional(),
+        smtpFromEmail: z.string().optional(),
+        smtpFromName: z.string().optional(),
+        followUpTemplate: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

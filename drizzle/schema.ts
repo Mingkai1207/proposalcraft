@@ -44,6 +44,7 @@ export const contractorProfiles = mysqlTable("contractor_profiles", {
   smtpPassword: text("smtpPassword"),
   smtpFromEmail: varchar("smtpFromEmail", { length: 320 }),
   smtpFromName: varchar("smtpFromName", { length: 255 }),
+  followUpTemplate: text("followUpTemplate"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -89,6 +90,7 @@ export const proposals = mysqlTable("proposals", {
   sentAt: timestamp("sentAt"),
   viewedAt: timestamp("viewedAt"),
   followUpSentAt: timestamp("followUpSentAt"),
+  followUpOpenedAt: timestamp("followUpOpenedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -112,7 +114,7 @@ export type InsertShareToken = typeof shareTokens.$inferInsert;
 export const emailEvents = mysqlTable("email_events", {
   id: int("id").autoincrement().primaryKey(),
   proposalId: int("proposalId").notNull(),
-  eventType: mysqlEnum("eventType", ["sent", "opened", "clicked"]).notNull(),
+  eventType: mysqlEnum("eventType", ["sent", "opened", "clicked", "follow_up_opened"]).notNull(),
   ipAddress: varchar("ipAddress", { length: 64 }),
   userAgent: text("userAgent"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

@@ -32,6 +32,25 @@ export const trackingRouter = router({
           title: "Proposal Opened!",
           content: `Your proposal "${proposal.title}" was opened by ${proposal.clientName || proposal.clientEmail || "your client"}.`,
         }).catch(() => {});
+      } else if (proposal.followUpSentAt && !proposal.followUpOpenedAt) {
+        // Track follow-up email open
+        await updateProposal(proposal.id, proposal.userId, {
+          followUpOpenedAt: new Date(),
+        });
+
+        // Record the event
+        await createEmailEvent({
+          proposalId: proposal.id,
+          eventType: "follow_up_opened",
+          ipAddress: ctx.req.ip || ctx.req.socket?.remoteAddress || null,
+          userAgent: ctx.req.headers["user-agent"] || null,
+        });
+
+        // Notify the contractor
+        await notifyOwner({
+          title: "Follow-up Email Opened!",
+          content: `Your follow-up email for "${proposal.title}" was opened by ${proposal.clientName || proposal.clientEmail || "your client"}.`,
+        }).catch(() => {});
       }
 
       return { success: true };

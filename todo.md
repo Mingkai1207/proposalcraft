@@ -209,3 +209,13 @@
 - [x] Create tRPC procedure to manually trigger follow-up email
 - [x] Add "Send Follow-up" button to proposal detail page
 - [x] Test follow-up email delivery and tracking
+
+
+## Phase 6: Advanced Follow-up Features
+- [x] Add followUpOpenedAt column to proposals table
+- [x] Add followUpTemplate field to contractor_profiles table
+- [x] Create backend cron job for automatic follow-ups (48 hours after sent, if unopened)
+- [x] Add follow-up email template customization to Settings page
+- [x] Update follow-up tracking to distinguish between original and follow-up opens
+- [x] Display follow-up engagement in proposal analytics
+- [x] Test automatic follow-up scheduling and template customization

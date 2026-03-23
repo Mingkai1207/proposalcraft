@@ -1,0 +1,1 @@
+ALTER TABLE `email_events` MODIFY COLUMN `eventType` enum('sent','opened','clicked','follow_up_opened') NOT NULL;
