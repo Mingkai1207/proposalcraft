@@ -158,3 +158,6 @@
 - [x] Add PayPal subscription buttons to Pricing page
 - [x] Handle PayPal webhook for subscription activation/cancellation
 - [x] Update billing portal to use PayPal
+
+## Bug Fixes
+- [x] Fix "Failed to fetch" TRPCClientError on /settings page — added retry logic (3 retries, exponential backoff)
