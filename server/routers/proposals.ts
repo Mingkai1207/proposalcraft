@@ -119,7 +119,17 @@ ${profile?.defaultTerms ? `Terms & Conditions: ${profile.defaultTerms}` : "Inclu
 
 Write a complete, ready-to-send proposal. Use professional formatting with clear section headers.`;
 
-      const model = profile?.preferredModel || "gemini-2.5-flash";
+      // Gate premium models by plan — free users are silently downgraded to Gemini 2.5 Flash
+      const PREMIUM_MODELS = ["gpt-4o", "gpt-4o-mini", "claude-3-7-sonnet-20250219", "deepseek-r1"];
+      const PRO_ONLY_MODELS = ["gpt-4o", "claude-3-7-sonnet-20250219", "deepseek-r1"];
+      const requestedModel = profile?.preferredModel || "gemini-2.5-flash";
+      let model = requestedModel;
+      if (sub.plan === "free" && PREMIUM_MODELS.includes(requestedModel)) {
+        model = "gemini-2.5-flash"; // Free plan: downgrade to default
+      } else if (sub.plan === "starter" && PRO_ONLY_MODELS.includes(requestedModel)) {
+        model = "deepseek-v3"; // Starter plan: downgrade Pro-only models to DeepSeek V3
+      }
+
       const response = await invokeLLM({
         messages: [
           { role: "system", content: systemPrompt },
@@ -135,6 +145,12 @@ const generatedContent = typeof rawContent === "string" ? rawContent : "";
       const trackingToken = nanoid(32);
 
       // Save proposal to DB
+      // Append watermark text for free-plan proposals (enforced at generation time)
+      const isFree = sub.plan === "free";
+      const watermarkedContent = isFree
+        ? `${generatedContent}\n\n---\n*This proposal was generated with ProposAI Free. Upgrade to remove this watermark and unlock email delivery, tracking, and custom branding.*`
+        : generatedContent;
+
       const proposal = await createProposal({
         userId: ctx.user.id,
         title: input.title,
@@ -147,7 +163,7 @@ const generatedContent = typeof rawContent === "string" ? rawContent : "";
         laborCost: input.laborCost || null,
         materialsCost: input.materialsCost || null,
         totalCost: input.totalCost || null,
-        generatedContent,
+        generatedContent: watermarkedContent,
         trackingToken,
         status: "draft",
       });
