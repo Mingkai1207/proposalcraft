@@ -15,6 +15,13 @@
       "when": 1774194491748,
       "tag": "0001_bored_sentry",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774231147760,
+      "tag": "0002_curved_blockbuster",
+      "breakpoints": true
     }
   ]
 }

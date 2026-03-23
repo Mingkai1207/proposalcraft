@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, User, Building, FileText, Save } from "lucide-react";
+import { ArrowLeft, Upload, User, Building, FileText, Save, Bot } from "lucide-react";
 
 export default function Settings() {
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -23,6 +23,17 @@ export default function Settings() {
     businessName: "", ownerName: "", phone: "", email: "",
     address: "", licenseNumber: "", website: "", defaultTerms: "",
   });
+  const [preferredModel, setPreferredModel] = useState("gemini-2.5-flash");
+
+  const AI_MODELS = [
+    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "Google", flag: "🌐", badge: "Default", badgeColor: "bg-blue-100 text-blue-700", desc: "Fast, capable, and great for English proposals. Best all-around choice.", bestFor: "English · Fast · Free tier" },
+    { id: "deepseek-v3", name: "DeepSeek V3", provider: "DeepSeek", flag: "🇨🇳", badge: "Best for Chinese", badgeColor: "bg-red-100 text-red-700", desc: "Trained on massive Chinese datasets. Writes fluent, natural Chinese proposals that sound native.", bestFor: "Chinese · Mandarin · Bilingual" },
+    { id: "deepseek-r1", name: "DeepSeek R1", provider: "DeepSeek", flag: "🇨🇳", badge: "Reasoning", badgeColor: "bg-orange-100 text-orange-700", desc: "DeepSeek's reasoning model. Thinks step-by-step for complex, technical proposals.", bestFor: "Chinese · Technical · Complex jobs" },
+    { id: "gpt-4o", name: "GPT-4o", provider: "OpenAI", flag: "🇺🇸", badge: "Premium", badgeColor: "bg-green-100 text-green-700", desc: "OpenAI's flagship model. Excellent English writing quality, persuasive tone, and detailed proposals.", bestFor: "English · Premium quality" },
+    { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "OpenAI", flag: "🇺🇸", badge: "Fast", badgeColor: "bg-emerald-100 text-emerald-700", desc: "Lighter version of GPT-4o. Faster and still high quality for standard proposals.", bestFor: "English · Speed · Cost-efficient" },
+    { id: "claude-3-7-sonnet-20250219", name: "Claude 3.7 Sonnet", provider: "Anthropic", flag: "🇺🇸", badge: "Best Writing", badgeColor: "bg-purple-100 text-purple-700", desc: "Anthropic's best model. Produces the most polished, human-like proposal writing with excellent structure.", bestFor: "English · Best prose quality" },
+    { id: "qwen-max", name: "Qwen Max", provider: "Alibaba", flag: "🇨🇳", badge: "Chinese Alt", badgeColor: "bg-yellow-100 text-yellow-700", desc: "Alibaba's top model. Strong Chinese language support, good for contractors in China or writing to Chinese clients.", bestFor: "Chinese · Alibaba ecosystem" },
+  ];
 
   useEffect(() => {
     if (profile) {
@@ -36,6 +47,7 @@ export default function Settings() {
         website: profile.website || "",
         defaultTerms: profile.defaultTerms || "",
       });
+      setPreferredModel(profile.preferredModel || "gemini-2.5-flash");
     }
   }, [profile]);
 
@@ -60,6 +72,7 @@ export default function Settings() {
     updateMutation.mutate({
       ...form,
       email: form.email || undefined,
+      preferredModel,
     });
   };
 
@@ -149,6 +162,49 @@ export default function Settings() {
               <Label className="text-sm font-medium mb-2 block">Business Address</Label>
               <Input placeholder="456 Business Ave, City, State 12345" value={form.address} onChange={e => update("address", e.target.value)} />
             </div>
+          </div>
+        </div>
+
+        {/* AI Model Selector */}
+        <div className="bg-card border border-border rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-1">
+            <Bot className="w-4 h-4 text-primary" />
+            <h2 className="font-semibold text-foreground">AI Model</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">Choose which AI model writes your proposals. Different models excel at different languages and styles.</p>
+          <div className="grid grid-cols-1 gap-3">
+            {AI_MODELS.map(m => (
+              <button
+                key={m.id}
+                onClick={() => setPreferredModel(m.id)}
+                className={`text-left rounded-xl border-2 p-4 transition-all ${
+                  preferredModel === m.id
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/40 bg-background"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">{m.flag}</span>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-foreground text-sm">{m.name}</span>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${m.badgeColor}`}>{m.badge}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{m.provider} · {m.bestFor}</p>
+                    </div>
+                  </div>
+                  {preferredModel === m.id && (
+                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{m.desc}</p>
+              </button>
+            ))}
           </div>
         </div>
 

@@ -108,11 +108,13 @@ ${profile?.defaultTerms ? `Terms & Conditions: ${profile.defaultTerms}` : "Inclu
 
 Write a complete, ready-to-send proposal. Use professional formatting with clear section headers.`;
 
+      const model = profile?.preferredModel || "gemini-2.5-flash";
       const response = await invokeLLM({
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
+        model,
       });
 
       const rawContent = response.choices[0]?.message?.content;

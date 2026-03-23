@@ -21,6 +21,7 @@ export const profileRouter = router({
         website: z.string().optional(),
         defaultTerms: z.string().optional(),
         logoUrl: z.string().optional(),
+        preferredModel: z.string().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

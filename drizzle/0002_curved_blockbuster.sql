@@ -1,0 +1,1 @@
+ALTER TABLE `contractor_profiles` ADD `preferredModel` varchar(128) DEFAULT 'gemini-2.5-flash' NOT NULL;

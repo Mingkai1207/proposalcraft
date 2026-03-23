@@ -37,6 +37,7 @@ export const contractorProfiles = mysqlTable("contractor_profiles", {
   logoUrl: text("logoUrl"),
   website: varchar("website", { length: 512 }),
   defaultTerms: text("defaultTerms"),
+  preferredModel: varchar("preferredModel", { length: 128 }).default("gemini-2.5-flash").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

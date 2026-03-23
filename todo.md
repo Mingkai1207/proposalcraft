@@ -123,3 +123,9 @@
 - [x] Generate guarantee badge image
 - [x] Embed demo video in How It Works section
 - [x] Add guarantee badge near pricing section
+
+## AI Model Selector
+- [x] Add preferred_model column to users table in drizzle schema
+- [x] Add model selector UI to proposal generation page
+- [x] Wire model preference to invokeLLM call in backend
+- [x] Add model comparison section to homepage

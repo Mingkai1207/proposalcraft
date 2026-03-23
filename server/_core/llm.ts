@@ -66,6 +66,7 @@ export type InvokeParams = {
   output_schema?: OutputSchema;
   responseFormat?: ResponseFormat;
   response_format?: ResponseFormat;
+  model?: string;
 };
 
 export type ToolCall = {
@@ -277,10 +278,11 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     output_schema,
     responseFormat,
     response_format,
+    model,
   } = params;
 
   const payload: Record<string, unknown> = {
-    model: "gemini-2.5-flash",
+    model: model || "gemini-2.5-flash",
     messages: messages.map(normalizeMessage),
   };
 
