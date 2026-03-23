@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 import {
   ArrowLeft, Send, Download, Eye, Clock, CheckCircle,
-  Mail, AlertCircle, Edit2, Save, X, Zap
+  Mail, AlertCircle, Edit2, Save, X, Zap, Share2
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
@@ -66,6 +66,14 @@ export default function ProposalDetail() {
       toast.success("Proposal saved");
       setEditing(false);
       refetch();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const shareLinkMutation = trpc.proposals.createShareLink.useMutation({
+    onSuccess: (data) => {
+      navigator.clipboard.writeText(data.shareUrl);
+      toast.success("Share link copied to clipboard!");
     },
     onError: (e) => toast.error(e.message),
   });
@@ -202,6 +210,9 @@ export default function ProposalDetail() {
                 setSendOpen(true);
               }}>
                 <Send className="w-4 h-4 mr-1" /> Send to Client
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => shareLinkMutation.mutate({ id: proposal.id })} disabled={shareLinkMutation.isPending}>
+                <Share2 className="w-4 h-4 mr-1" /> Share Link
               </Button>
             </>
           ) : (

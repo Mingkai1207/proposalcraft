@@ -22,6 +22,20 @@
       "when": 1774231147760,
       "tag": "0002_curved_blockbuster",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1774240082732,
+      "tag": "0003_violet_frightful_four",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1774240371492,
+      "tag": "0004_cultured_blackheart",
+      "breakpoints": true
     }
   ]
 }

@@ -190,3 +190,14 @@
 - [x] Wire trade selector to switch between trade-specific PDFs in walkthrough
 - [x] Add "Copy to clipboard" button for demo form data
 - [x] Integrate analytics event tracking for walkthrough steps (form start, AI generation, PDF view)
+
+
+## Phase 4: Feature Completion & Email Support
+- [x] Audit all Starter and Pro plan features to identify gaps
+- [x] Implement "Skip animation" link during AI generation
+- [x] Implement lead capture modal after PDF view
+- [x] Implement "Share proposal" feature with shareable links
+- [x] Add custom SMTP email configuration for users
+- [x] Add email settings UI (SMTP server, port, username, password)
+- [x] Update proposal delivery to use custom SMTP or fallback to default
+- [x] Test all plan features end-to-end

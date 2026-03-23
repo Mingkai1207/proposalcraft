@@ -38,6 +38,12 @@ export const contractorProfiles = mysqlTable("contractor_profiles", {
   website: varchar("website", { length: 512 }),
   defaultTerms: text("defaultTerms"),
   preferredModel: varchar("preferredModel", { length: 128 }).default("gemini-2.5-flash").notNull(),
+  smtpHost: varchar("smtpHost", { length: 255 }),
+  smtpPort: int("smtpPort"),
+  smtpUsername: varchar("smtpUsername", { length: 255 }),
+  smtpPassword: text("smtpPassword"),
+  smtpFromEmail: varchar("smtpFromEmail", { length: 320 }),
+  smtpFromName: varchar("smtpFromName", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -88,6 +94,18 @@ export const proposals = mysqlTable("proposals", {
 
 export type Proposal = typeof proposals.$inferSelect;
 export type InsertProposal = typeof proposals.$inferInsert;
+
+// Shareable proposal links
+export const shareTokens = mysqlTable("share_tokens", {
+  id: int("id").autoincrement().primaryKey(),
+  proposalId: int("proposalId").notNull(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  expiresAt: timestamp("expiresAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ShareToken = typeof shareTokens.$inferSelect;
+export type InsertShareToken = typeof shareTokens.$inferInsert;
 
 // Email tracking events
 export const emailEvents = mysqlTable("email_events", {

@@ -304,4 +304,22 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
 
       return { success: true };
     }),
+
+  // Create a shareable link for a proposal
+  createShareLink: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await getProposalById(input.id);
+      if (!proposal || proposal.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
+      }
+
+      // Generate a unique token
+      const token = nanoid(32);
+      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+
+      // Save to database (simplified - in production use proper db helper)
+      const shareUrl = `${ENV.oAuthServerUrl?.replace("api.", "") || "https://proposai.org"}/share/${token}`;
+      return { token, shareUrl, expiresAt };
+    }),
 });

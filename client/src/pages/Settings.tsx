@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, User, Building, FileText, Save, Bot } from "lucide-react";
+import { ArrowLeft, Upload, User, Building, FileText, Save, Bot, Mail } from "lucide-react";
 
 export default function Settings() {
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -24,6 +24,10 @@ export default function Settings() {
     address: "", licenseNumber: "", website: "", defaultTerms: "",
   });
   const [preferredModel, setPreferredModel] = useState("gemini-2.5-flash");
+  const [smtpForm, setSmtpForm] = useState({
+    smtpHost: "", smtpPort: 587, smtpUsername: "", smtpPassword: "",
+    smtpFromEmail: "", smtpFromName: "",
+  });
 
   const AI_MODELS = [
     { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "Google", flag: "🌐", badge: "Default", badgeColor: "bg-blue-100 text-blue-700", desc: "Fast, capable, and great for English proposals. Best all-around choice.", bestFor: "English · Fast · Free tier" },
@@ -48,6 +52,14 @@ export default function Settings() {
         defaultTerms: profile.defaultTerms || "",
       });
       setPreferredModel(profile.preferredModel || "gemini-2.5-flash");
+      setSmtpForm({
+        smtpHost: profile.smtpHost || "",
+        smtpPort: profile.smtpPort || 587,
+        smtpUsername: profile.smtpUsername || "",
+        smtpPassword: profile.smtpPassword || "",
+        smtpFromEmail: profile.smtpFromEmail || "",
+        smtpFromName: profile.smtpFromName || "",
+      });
     }
   }, [profile]);
 
@@ -73,6 +85,7 @@ export default function Settings() {
       ...form,
       email: form.email || undefined,
       preferredModel,
+      ...smtpForm,
     });
   };
 
@@ -222,6 +235,44 @@ export default function Settings() {
             rows={6}
             className="resize-none"
           />
+        </div>
+
+        {/* SMTP Configuration */}
+        <div className="bg-card border border-border rounded-xl p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Mail className="w-4 h-4 text-primary" />
+            <h2 className="font-semibold text-foreground">Custom Email (SMTP)</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">Configure your own SMTP server to send proposals from your custom email address. Leave blank to use default email delivery.</p>
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium mb-2 block">SMTP Host</Label>
+                <Input placeholder="smtp.gmail.com" value={smtpForm.smtpHost} onChange={e => setSmtpForm({...smtpForm, smtpHost: e.target.value})} />
+              </div>
+              <div>
+                <Label className="text-sm font-medium mb-2 block">SMTP Port</Label>
+                <Input type="number" placeholder="587" value={smtpForm.smtpPort} onChange={e => setSmtpForm({...smtpForm, smtpPort: parseInt(e.target.value) || 587})} />
+              </div>
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Username</Label>
+                <Input placeholder="your-email@gmail.com" value={smtpForm.smtpUsername} onChange={e => setSmtpForm({...smtpForm, smtpUsername: e.target.value})} />
+              </div>
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Password</Label>
+                <Input type="password" placeholder="••••••••" value={smtpForm.smtpPassword} onChange={e => setSmtpForm({...smtpForm, smtpPassword: e.target.value})} />
+              </div>
+              <div>
+                <Label className="text-sm font-medium mb-2 block">From Email Address</Label>
+                <Input type="email" placeholder="proposals@yourcompany.com" value={smtpForm.smtpFromEmail} onChange={e => setSmtpForm({...smtpForm, smtpFromEmail: e.target.value})} />
+              </div>
+              <div>
+                <Label className="text-sm font-medium mb-2 block">From Name</Label>
+                <Input placeholder="Your Company Name" value={smtpForm.smtpFromName} onChange={e => setSmtpForm({...smtpForm, smtpFromName: e.target.value})} />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">💡 Tip: For Gmail, use App Passwords instead of your regular password. Enable 2FA and generate an app-specific password.</p>
+          </div>
         </div>
 
         <Button onClick={handleSave} disabled={updateMutation.isPending} className="w-full">

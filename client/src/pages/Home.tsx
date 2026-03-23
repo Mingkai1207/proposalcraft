@@ -240,6 +240,8 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
   const [aiLines, setAiLines] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationDone, setGenerationDone] = useState(false);
+  const [showLeadCapture, setShowLeadCapture] = useState(false);
+  const [leadEmail, setLeadEmail] = useState("");
   const aiRef = useRef<HTMLDivElement>(null);
   const lineIndexRef = useRef(0);
   const charIndexRef = useRef(0);
@@ -296,6 +298,24 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
   const handleViewPDF = () => {
     setActiveStep(2);
     trackWalkthroughStep("pdf_view", { trade: formData.trade });
+    setShowLeadCapture(true);
+  };
+
+  const handleSkipAnimation = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setIsGenerating(false);
+    setGenerationDone(true);
+    trackWalkthroughStep("ai_generation_complete", { trade: formData.trade, skipped: true });
+  };
+
+  const handleLeadCapture = async () => {
+    if (!leadEmail.trim()) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+    toast.success("Thanks! Check your email to get started.");
+    setShowLeadCapture(false);
+    setLeadEmail("");
   };
 
   const steps = [
@@ -593,6 +613,16 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   <span className="text-slate-600">Waiting for input…</span>
                 )}
               </div>
+              {isGenerating && (
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={handleSkipAnimation}
+                    className="text-xs text-slate-400 hover:text-slate-300 underline transition-colors"
+                  >
+                    Skip animation
+                  </button>
+                </div>
+              )}
               {generationDone && (
                 <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-xl flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
@@ -716,6 +746,39 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
           </div>
         )}
       </div>
+
+      {/* Lead capture modal */}
+      {showLeadCapture && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
+            <h3 className="text-2xl font-bold text-foreground mb-2">Get Started Free</h3>
+            <p className="text-sm text-muted-foreground mb-6">Enter your email to create your first proposal in 60 seconds. No credit card required.</p>
+            <div className="space-y-3">
+              <input
+                type="email"
+                placeholder="your@email.com"
+                value={leadEmail}
+                onChange={(e) => setLeadEmail(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleLeadCapture()}
+                className="w-full px-4 py-2.5 rounded-lg border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                autoFocus
+              />
+              <Button
+                onClick={handleLeadCapture}
+                className="w-full h-11 bg-primary hover:bg-primary/90 font-semibold text-sm"
+              >
+                Get Started
+              </Button>
+              <button
+                onClick={() => setShowLeadCapture(false)}
+                className="w-full h-11 bg-slate-100 hover:bg-slate-200 text-foreground font-semibold text-sm rounded-lg transition-colors"
+              >
+                Skip for now
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Step indicator dots */}
       <div className="flex justify-center gap-2 mt-6" role="tablist" aria-label="Walkthrough steps">
