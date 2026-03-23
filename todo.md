@@ -170,3 +170,11 @@
 
 ## Pricing Page UX
 - [x] Clicking upgrade on homepage/pricing should go directly to PayPal checkout, not dashboard
+
+## Homepage Redesign v2
+- [x] Remove fake testimonials/reviews section from homepage
+- [x] Generate a realistic sample HVAC proposal PDF
+- [x] Upload sample PDF to CDN
+- [x] Build full-page interactive walkthrough section (form → AI → PDF)
+- [x] Make walkthrough interactive: live form fields, animated AI step, clickable PDF preview
+- [x] Ensure all interactive elements are accessible (keyboard nav, ARIA labels)
