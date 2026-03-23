@@ -65,7 +65,7 @@ const TRADES = [
 ];
 
 const GUARANTEE_BADGE_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposai-guarantee-badge-iVr29Hp4v4FN5DhPsDtUwF.webp";
-const SAMPLE_PDF_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_9052369c.pdf";
+const SAMPLE_PDF_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_773a9876.pdf";
 
 const STATS = [
   { value: "60s", label: "Average proposal time", icon: Timer },

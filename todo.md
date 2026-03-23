@@ -181,3 +181,4 @@
 
 ## Walkthrough UX Improvements
 - [x] Add visual cues (pulse animation, helper text) to guide users to click "Generate Proposal with AI" button
+- [x] Fix sample proposal PDF — remove overlapping text in header, ensure clean professional layout
