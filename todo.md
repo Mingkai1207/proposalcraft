@@ -178,3 +178,6 @@
 - [x] Build full-page interactive walkthrough section (form → AI → PDF)
 - [x] Make walkthrough interactive: live form fields, animated AI step, clickable PDF preview
 - [x] Ensure all interactive elements are accessible (keyboard nav, ARIA labels)
+
+## Walkthrough UX Improvements
+- [x] Add visual cues (pulse animation, helper text) to guide users to click "Generate Proposal with AI" button
