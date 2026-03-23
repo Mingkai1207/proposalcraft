@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 import {
   ArrowLeft, Send, Download, Eye, Clock, CheckCircle,
-  Mail, AlertCircle, Edit2, Save, X
+  Mail, AlertCircle, Edit2, Save, X, Zap
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
@@ -43,6 +43,14 @@ export default function ProposalDetail() {
     { id: proposalId },
     { enabled: isAuthenticated && proposalId > 0 }
   );
+
+  const { data: subscription } = trpc.subscription.get.useQuery(
+    undefined,
+    { enabled: isAuthenticated }
+  );
+  const isFreePlan = !subscription || subscription.plan === "free";
+  const [bannerDismissed, setBannerDismissed] = useState(false);
+  const showUpgradeBanner = isFreePlan && !bannerDismissed && !!proposal;
 
   const sendMutation = trpc.proposals.send.useMutation({
     onSuccess: () => {
@@ -138,6 +146,25 @@ export default function ProposalDetail() {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Upgrade banner for free users */}
+      {showUpgradeBanner && (
+        <div className="bg-orange-50 border-b border-orange-200 px-4 py-2.5 flex items-center gap-3">
+          <Zap className="w-4 h-4 text-orange-500 flex-shrink-0" />
+          <p className="text-sm text-orange-800 flex-1">
+            <strong>Free plan:</strong> This proposal has a ProposAI watermark on the PDF. Upgrade to remove it and unlock email delivery, read tracking, and custom branding.
+          </p>
+          <button
+            onClick={() => navigate("/pricing")}
+            className="text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded-full transition-colors flex-shrink-0"
+          >
+            Upgrade
+          </button>
+          <button onClick={() => setBannerDismissed(true)} className="text-orange-400 hover:text-orange-600 flex-shrink-0">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
       {/* Top bar */}
       <div className="border-b border-border bg-white px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
         <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors">

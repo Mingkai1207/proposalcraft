@@ -31,79 +31,71 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
-  // Paddle webhook endpoint — registered before express.json() to receive raw body for signature verification
-  app.post("/api/paddle/webhook", express.raw({ type: "application/json" }), async (req, res) => {
-    const signature = req.headers["paddle-signature"] as string;
-    const webhookSecret = process.env.PADDLE_WEBHOOK_SECRET || "";
-
+  // PayPal webhook endpoint — registered before express.json() to receive raw body
+  app.post("/api/paypal/webhook", express.raw({ type: "application/json" }), async (req, res) => {
     let eventData: any;
     try {
       const rawBody = req.body.toString("utf8");
       eventData = JSON.parse(rawBody);
-
-      // Verify signature if webhook secret is configured
-      if (webhookSecret && signature) {
-        const { Paddle, Environment } = await import("@paddle/paddle-node-sdk");
-        const paddleApiKey = process.env.PADDLE_API_KEY || "";
-        const paddleClient = new Paddle(paddleApiKey, {
-          environment: paddleApiKey.includes("live") ? Environment.production : Environment.sandbox,
-        });
-        const isValid = paddleClient.webhooks.isSignatureValid(rawBody, webhookSecret, signature);
-        if (!isValid) {
-          console.error("[Paddle Webhook] Invalid signature");
-          res.status(400).json({ error: "Invalid signature" });
-          return;
-        }
-      }
     } catch (err: any) {
-      console.error("[Paddle Webhook] Parse error:", err.message);
+      console.error("[PayPal Webhook] Parse error:", err.message);
       res.status(400).json({ error: "Invalid payload" });
       return;
     }
 
     const eventType = eventData?.event_type || "";
-    console.log("[Paddle Webhook] Event:", eventType);
+    console.log("[PayPal Webhook] Event:", eventType, eventData?.id);
 
     try {
       const { updateSubscription } = await import("../db");
-      const { getDb } = await import("../db");
 
-      // subscription.activated or transaction.completed — user upgraded
-      if (eventType === "subscription.activated" || eventType === "transaction.completed") {
-        const customData = eventData?.data?.custom_data || {};
-        const userId = parseInt(customData.user_id || "0");
-        const plan = (customData.plan || "starter") as "starter" | "pro";
-        const customerId = eventData?.data?.customer_id || null;
-        const subscriptionId = eventData?.data?.id || null;
-
-        if (userId) {
-          await updateSubscription(userId, {
-            plan,
-            stripeCustomerId: customerId,   // reusing this field for Paddle customer ID
-            stripeSubscriptionId: subscriptionId,
-          });
-          console.log(`[Paddle] User ${userId} upgraded to ${plan}`);
+      // BILLING.SUBSCRIPTION.ACTIVATED — user completed PayPal subscription approval
+      if (eventType === "BILLING.SUBSCRIPTION.ACTIVATED") {
+        const subscriptionId = eventData?.resource?.id;
+        const customId = eventData?.resource?.custom_id;
+        if (customId && subscriptionId) {
+          let parsed: { user_id?: number; plan?: string } = {};
+          try { parsed = JSON.parse(customId); } catch {}
+          const userId = parsed.user_id ? Number(parsed.user_id) : 0;
+          const plan = (parsed.plan || "starter") as "starter" | "pro";
+          if (userId) {
+            await updateSubscription(userId, {
+              plan,
+              stripeCustomerId: null,
+              stripeSubscriptionId: subscriptionId,
+            });
+            console.log(`[PayPal] User ${userId} activated ${plan} subscription ${subscriptionId}`);
+          }
         }
       }
 
-      // subscription.canceled — downgrade user to free
-      if (eventType === "subscription.canceled") {
-        const customerId = eventData?.data?.customer_id || null;
-        if (customerId) {
+      // BILLING.SUBSCRIPTION.CANCELLED or BILLING.SUBSCRIPTION.EXPIRED — downgrade to free
+      if (
+        eventType === "BILLING.SUBSCRIPTION.CANCELLED" ||
+        eventType === "BILLING.SUBSCRIPTION.EXPIRED" ||
+        eventType === "BILLING.SUBSCRIPTION.SUSPENDED"
+      ) {
+        const subscriptionId = eventData?.resource?.id;
+        if (subscriptionId) {
+          const { getDb } = await import("../db");
           const db = await getDb();
           if (db) {
             const { subscriptions } = await import("../../drizzle/schema");
             const { eq } = await import("drizzle-orm");
-            const rows = await db.select().from(subscriptions).where(eq(subscriptions.stripeCustomerId, customerId)).limit(1);
+            const rows = await db
+              .select()
+              .from(subscriptions)
+              .where(eq(subscriptions.stripeSubscriptionId, subscriptionId))
+              .limit(1);
             if (rows[0]) {
               await updateSubscription(rows[0].userId, { plan: "free" });
-              console.log(`[Paddle] User ${rows[0].userId} downgraded to free`);
+              console.log(`[PayPal] User ${rows[0].userId} downgraded to free (sub ${subscriptionId})`);
             }
           }
         }
       }
     } catch (err) {
-      console.error("[Paddle Webhook] Processing error:", err);
+      console.error("[PayPal Webhook] Processing error:", err);
     }
 
     res.json({ received: true });

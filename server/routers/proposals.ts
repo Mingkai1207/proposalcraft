@@ -177,7 +177,7 @@ const generatedContent = typeof rawContent === "string" ? rawContent : "";
         content: `${ctx.user.name || ctx.user.email} generated a ${tradeName} proposal: "${input.title}"`,
       }).catch(() => {});
 
-      return proposal;
+      return { ...proposal, modelDowngraded: model !== requestedModel, modelUsed: model };
     }),
 
   // Update proposal content

@@ -1,6 +1,5 @@
-// ProposAI - Paddle Product & Price Configuration
-// Paddle Price IDs are set as environment variables after creating products
-// in the Paddle Dashboard (Catalog > Products).
+// ProposAI - PayPal Subscription Plan Configuration
+// PayPal Plan IDs are created via the PayPal REST API and stored as environment variables.
 
 export const PLANS = {
   starter: {
@@ -11,8 +10,7 @@ export const PLANS = {
     priceDisplay: "$29",
     interval: "month" as const,
     proposals: 20,
-    // Set PADDLE_STARTER_PRICE_ID in your environment after creating the product in Paddle Dashboard
-    paddlePriceId: process.env.PADDLE_STARTER_PRICE_ID || "",
+    paypalPlanId: process.env.PAYPAL_STARTER_PLAN_ID || "",
   },
   pro: {
     id: "pro",
@@ -22,8 +20,7 @@ export const PLANS = {
     priceDisplay: "$59",
     interval: "month" as const,
     proposals: Infinity,
-    // Set PADDLE_PRO_PRICE_ID in your environment after creating the product in Paddle Dashboard
-    paddlePriceId: process.env.PADDLE_PRO_PRICE_ID || "",
+    paypalPlanId: process.env.PAYPAL_PRO_PLAN_ID || "",
   },
 } as const;
 

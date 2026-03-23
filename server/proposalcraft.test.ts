@@ -134,17 +134,17 @@ describe("proposals", () => {
   });
 });
 
-describe("paddle", () => {
-  it("has Paddle Price IDs configured", () => {
-    // Validate that Paddle Price IDs are set and match expected format
-    const starterPriceId = process.env.PADDLE_STARTER_PRICE_ID || "";
-    const proPriceId = process.env.PADDLE_PRO_PRICE_ID || "";
-    expect(starterPriceId).toMatch(/^pri_/);
-    expect(proPriceId).toMatch(/^pri_/);
-    expect(starterPriceId).not.toBe(proPriceId);
+describe("paypal", () => {
+  it("has PayPal Plan IDs configured", () => {
+    // Validate that PayPal Plan IDs are set and match expected format (P-...)
+    const starterPlanId = process.env.PAYPAL_STARTER_PLAN_ID || "";
+    const proPlanId = process.env.PAYPAL_PRO_PLAN_ID || "";
+    expect(starterPlanId).toMatch(/^P-/);
+    expect(proPlanId).toMatch(/^P-/);
+    expect(starterPlanId).not.toBe(proPlanId);
   });
 
-  it("billing.getPlans returns both plans with price IDs", async () => {
+  it("billing.getPlans returns both plans with PayPal plan IDs", async () => {
     const ctx = createMockContext();
     const caller = appRouter.createCaller(ctx);
     const plans = await caller.billing.getPlans();

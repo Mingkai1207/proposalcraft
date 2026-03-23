@@ -52,10 +52,28 @@ export default function NewProposal() {
     language: "english",
   });
 
+  const MODEL_LABELS: Record<string, string> = {
+    "gemini-2.5-flash": "Gemini 2.5 Flash",
+    "deepseek-v3": "DeepSeek V3",
+    "deepseek-r1": "DeepSeek R1",
+    "gpt-4o": "GPT-4o",
+    "gpt-4o-mini": "GPT-4o Mini",
+    "claude-3-7-sonnet-20250219": "Claude 3.7 Sonnet",
+    "qwen-max": "Qwen Max",
+  };
+
   const generateMutation = trpc.proposals.generate.useMutation({
     onSuccess: (data) => {
       if (data) {
-        toast.success("Proposal generated successfully!");
+        if (data.modelDowngraded) {
+          const usedLabel = MODEL_LABELS[data.modelUsed] || data.modelUsed;
+          toast.warning(
+            `Your selected model requires a higher plan. Used ${usedLabel} instead. Upgrade to unlock premium models.`,
+            { duration: 6000 }
+          );
+        } else {
+          toast.success("Proposal generated successfully!");
+        }
         navigate(`/proposals/${data.id}`);
       }
     },

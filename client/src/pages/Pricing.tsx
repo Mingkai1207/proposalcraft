@@ -4,12 +4,9 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
-import { CheckCircle, ArrowLeft, Zap, Crown, ExternalLink, Lock, X } from "lucide-react";
+import { CheckCircle, ArrowLeft, Zap, Crown, ExternalLink, Lock } from "lucide-react";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
-import type { Paddle } from "@paddle/paddle-js";
-import { initializePaddle } from "@paddle/paddle-js";
-import type { Environments } from "@paddle/paddle-js";
+import { useEffect, useRef, useState } from "react";
 
 const PLANS = [
   {
@@ -90,36 +87,81 @@ const PLANS = [
   },
 ];
 
-export default function Pricing() {
-  const { isAuthenticated, loading: authLoading, user } = useAuth();
-  const [, navigate] = useLocation();
-  const [paddle, setPaddle] = useState<Paddle | undefined>(undefined);
-  const [checkingOut, setCheckingOut] = useState<string | null>(null);
+// PayPal subscription button component
+function PayPalButton({ planId, onSuccess }: { planId: string; onSuccess: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [rendered, setRendered] = useState(false);
+  const clientId = import.meta.env.VITE_PAYPAL_CLIENT_ID;
 
-  const { data: subscription } = trpc.subscription.get.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
-
-  const { data: serverPlans } = trpc.billing.getPlans.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
-
-  const currentPlan = subscription?.plan || "free";
-
-  // Initialize Paddle.js with client-side token
   useEffect(() => {
-    const token = import.meta.env.VITE_PADDLE_CLIENT_TOKEN;
-    if (!token) return;
-    const isLive = token.startsWith("live_");
-    initializePaddle({
-      environment: (isLive ? 'production' : 'sandbox') as Environments,
-      token,
-    }).then((paddleInstance) => {
-      if (paddleInstance) setPaddle(paddleInstance);
-    }).catch((err) => {
-      console.error("[Paddle] Failed to initialize:", err);
-    });
-  }, []);
+    if (!clientId || !containerRef.current || rendered) return;
+
+    // Load PayPal JS SDK dynamically
+    const scriptId = "paypal-js-sdk";
+    const existing = document.getElementById(scriptId);
+
+    const renderButton = () => {
+      if (!(window as any).paypal || !containerRef.current) return;
+      const planEnvKey = planId === "starter" ? "VITE_PAYPAL_STARTER_PLAN_ID" : "VITE_PAYPAL_PRO_PLAN_ID";
+      const paypalPlanId = planId === "starter"
+        ? import.meta.env.VITE_PAYPAL_STARTER_PLAN_ID
+        : import.meta.env.VITE_PAYPAL_PRO_PLAN_ID;
+
+      if (!paypalPlanId) return;
+
+      try {
+        (window as any).paypal.Buttons({
+          style: {
+            shape: "pill",
+            color: "gold",
+            layout: "vertical",
+            label: "subscribe",
+          },
+          createSubscription: (_data: any, actions: any) => {
+            return actions.subscription.create({ plan_id: paypalPlanId });
+          },
+          onApprove: (_data: any, _actions: any) => {
+            toast.success("Subscription activated! Refreshing your plan...");
+            onSuccess();
+          },
+          onError: (err: any) => {
+            console.error("[PayPal] Error:", err);
+            toast.error("PayPal checkout failed. Please try again.");
+          },
+          onCancel: () => {
+            toast.info("Checkout cancelled.");
+          },
+        }).render(containerRef.current);
+        setRendered(true);
+      } catch (e) {
+        console.error("[PayPal] Render error:", e);
+      }
+    };
+
+    if (existing) {
+      if ((window as any).paypal) renderButton();
+      else existing.addEventListener("load", renderButton);
+    } else {
+      const script = document.createElement("script");
+      script.id = scriptId;
+      script.src = `https://www.paypal.com/sdk/js?client-id=${clientId}&vault=true&intent=subscription`;
+      script.setAttribute("data-sdk-integration-source", "button-factory");
+      script.onload = renderButton;
+      document.body.appendChild(script);
+    }
+  }, [clientId, planId, rendered, onSuccess]);
+
+  return <div ref={containerRef} className="mt-4 min-h-[45px]" />;
+}
+
+export default function Pricing() {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const [, navigate] = useLocation();
+  const utils = trpc.useUtils();
+
+  const { data: subscription, refetch: refetchSub } = trpc.subscription.get.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
 
   const portalMutation = trpc.billing.createPortal.useMutation({
     onSuccess: (data) => {
@@ -128,56 +170,15 @@ export default function Pricing() {
     onError: (e) => toast.error(e.message),
   });
 
-  const handleUpgrade = async (planId: string) => {
-    if (!isAuthenticated) {
-      window.location.href = getLoginUrl();
-      return;
-    }
-    if (planId !== "starter" && planId !== "pro") return;
+  const currentPlan = subscription?.plan || "free";
 
-    // Find the Paddle price ID for this plan from server
-    const planData = serverPlans?.find(p => p.id === planId);
-    if (!planData?.available) {
-      toast.error("Payment not yet configured. Please contact support.");
-      return;
-    }
-
-    if (!paddle) {
-      toast.error("Payment system is loading. Please try again in a moment.");
-      return;
-    }
-
-    setCheckingOut(planId);
-    try {
-      // Use Paddle.js inline checkout overlay
-      const priceId = planId === "starter"
-        ? import.meta.env.VITE_PADDLE_STARTER_PRICE_ID
-        : import.meta.env.VITE_PADDLE_PRO_PRICE_ID;
-
-      if (!priceId) {
-        toast.error("Price configuration error. Please contact support.");
-        return;
-      }
-
-      paddle.Checkout.open({
-        items: [{ priceId, quantity: 1 }],
-        customer: user?.email ? { email: user.email } : undefined,
-        customData: {
-          user_id: user?.id?.toString() || "",
-          plan: planId,
-        },
-        settings: {
-          successUrl: `${window.location.origin}/dashboard?upgraded=1`,
-          displayMode: "overlay",
-          theme: "light",
-          locale: "en",
-        },
-      });
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to open checkout. Please try again.");
-    } finally {
-      setCheckingOut(null);
-    }
+  const handlePayPalSuccess = () => {
+    // Give PayPal webhook a moment to fire, then refetch
+    setTimeout(() => {
+      refetchSub();
+      utils.subscription.get.invalidate();
+      navigate("/dashboard?upgraded=1");
+    }, 3000);
   };
 
   if (authLoading) {
@@ -216,7 +217,10 @@ export default function Pricing() {
         <div className="grid md:grid-cols-3 gap-6 items-start">
           {PLANS.map(({ id, name, price, period, proposals, features, locked, badge, cta, highlight, icon: Icon }) => {
             const isCurrent = currentPlan === id;
-            const isLoading = checkingOut === id;
+            const isPaid = id === "starter" || id === "pro";
+            const showPayPal = isAuthenticated && isPaid && !isCurrent;
+            const needsLogin = !isAuthenticated && isPaid;
+
             return (
               <div
                 key={id}
@@ -269,19 +273,26 @@ export default function Pricing() {
                   )}
                 </ul>
 
-                <Button
-                  onClick={() => !isCurrent && handleUpgrade(id)}
-                  disabled={isCurrent || isLoading}
-                  variant={highlight ? "secondary" : "default"}
-                  className={`w-full mt-4 ${highlight ? "bg-white text-primary hover:bg-white/90" : ""} ${isCurrent ? "opacity-60 cursor-not-allowed" : ""}`}
-                >
-                  {isLoading ? (
-                    <span className="flex items-center gap-2">
-                      <span className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                      Opening checkout...
-                    </span>
-                  ) : isCurrent ? "✓ Current Plan" : cta}
-                </Button>
+                {/* CTA */}
+                {isCurrent ? (
+                  <Button disabled variant={highlight ? "secondary" : "default"} className={`w-full mt-4 opacity-60 cursor-not-allowed ${highlight ? "bg-white text-primary" : ""}`}>
+                    ✓ Current Plan
+                  </Button>
+                ) : needsLogin ? (
+                  <Button
+                    onClick={() => { window.location.href = getLoginUrl(); }}
+                    variant={highlight ? "secondary" : "default"}
+                    className={`w-full mt-4 ${highlight ? "bg-white text-primary hover:bg-white/90" : ""}`}
+                  >
+                    Sign in to {cta}
+                  </Button>
+                ) : showPayPal ? (
+                  <PayPalButton planId={id} onSuccess={handlePayPalSuccess} />
+                ) : id === "free" ? (
+                  <Button disabled variant="outline" className="w-full mt-4 opacity-60 cursor-not-allowed">
+                    {cta}
+                  </Button>
+                ) : null}
               </div>
             );
           })}
@@ -295,7 +306,7 @@ export default function Pricing() {
               disabled={portalMutation.isPending}
             >
               <ExternalLink className="w-4 h-4 mr-1" />
-              {portalMutation.isPending ? "Loading..." : "Manage Subscription & Billing"}
+              {portalMutation.isPending ? "Loading..." : "Manage Subscription (PayPal)"}
             </Button>
           </div>
         )}
@@ -308,7 +319,7 @@ export default function Pricing() {
           </Button>
         </div>
       </div>
-    <Footer />
+      <Footer />
     </div>
   );
 }
