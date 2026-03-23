@@ -88,6 +88,7 @@ export const proposals = mysqlTable("proposals", {
   trackingToken: varchar("trackingToken", { length: 128 }).unique(),
   sentAt: timestamp("sentAt"),
   viewedAt: timestamp("viewedAt"),
+  followUpSentAt: timestamp("followUpSentAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

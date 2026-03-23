@@ -78,6 +78,14 @@ export default function ProposalDetail() {
     onError: (e) => toast.error(e.message),
   });
 
+  const followUpMutation = trpc.proposals.sendFollowUp.useMutation({
+    onSuccess: () => {
+      toast.success("Follow-up email sent!");
+      refetch();
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   if (authLoading || isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   }
@@ -214,6 +222,11 @@ export default function ProposalDetail() {
               <Button variant="outline" size="sm" onClick={() => shareLinkMutation.mutate({ id: proposal.id })} disabled={shareLinkMutation.isPending}>
                 <Share2 className="w-4 h-4 mr-1" /> Share Link
               </Button>
+              {proposal.sentAt && !proposal.viewedAt && !proposal.followUpSentAt && (
+                <Button variant="outline" size="sm" onClick={() => followUpMutation.mutate({ id: proposal.id })} disabled={followUpMutation.isPending}>
+                  <Mail className="w-4 h-4 mr-1" /> {followUpMutation.isPending ? "Sending..." : "Send Follow-up"}
+                </Button>
+              )}
             </>
           ) : (
             <>

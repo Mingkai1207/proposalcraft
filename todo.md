@@ -201,3 +201,11 @@
 - [x] Add email settings UI (SMTP server, port, username, password)
 - [x] Update proposal delivery to use custom SMTP or fallback to default
 - [x] Test all plan features end-to-end
+
+
+## Phase 5: Email Follow-up Automation
+- [x] Add followUpSentAt column to proposals table
+- [x] Create backend job to send follow-up emails 48 hours after proposal sent (if not opened)
+- [x] Create tRPC procedure to manually trigger follow-up email
+- [x] Add "Send Follow-up" button to proposal detail page
+- [x] Test follow-up email delivery and tracking

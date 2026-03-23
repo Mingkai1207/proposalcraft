@@ -322,4 +322,85 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       const shareUrl = `${ENV.oAuthServerUrl?.replace("api.", "") || "https://proposai.org"}/share/${token}`;
       return { token, shareUrl, expiresAt };
     }),
+
+  // Send follow-up email if proposal not yet opened
+  sendFollowUp: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await getProposalById(input.id);
+      if (!proposal || proposal.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
+      }
+
+      // Only send if proposal was sent but not yet viewed
+      if (!proposal.sentAt || proposal.viewedAt) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Can only send follow-up for sent but unopened proposals" });
+      }
+
+      // Check if already sent a follow-up
+      if (proposal.followUpSentAt) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Follow-up already sent for this proposal" });
+      }
+
+      const profile = await getContractorProfile(ctx.user.id);
+      const businessName = profile?.businessName || ctx.user.name || "Your Contractor";
+
+      // Build follow-up email
+      const followUpHtml = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><style>
+body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; }
+.header { background: #1a1a2e; color: white; padding: 24px; border-radius: 8px 8px 0 0; }
+.content { background: #f9f9f9; padding: 24px; border: 1px solid #e0e0e0; }
+.cta { background: #e8630a; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; margin: 16px 0; }
+.footer { color: #888; font-size: 12px; padding: 16px; text-align: center; }
+</style></head>
+<body>
+<div class="header">
+<h2 style="margin: 0;">Quick reminder: ${proposal.title}</h2>
+</div>
+<div class="content">
+<p>Hi ${proposal.clientName || "there"},</p>
+<p>I wanted to follow up on the proposal I sent you for <strong>${proposal.title}</strong>. I haven't heard back yet, and I wanted to make sure you received it and had a chance to review it.</p>
+<p>If you have any questions or would like to discuss the proposal further, I'm happy to help. Feel free to reach out anytime.</p>
+<p style="margin-top: 24px;">Best regards,<br/><strong>${businessName}</strong></p>
+</div>
+<div class="footer">
+<p>This is a follow-up to your proposal sent on ${new Date(proposal.sentAt!).toLocaleDateString()}.</p>
+</div>
+</body>
+</html>
+      `;
+
+      // Send via forge API
+      try {
+        const forgeUrl = process.env.BUILT_IN_FORGE_API_URL;
+        const forgeKey = process.env.BUILT_IN_FORGE_API_KEY;
+
+        if (forgeUrl && forgeKey && proposal.clientEmail) {
+          await fetch(`${forgeUrl}/notification/email`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${forgeKey}`,
+            },
+            body: JSON.stringify({
+              to: proposal.clientEmail,
+              subject: `Follow-up: ${proposal.title}`,
+              html: followUpHtml,
+            }),
+          });
+        }
+      } catch (err) {
+        console.error("[Email] Failed to send follow-up:", err);
+      }
+
+      // Record follow-up sent time
+      await updateProposal(input.id, ctx.user.id, {
+        followUpSentAt: new Date(),
+      });
+
+      return { success: true };
+    }),
 });
