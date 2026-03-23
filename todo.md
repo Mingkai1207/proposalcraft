@@ -164,3 +164,9 @@
 
 ## PayPal Checkout Fix
 - [x] Fix PayPal subscription buttons — replaced embedded JS buttons with server-side redirect flow
+
+## PayPal Billing Error Fix
+- [ ] Fix PayPal billing/error page when user clicks upgrade
+
+## Pricing Page UX
+- [x] Clicking upgrade on homepage/pricing should go directly to PayPal checkout, not dashboard

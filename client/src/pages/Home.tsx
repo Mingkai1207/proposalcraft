@@ -5,6 +5,8 @@ import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
 import Footer from "@/components/Footer";
 import { useState } from "react";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 import {
   Zap, FileText, Mail, Eye, Shield, Star,
   CheckCircle, ArrowRight, Wrench, Droplets,
@@ -125,6 +127,7 @@ const STATS = [
 const PLANS = [
   {
     name: "Free",
+    planId: "free",
     price: "$0",
     period: "/month",
     proposals: "3 proposals/month",
@@ -141,6 +144,7 @@ const PLANS = [
   },
   {
     name: "Starter",
+    planId: "starter",
     price: "$29",
     period: "/month",
     proposals: "20 proposals/month",
@@ -160,6 +164,7 @@ const PLANS = [
   },
   {
     name: "Pro",
+    planId: "pro",
     price: "$59",
     period: "/month",
     proposals: "Unlimited proposals",
@@ -242,6 +247,39 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 export default function Home() {
   const { isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+
+  const checkoutMutation = trpc.billing.createCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data.url) {
+        toast.success("Redirecting to PayPal checkout...");
+        window.location.href = data.url;
+      }
+      setLoadingPlan(null);
+    },
+    onError: (e) => {
+      toast.error(e.message || "Failed to start checkout. Please try again.");
+      setLoadingPlan(null);
+    },
+  });
+
+  const handlePlanClick = (planId: string) => {
+    if (planId === "free") {
+      if (isAuthenticated) {
+        navigate("/dashboard");
+      } else {
+        window.location.href = getLoginUrl();
+      }
+      return;
+    }
+    if (!isAuthenticated) {
+      // Redirect to login; after login user lands on /pricing
+      window.location.href = getLoginUrl();
+      return;
+    }
+    setLoadingPlan(planId);
+    checkoutMutation.mutate({ plan: planId as "starter" | "pro" });
+  };
 
   const handleCTA = () => {
     if (isAuthenticated) {
@@ -541,7 +579,9 @@ export default function Home() {
             <p className="text-muted-foreground text-lg">One winning proposal pays for the tool 10x over.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-            {PLANS.map(({ name, price, period, proposals, features, cta, highlight, badge }) => (
+            {PLANS.map(({ name, planId, price, period, proposals, features, cta, highlight, badge }) => {
+              const isLoadingThis = loadingPlan === planId && checkoutMutation.isPending;
+              return (
               <div key={name} className={`relative rounded-2xl border p-7 flex flex-col transition-all ${highlight ? "border-primary bg-primary text-white shadow-2xl shadow-primary/20 scale-105" : "border-border bg-card hover:shadow-lg"}`}>
                 {badge && (
                   <div className={`absolute -top-3 left-1/2 -translate-x-1/2 text-xs font-bold px-3 py-1 rounded-full ${highlight ? "bg-white text-primary" : "bg-primary text-white"}`}>
@@ -565,14 +605,20 @@ export default function Home() {
                   ))}
                 </ul>
                 <Button
-                  onClick={handleCTA}
+                  onClick={() => handlePlanClick(planId)}
+                  disabled={isLoadingThis}
                   variant={highlight ? "secondary" : "default"}
                   className={`w-full h-11 font-semibold ${highlight ? "bg-white text-primary hover:bg-white/90" : ""}`}
                 >
-                  {cta} <ChevronRight className="w-4 h-4 ml-1" />
+                  {isLoadingThis ? (
+                    <span className="flex items-center gap-2"><span className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" /> Redirecting...</span>
+                  ) : (
+                    <>{!isAuthenticated && planId !== "free" ? "Sign in & " : ""}{cta} <ChevronRight className="w-4 h-4 ml-1" /></>
+                  )}
                 </Button>
               </div>
-            ))}
+              );
+            })}
           </div>
           {/* Guarantee badge */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-10">
