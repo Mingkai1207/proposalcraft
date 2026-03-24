@@ -301,3 +301,12 @@
 - [x] Integrate editor into proposal workflow (after generation, before PDF)
 - [x] Add save and preview functionality
 - [x] Test end-to-end proposal editing flow
+
+
+## Phase 16: Enhance Sample Proposals with Detailed Content
+- [x] Expand HVAC sample proposal with detailed scope, materials, timeline, terms
+- [x] Expand Plumbing sample proposal with comprehensive details
+- [x] Expand Electrical sample proposal with comprehensive details
+- [x] Expand Roofing sample proposal with comprehensive details
+- [x] Regenerate all 4 PDFs with enhanced content
+- [x] Upload to CDN and verify display
