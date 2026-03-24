@@ -621,10 +621,10 @@ ${fieldContext}`;
       try {
         const content = proposal.generatedContent || "";
 
-        // HTML-based proposals (WeasyPrint): generatedContent is a full HTML document
+        // HTML-based proposals (Puppeteer): generatedContent is a full HTML document
         if (content.trimStart().toLowerCase().startsWith("<!doctype")) {
-          const { htmlToPdf } = await import("../utils/htmlToPdf");
-          const pdfBuffer = await htmlToPdf(content);
+          const { generatePdfFromHtml } = await import("../utils/proposalPdfExport");
+          const pdfBuffer = await generatePdfFromHtml(content);
           const fileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
           const { url } = await storagePut(fileName, pdfBuffer, "application/pdf");
           await updateProposal(proposal.id, ctx.user.id, { pdfUrl: url });
@@ -1184,12 +1184,20 @@ STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no ex
         summaryContent: input.approvedSummary,
       });
 
-      // HTML is stored in DB — PDF is generated client-side via browser print (no server-side conversion needed)
-      // Save final proposal record
-      await updateProposal(proposal.id, ctx.user.id, {
-        generatedContent,
-        summaryContent: input.approvedSummary,
-      });
+      // Auto-generate PDF from the HTML using Puppeteer (headless Chrome)
+      let pdfUrl: string | null = null;
+      try {
+        const { generatePdfFromHtml } = await import("../utils/proposalPdfExport");
+        const pdfBuffer = await generatePdfFromHtml(generatedContent);
+        const pdfFileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
+        const { url } = await storagePut(pdfFileName, pdfBuffer, "application/pdf");
+        pdfUrl = url;
+        await updateProposal(proposal.id, ctx.user.id, { pdfUrl });
+        console.log(`[PDF] Auto-generated PDF for proposal ${proposal.id}: ${pdfUrl}`);
+      } catch (pdfErr) {
+        console.error(`[PDF] Auto-generation failed for proposal ${proposal.id}:`, pdfErr);
+        // Non-fatal: proposal is still saved, user can regenerate PDF later
+      }
 
       await incrementProposalUsage(ctx.user.id);
       await notifyOwner({
@@ -1199,7 +1207,7 @@ STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no ex
 
       return {
         proposalId: proposal.id,
-        pdfUrl: null,
+        pdfUrl,
         wordUrl: null,
         googleDocUrl: null,
         usedAnthropicApi: result.usedAnthropicApi,

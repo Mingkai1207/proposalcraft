@@ -164,6 +164,47 @@ This is a detailed proposal with **bold text** and *italic text*.
   });
 });
 
+// ─── Puppeteer PDF generation tests ──────────────────────────────────
+
+describe("generatePdfFromHtml (Puppeteer)", () => {
+  it("module exports generatePdfFromHtml function", async () => {
+    const mod = await import("./utils/proposalPdfExport");
+    expect(mod.generatePdfFromHtml).toBeDefined();
+    expect(typeof mod.generatePdfFromHtml).toBe("function");
+  });
+
+  it("module exports buildProposalHtml function", async () => {
+    const mod = await import("./utils/proposalPdfExport");
+    expect(mod.buildProposalHtml).toBeDefined();
+    expect(typeof mod.buildProposalHtml).toBe("function");
+  });
+});
+
+// ─── CSS sanitizer logic tests ──────────────────────────────────────────
+
+describe("CSS sanitization for print", () => {
+  it("removes break-inside: avoid-page from CSS", () => {
+    const css = ".section { break-inside: avoid-page; margin: 10px; }";
+    const sanitized = css.replace(/break-inside\s*:\s*avoid-page\s*;/gi, "");
+    expect(sanitized).not.toContain("avoid-page");
+    expect(sanitized).toContain("margin: 10px");
+  });
+
+  it("removes page-break-inside: avoid from CSS", () => {
+    const css = ".section { page-break-inside: avoid; color: red; }";
+    const sanitized = css.replace(/page-break-inside\s*:\s*avoid\s*;/gi, "");
+    expect(sanitized).not.toContain("page-break-inside");
+    expect(sanitized).toContain("color: red");
+  });
+
+  it("removes position: running() from CSS", () => {
+    const css = ".header { position: running(header); font-size: 10px; }";
+    const sanitized = css.replace(/position\s*:\s*running\([^)]*\)\s*;/gi, "");
+    expect(sanitized).not.toContain("running");
+    expect(sanitized).toContain("font-size: 10px");
+  });
+});
+
 // ─── Financial calculation tests ───────────────────────────────────────
 
 describe("Financial calculations", () => {

@@ -120,6 +120,7 @@ export default function ProposalDetail() {
   });
 
   // On-demand PDF export (fallback if no pre-generated URL)
+  const utils = trpc.useUtils();
   const exportPdfMutation = trpc.proposals.exportPdf.useMutation({
     onSuccess: (data) => {
       const link = document.createElement("a");
@@ -127,6 +128,8 @@ export default function ProposalDetail() {
       link.target = "_blank"; link.rel = "noopener noreferrer";
       document.body.appendChild(link); link.click(); document.body.removeChild(link);
       toast.success("PDF downloaded!");
+      // Refresh proposal data so pdfUrl is available for future downloads
+      utils.proposals.get.invalidate({ id: proposalId });
     },
     onError: (e) => toast.error(e.message || "Failed to generate PDF."),
   });
@@ -179,23 +182,9 @@ export default function ProposalDetail() {
 
   const handleDownloadPDF = () => {
     if (!proposal) return;
-    const content = proposal.generatedContent || "";
-    // HTML-based proposals: open in a new tab via Blob URL and trigger browser print
-    if (content.trimStart().toLowerCase().startsWith("<!doctype")) {
-      // Sanitize CSS to fix multi-page print issues from older generations
-      const sanitized = sanitizeProposalHtml(content);
-      // Inject a print-on-load script into the HTML before opening
-      const printScript = `<script>window.addEventListener('load', function() { setTimeout(function() { window.print(); }, 800); });<\/script>`;
-      const htmlWithPrint = sanitized.replace(/<\/body>/i, printScript + "</body>");
-      const blob = new Blob([htmlWithPrint], { type: "text/html" });
-      const blobUrl = URL.createObjectURL(blob);
-      const printWindow = window.open(blobUrl, "_blank");
-      if (!printWindow) { toast.error("Please allow popups to print the PDF."); URL.revokeObjectURL(blobUrl); return; }
-      // Revoke the blob URL after a delay to allow the window to load
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
-      toast.success("Print dialog will open — choose \"Save as PDF\" in the dialog.");
-    } else if (proposal.pdfUrl) {
-      // Legacy: use pre-generated URL
+
+    // If a server-generated PDF already exists, download it directly
+    if (proposal.pdfUrl) {
       const link = document.createElement("a");
       link.href = proposal.pdfUrl;
       link.download = `proposal-${proposal.id}.pdf`;
@@ -203,9 +192,12 @@ export default function ProposalDetail() {
       link.rel = "noopener noreferrer";
       document.body.appendChild(link); link.click(); document.body.removeChild(link);
       toast.success("PDF downloaded!");
-    } else {
-      exportPdfMutation.mutate({ id: proposal.id });
+      return;
     }
+
+    // No PDF yet — generate one server-side via Puppeteer
+    toast.info("Generating PDF... this may take a few seconds.");
+    exportPdfMutation.mutate({ id: proposal.id });
   };
 
   const handleDownloadWord = () => {

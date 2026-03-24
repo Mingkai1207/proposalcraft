@@ -644,3 +644,12 @@
 - [x] Add sanitizeProposalHtml() client-side to fix existing proposals in DB (strips bad CSS before iframe render and before print)
 - [x] Fix handleDownloadPDF: use Blob URL instead of document.write for reliable multi-page print
 - [x] Fix iframe height: re-measure at 500ms, 1500ms, 3000ms after load to account for Google Fonts loading
+
+## Server-Side PDF Generation (Puppeteer Headless Chrome)
+- [x] Research: confirmed Puppeteer already installed and working, generatePdfFromHtml function exists
+- [x] Switch exportPdf mutation from WeasyPrint (htmlToPdf) to Puppeteer (generatePdfFromHtml)
+- [x] Auto-generate PDF in generateFromSummary: after HTML saved, Puppeteer renders PDF → S3 → pdfUrl stored
+- [x] Update frontend: PDF button downloads directly from S3 pdfUrl, falls back to server-side generation
+- [x] Added invalidation on exportPdf success so pdfUrl is cached for future downloads
+- [x] Write tests for Puppeteer PDF exports and CSS sanitization (35 tests passing)
+- [x] Verify end-to-end: form → summary → HTML + auto PDF → direct download
