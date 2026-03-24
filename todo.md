@@ -572,3 +572,8 @@
 
 ## LLM Cost Optimization
 - [x] Switch compileSummary (Step 1 summary) to use built-in free Manus LLM (Claude 3.7) — only generateFromSummary and reviseWithAI use paid VectorEngine API
+
+## Prompt Redesign (Match User Example Style)
+- [x] Redesign compileSummary prompt: free LLM generates a fully pre-written draft proposal with all sections (Executive Summary, Scope of Work, Materials, Timeline, Investment, Why Choose Us, Terms)
+- [x] Redesign generateFromSummary prompt: paid Claude receives the complete draft and polishes it into a professional final document with charts
+- [x] Update Step 2 review page label from "Project Summary" to "Draft Proposal" to reflect new content

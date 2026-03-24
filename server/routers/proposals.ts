@@ -919,27 +919,68 @@ ${fieldContext}`;
       const businessName = profile?.businessName || ctx.user.name || "Your Business";
       const tradeName = TRADE_TEMPLATES[input.tradeType] || "General Contracting";
 
-      const summaryPrompt = `You are a professional proposal assistant. Compile the following job information into a clean, structured summary that will be reviewed by the contractor before generating a full proposal.
+      const depositPercent = 50;
+      const depositAmount = input.totalCost ? (parseFloat(input.totalCost) * depositPercent / 100).toFixed(2) : null;
+      const balanceAmount = input.totalCost && depositAmount ? (parseFloat(input.totalCost) - parseFloat(depositAmount)).toFixed(2) : null;
 
-Format the summary as a well-organized set of labeled sections with bullet points. Be concise and accurate — do not add information that was not provided. If a field is missing, omit it.
+      const summaryPrompt = `You are an expert ${tradeName} proposal writer. Using the job details below, write a complete, professional contractor proposal draft with all sections fully filled in. This draft will be reviewed by the contractor before being polished into the final document.
 
-Business: ${businessName}
+Write each section with real, specific content — not placeholders. Use the exact names, addresses, costs, and dates provided. If a value is not provided, make a reasonable professional inference based on the trade and job scope.
+
+--- JOB DETAILS ---
+Contractor Business: ${businessName}
+${profile?.ownerName ? `Owner/Contact: ${profile.ownerName}` : ""}
+${profile?.phone ? `Phone: ${profile.phone}` : ""}
+${profile?.email ? `Email: ${profile.email}` : ""}
+${profile?.address ? `Business Address: ${profile.address}` : ""}
+${profile?.licenseNumber ? `License: ${profile.licenseNumber}` : ""}
 Trade: ${tradeName}
-Client: ${input.clientName || "(not specified)"}
+Client Name: ${input.clientName || "(not specified)"}
 Client Email: ${input.clientEmail || "(not specified)"}
 Property Address: ${input.clientAddress || "(not specified)"}
 Project Title: ${input.title}
-Job Description: ${input.jobScope}
-${input.materials ? `Materials/Equipment: ${input.materials}` : ""}
+Job Scope: ${input.jobScope}
+${input.materials ? `Materials/Equipment Specified: ${input.materials}` : ""}
 ${input.laborCost ? `Labor Cost: $${input.laborCost}` : ""}
 ${input.materialsCost ? `Materials Cost: $${input.materialsCost}` : ""}
-${input.totalCost ? `Total Cost: $${input.totalCost}` : ""}
+${input.totalCost ? `Total Project Cost: $${input.totalCost}` : ""}
+${depositAmount ? `Deposit (50%): $${depositAmount}` : ""}
+${balanceAmount ? `Balance on Completion (50%): $${balanceAmount}` : ""}
 ${input.estimatedDays ? `Estimated Duration: ${input.estimatedDays} days` : ""}
 ${input.startDate ? `Proposed Start Date: ${input.startDate}` : ""}
 ${input.paymentTerms ? `Payment Terms: ${input.paymentTerms}` : ""}
-${input.specialNotes ? `Special Notes: ${input.specialNotes}` : ""}
+${input.specialNotes ? `Special Notes / Additional Requirements: ${input.specialNotes}` : ""}
+${profile?.defaultTerms ? `Contractor's Standard Terms: ${profile.defaultTerms}` : ""}
+--- END JOB DETAILS ---
 
-Return ONLY the structured summary. No preamble, no explanation.`;
+Write the full proposal draft with these exact sections (use ## for each heading):
+
+## Executive Summary
+Write 2-3 paragraphs introducing the project, the contractor's qualifications, and the value this project delivers to the client. Be specific about the work being done and the outcome.
+
+## Scope of Work
+List every task that will be performed, numbered step by step. Be highly specific — include permit acquisition, material removal/disposal, installation steps, testing, commissioning, cleanup, and client walkthrough. Use ${tradeName}-specific technical terminology.
+
+## Materials & Equipment
+List all major materials and equipment with brand, model, and specifications where known. Organize by category (e.g. main unit, electrical, plumbing, hardware, consumables).
+
+## Project Timeline
+Break the project into phases by day. For each phase: name, duration, activities, and milestone. End with estimated completion date.
+
+## Investment Summary
+Provide an itemized cost breakdown (labor, materials, permits, etc.) and the total. Include a payment schedule (e.g. 50% deposit, 50% on completion) with exact dollar amounts.
+
+## Why Choose Us
+Write 3-4 compelling reasons why the client should choose ${businessName}. Include experience, certifications, warranty, and commitment to quality.
+
+## Terms & Conditions
+Write complete, professional terms covering: payment terms, workmanship warranty (1 year labor), manufacturer warranty pass-through, change order policy, liability limitations, permit responsibility, and client responsibilities.
+
+RULES:
+- Use real names and values throughout — never write [Your Name], [Client Name], or any placeholder
+- Do NOT include a signature block or "Accepted By" section
+- Do NOT include a Contact Information section
+- Return ONLY the proposal draft. No preamble, no explanation.`;
 
       const { invokeLLM } = await import("../_core/llm");
       const summaryResult = await invokeLLM({
@@ -1022,27 +1063,25 @@ Return ONLY the structured summary. No preamble, no explanation.`;
       };
       const tradeContext = TRADE_CONTEXT[proposal.tradeType] || TRADE_CONTEXT.general;
 
-      const systemPrompt = `You are an expert proposal writer for ${tradeName} contractors.
-Write a complete, professional, visually appealing proposal based on the provided project summary.
+      const systemPrompt = `You are an expert ${tradeName} proposal writer and editor. A contractor has prepared a complete draft proposal for your review. Your job is to polish and elevate it into a final, client-ready document.
 
-Trade-specific guidance: ${tradeContext}
+Trade expertise: ${tradeContext}
 
-Structure the proposal with these sections, each starting with ## followed by the section title:
-1. ## Executive Summary
-2. ## Scope of Work
-3. ## Materials & Equipment
-4. ## Project Timeline
-5. ## Investment Summary
-6. ## Why Choose Us
-7. ## Terms & Conditions
+Your editing instructions:
+1. Keep all real data exactly as provided — names, addresses, costs, dates, model numbers, specifications. Do NOT change or omit any factual information.
+2. Elevate the language to be highly professional, persuasive, and client-focused. Every sentence should build confidence in the contractor.
+3. Expand thin sections with trade-specific technical detail, professional justifications, and client benefits.
+4. Ensure the Scope of Work is numbered, exhaustive, and uses precise ${tradeName} terminology.
+5. Ensure the Investment Summary has a clear itemized breakdown and payment schedule with exact dollar amounts.
+6. Ensure the Terms & Conditions are complete and legally sound — covering payment, warranty, change orders, liability, permits, and client responsibilities.
+7. Add chart data annotations where relevant: for cost breakdown (labor vs materials), payment schedule, and project timeline — format as a JSON block inside a code fence labeled chart-data so the PDF renderer can generate visual charts.
+8. Maintain the exact section structure with ## headings.
 
-IMPORTANT RULES:
-- Visually appealing analytic graphs are required in this proposal. Describe data for charts where relevant (cost breakdown, timeline, payment schedule).
-- Use the actual business name and client name. Never use placeholders like [Your Name].
-- Do NOT include a Contact Information section — it is in the header.
-- Do NOT include signature blocks or Accepted By sections.
-- Be specific, detailed, and persuasive. Vague proposals lose to specific ones.
-- Write in a professional, confident, and persuasive tone throughout.`;
+STRICT RULES:
+- Use the real business name and client name throughout. Never write [Your Name], [Client Name], or any placeholder.
+- Do NOT add a Contact Information section — it appears in the document header.
+- Do NOT add signature blocks or Accepted By sections.
+- Return ONLY the polished proposal. No preamble, no explanation, no meta-commentary.`;
 
       const { invokeAnthropic } = await import("../utils/anthropicLLM");
       const result = await invokeAnthropic({
@@ -1050,7 +1089,7 @@ IMPORTANT RULES:
         systemPrompt,
         messages: [{
           role: "user",
-          content: `Business: ${businessName}\n\nProject Summary (approved by contractor):\n\n${input.approvedSummary}\n\nWrite the complete proposal now.`,
+          content: `Here is the complete proposal draft prepared by the contractor at ${businessName}. Polish and elevate it into the final client-ready document following your instructions:\n\n${input.approvedSummary}\n\nReturn the polished final proposal now.`,
         }],
         maxTokens: 8192,
       });

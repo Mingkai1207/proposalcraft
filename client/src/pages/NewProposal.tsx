@@ -533,9 +533,9 @@ export default function NewProposal() {
         {step === 3 && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-foreground mb-1">Review Your Project Summary</h2>
+              <h2 className="text-xl font-bold text-foreground mb-1">Review Your Draft Proposal</h2>
               <p className="text-muted-foreground text-sm">
-                ProposAI has compiled your project details into a structured summary. Review it carefully and make any edits before generating the full proposal.
+                ProposAI has written a complete draft proposal with all sections filled in. Review it carefully and make any edits before sending it to Claude for final polishing.
               </p>
             </div>
 
@@ -543,15 +543,15 @@ export default function NewProposal() {
             <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
               <Edit3 className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-blue-800">Edit before generating</p>
-                <p className="text-xs text-blue-600 mt-0.5">This summary will be sent to ProposAI to write your full proposal. Make sure all details are accurate — especially costs, dates, and client information.</p>
+                <p className="text-sm font-medium text-blue-800">Review before final generation</p>
+                <p className="text-xs text-blue-600 mt-0.5">This draft will be sent to Claude Sonnet for final polishing. Make sure all details are accurate — especially costs, dates, and client information. You can edit any section directly.</p>
               </div>
             </div>
 
             {/* Preview / Edit toggle */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label className="text-sm font-medium">Project Summary</Label>
+                <Label className="text-sm font-medium">Draft Proposal</Label>
                 <div className="flex rounded-lg border border-border overflow-hidden text-xs">
                   <button
                     type="button"
