@@ -474,6 +474,143 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       return { success: true };
     }),
 
+  // Generate a proposal from a template — AI fills each section individually
+  generateFromTemplate: protectedProcedure
+    .input(
+      z.object({
+        templateId: z.string().min(1),
+        title: z.string().min(1),
+        language: z.string().optional().default("english"),
+        fields: z.record(z.string(), z.string()),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { getTemplateById } = await import("../../shared/templateDefs");
+      const template = getTemplateById(input.templateId);
+      if (!template) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Template not found" });
+      }
+
+      // Check subscription limits (admin bypasses)
+      const isAdmin = ctx.user.role === "admin";
+      const sub = await ensureSubscription(ctx.user.id);
+      if (!sub) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Subscription error" });
+      if (!isAdmin) {
+        const limit = getPlanLimit(sub.plan);
+        if (sub.proposalsUsedThisMonth >= limit) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `You've reached your ${sub.plan} plan limit of ${limit} proposals/month. Please upgrade to continue.`,
+          });
+        }
+      }
+
+      const profile = await getContractorProfile(ctx.user.id);
+      const businessName = profile?.businessName || ctx.user.name || "Your Business";
+
+      const langMap: Record<string, string> = {
+        english: "English", chinese: "Simplified Chinese (简体中文)",
+        spanish: "Spanish (Español)", french: "French (Français)",
+      };
+      const outputLang = langMap[input.language] || "English";
+
+      // Build field context string for the AI
+      const fieldContext = template.inputFields
+        .filter(f => input.fields[f.id])
+        .map(f => `${f.label}: ${input.fields[f.id]}`)
+        .join("\n");
+
+      // Fill each AI section individually with section-specific prompts
+      const sectionContents: Record<string, string> = {};
+
+      for (const section of template.sections) {
+        if (section.type !== "ai_filled" || !section.aiPrompt) continue;
+
+        // Gather only the relevant fields for this section
+        const relevantFields = (section.inputFields || [])
+          .filter(fId => input.fields[fId])
+          .map(fId => {
+            const fieldDef = template.inputFields.find(f => f.id === fId);
+            return fieldDef ? `${fieldDef.label}: ${input.fields[fId]}` : `${fId}: ${input.fields[fId]}`;
+          })
+          .join("\n");
+
+        const sectionPrompt = `You are an expert proposal writer for ${template.trade} contractors.
+Write ONLY the content for the "${section.title}" section. Do NOT include the section header.
+Write in ${outputLang}.
+Do NOT include placeholder text like [Your X]. Do NOT include signature blocks or contact info.
+
+Section instructions: ${section.aiPrompt}
+
+Business name: ${businessName}
+Client: ${input.fields["clientName"] || "Valued Client"}
+${input.fields["clientAddress"] ? `Property: ${input.fields["clientAddress"]}` : ""}
+
+Relevant project details:
+${relevantFields || fieldContext}`;
+
+        const response = await invokeLLM({
+          messages: [{ role: "user", content: sectionPrompt }],
+          model: "gemini-2.5-flash",
+        });
+
+        const content = response.choices[0]?.message?.content;
+        sectionContents[section.id] = typeof content === "string" ? content.trim() : "";
+      }
+
+      // Assemble the full markdown document from sections
+      const markdownParts: string[] = [];
+      for (const section of template.sections) {
+        if (section.type === "visualization") continue; // handled by PDF renderer
+        markdownParts.push(`## ${section.title}\n\n${sectionContents[section.id] || ""}`);
+      }
+      const generatedContent = markdownParts.join("\n\n");
+
+      // Determine trade type (map template trade to DB enum)
+      const tradeMap: Record<string, string> = {
+        hvac: "hvac", plumbing: "plumbing", electrical: "electrical",
+        roofing: "roofing", general: "general", painting: "painting",
+        flooring: "flooring", landscaping: "landscaping", carpentry: "carpentry",
+        concrete: "concrete", masonry: "masonry", insulation: "insulation",
+        drywall: "drywall", windows: "windows", solar: "solar",
+      };
+      const tradeType = (tradeMap[template.trade] || "general") as typeof ALL_TRADE_TYPES[number];
+
+      const trackingToken = nanoid(32);
+      const isFree = sub.plan === "free" && !isAdmin;
+      const watermarkedContent = isFree
+        ? `${generatedContent}\n\n---\n*This proposal was generated with ProposAI Free. Upgrade to remove this watermark.*`
+        : generatedContent;
+
+      const proposal = await createProposal({
+        userId: ctx.user.id,
+        title: input.title,
+        tradeType,
+        clientName: input.fields["clientName"] || null,
+        clientEmail: input.fields["clientEmail"] || null,
+        clientAddress: input.fields["clientAddress"] || null,
+        jobScope: input.fields["jobScope"] || "See proposal content",
+        materials: input.fields["materials"] || null,
+        laborCost: input.fields["laborCost"] || null,
+        materialsCost: input.fields["materialsCost"] || null,
+        totalCost: input.fields["totalCost"] || null,
+        generatedContent: watermarkedContent,
+        trackingToken,
+        status: "draft",
+        expiryDays: 30,
+      });
+
+      if (!proposal) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to save proposal" });
+
+      await incrementProposalUsage(ctx.user.id);
+      await notifyOwner({
+        title: "New Template Proposal Generated",
+        content: `${ctx.user.name || ctx.user.email} used template "${template.name}" to create: "${input.title}"`,
+      }).catch(() => {});
+
+      return { id: proposal.id };
+    }),
+
   exportPdf: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
@@ -483,42 +620,198 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       }
 
       const profile = await getContractorProfile(ctx.user.id);
-      // Gracefully handle missing profile — use user info and sensible defaults
-
-      const pdfData: ProposalPdfData = {
-        businessName: profile?.businessName || ctx.user.name || "Your Business",
-        businessPhone: profile?.phone || "",
-        businessEmail: profile?.email || ctx.user.email || "",
-        businessAddress: profile?.address || "",
-        licenseNumber: profile?.licenseNumber || "",
-        clientName: proposal.clientName || "Valued Client",
-        clientAddress: proposal.clientAddress || "",
-        clientPhone: "",
-        clientEmail: proposal.clientEmail || "",
-        jobTitle: proposal.title,
-        preparedDate: new Date(proposal.createdAt).toLocaleDateString(),
-        validUntil: new Date(new Date(proposal.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-        laborCost: parseInt(proposal.laborCost || "2000") || 2000,
-        materialsCost: parseInt(proposal.materialsCost || "3000") || 3000,
-        totalCost: parseInt(proposal.totalCost || "5000") || 5000,
-        // Pass the FULL AI-generated content as markdown — the PDF renderer will convert it
-        proposalMarkdown: proposal.generatedContent || "No proposal content available.",
-        termsOverride: profile?.defaultTerms || undefined,
-      };
+      const businessName = profile?.businessName || ctx.user.name || "Your Business";
+      const preparedDate = new Date(proposal.createdAt).toLocaleDateString();
+      const validUntil = new Date(new Date(proposal.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
 
       try {
+        // Use template renderer if proposal was created from a template
+        if (proposal.templateId) {
+          const { getTemplateById } = await import("../../shared/templateDefs");
+          const template = getTemplateById(proposal.templateId);
+          if (template) {
+            const { renderTemplatePdf } = await import("../utils/templatePdfRenderer");
+            const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
+
+            // Parse section contents from generatedContent
+            const sectionContents: Record<string, string> = {};
+            const content = proposal.generatedContent || "";
+            const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n\n([\s\S]*?)(?=\n\n## |$)/g));
+            for (const match of sectionMatches) {
+              const sectionTitle = match[1].trim();
+              const section = template.sections.find(s => s.title === sectionTitle);
+              if (section) sectionContents[section.id] = match[2].trim();
+            }
+
+            const pdfBuffer = await renderTemplatePdf({
+              template,
+              title: proposal.title,
+              businessName,
+              businessPhone: profile?.phone || "",
+              businessEmail: profile?.email || ctx.user.email || "",
+              businessAddress: profile?.address || "",
+              licenseNumber: profile?.licenseNumber || "",
+              clientName: proposal.clientName || "Valued Client",
+              clientAddress: proposal.clientAddress || "",
+              clientEmail: proposal.clientEmail || "",
+              preparedDate,
+              validUntil,
+              sectionContents,
+              fields,
+            });
+
+            const fileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
+            const { url } = await storagePut(fileName, pdfBuffer, "application/pdf");
+            return { url, fileName };
+          }
+        }
+
+        // Fallback: use legacy markdown-based renderer
+        const pdfData: ProposalPdfData = {
+          businessName,
+          businessPhone: profile?.phone || "",
+          businessEmail: profile?.email || ctx.user.email || "",
+          businessAddress: profile?.address || "",
+          licenseNumber: profile?.licenseNumber || "",
+          clientName: proposal.clientName || "Valued Client",
+          clientAddress: proposal.clientAddress || "",
+          clientPhone: "",
+          clientEmail: proposal.clientEmail || "",
+          jobTitle: proposal.title,
+          preparedDate,
+          validUntil,
+          laborCost: parseInt(proposal.laborCost || "2000") || 2000,
+          materialsCost: parseInt(proposal.materialsCost || "3000") || 3000,
+          totalCost: parseInt(proposal.totalCost || "5000") || 5000,
+          proposalMarkdown: proposal.generatedContent || "No proposal content available.",
+          termsOverride: profile?.defaultTerms || undefined,
+        };
         const pdfBuffer = await generateProposalPdf(pdfData);
         const fileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
         const { url } = await storagePut(fileName, pdfBuffer, "application/pdf");
-
-        console.log(`[PDF Export] Successfully generated PDF for proposal ${proposal.id}`);
         return { url, fileName };
       } catch (error) {
         console.error(`[PDF Export] Failed to generate PDF for proposal ${proposal.id}:`, error);
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to generate PDF. Please try again.",
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to generate PDF. Please try again." });
+      }
+    }),
+
+  exportWord: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await getProposalById(input.id);
+      if (!proposal || proposal.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
+      }
+
+      const profile = await getContractorProfile(ctx.user.id);
+      const businessName = profile?.businessName || ctx.user.name || "Your Business";
+      const preparedDate = new Date(proposal.createdAt).toLocaleDateString();
+      const validUntil = new Date(new Date(proposal.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
+
+      try {
+        const { exportToWord } = await import("../utils/wordExporter");
+        const { getTemplateById, TEMPLATE_DEFS } = await import("../../shared/templateDefs");
+
+        const template = proposal.templateId ? getTemplateById(proposal.templateId) : TEMPLATE_DEFS[0];
+        if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Template not found" });
+
+        const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
+        const sectionContents: Record<string, string> = {};
+        const content = proposal.generatedContent || "";
+        const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n\n([\s\S]*?)(?=\n\n## |$)/g));
+        for (const match of sectionMatches) {
+          const sectionTitle = match[1].trim();
+          const section = template.sections.find(s => s.title === sectionTitle);
+          if (section) sectionContents[section.id] = match[2].trim();
+        }
+        // If no sections matched, put all content in a generic section
+        if (Object.keys(sectionContents).length === 0) {
+          sectionContents["content"] = content;
+        }
+
+        const docxBuffer = await exportToWord({
+          template,
+          title: proposal.title,
+          businessName,
+          businessPhone: profile?.phone || "",
+          businessEmail: profile?.email || ctx.user.email || "",
+          businessAddress: profile?.address || "",
+          licenseNumber: profile?.licenseNumber || "",
+          clientName: proposal.clientName || "Valued Client",
+          clientAddress: proposal.clientAddress || "",
+          clientEmail: proposal.clientEmail || "",
+          preparedDate,
+          validUntil,
+          sectionContents,
+          fields,
         });
+
+        const fileName = `proposal-${proposal.id}-${Date.now()}.docx`;
+        const { url } = await storagePut(
+          fileName,
+          docxBuffer,
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        );
+        return { url, fileName };
+      } catch (error) {
+        console.error(`[Word Export] Failed:`, error);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to generate Word document." });
+      }
+    }),
+
+  exportGoogleDocs: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await getProposalById(input.id);
+      if (!proposal || proposal.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
+      }
+
+      const profile = await getContractorProfile(ctx.user.id);
+      const businessName = profile?.businessName || ctx.user.name || "Your Business";
+      const preparedDate = new Date(proposal.createdAt).toLocaleDateString();
+      const validUntil = new Date(new Date(proposal.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
+
+      try {
+        const { exportToGoogleDocs } = await import("../utils/googleDocsExporter");
+        const { getTemplateById, TEMPLATE_DEFS } = await import("../../shared/templateDefs");
+
+        const template = proposal.templateId ? getTemplateById(proposal.templateId) : TEMPLATE_DEFS[0];
+        if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Template not found" });
+
+        const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
+        const sectionContents: Record<string, string> = {};
+        const content = proposal.generatedContent || "";
+        const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n\n([\s\S]*?)(?=\n\n## |$)/g));
+        for (const match of sectionMatches) {
+          const sectionTitle = match[1].trim();
+          const section = template.sections.find(s => s.title === sectionTitle);
+          if (section) sectionContents[section.id] = match[2].trim();
+        }
+        if (Object.keys(sectionContents).length === 0) sectionContents["content"] = content;
+
+        const result = await exportToGoogleDocs({
+          template,
+          title: proposal.title,
+          businessName,
+          businessPhone: profile?.phone || "",
+          businessEmail: profile?.email || ctx.user.email || "",
+          businessAddress: profile?.address || "",
+          licenseNumber: profile?.licenseNumber || "",
+          clientName: proposal.clientName || "Valued Client",
+          clientAddress: proposal.clientAddress || "",
+          clientEmail: proposal.clientEmail || "",
+          preparedDate,
+          validUntil,
+          sectionContents,
+          fields,
+        }, proposal.id);
+
+        return result;
+      } catch (error) {
+        console.error(`[Google Docs Export] Failed:`, error);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to generate Google Docs export." });
       }
     }),
 });

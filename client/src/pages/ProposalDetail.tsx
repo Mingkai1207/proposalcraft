@@ -97,7 +97,6 @@ export default function ProposalDetail() {
   // PDF export mutation - calls the professional PDF generation endpoint
   const exportPdfMutation = trpc.proposals.exportPdf.useMutation({
     onSuccess: (data) => {
-      // Open the S3 URL in a new tab to trigger download
       const link = document.createElement("a");
       link.href = data.url;
       link.download = data.fileName;
@@ -108,9 +107,32 @@ export default function ProposalDetail() {
       document.body.removeChild(link);
       toast.success("PDF downloaded successfully!");
     },
-    onError: (e) => {
-      toast.error(e.message || "Failed to generate PDF. Please try again.");
+    onError: (e) => toast.error(e.message || "Failed to generate PDF. Please try again."),
+  });
+
+  // Word export mutation
+  const exportWordMutation = trpc.proposals.exportWord.useMutation({
+    onSuccess: (data) => {
+      const link = document.createElement("a");
+      link.href = data.url;
+      link.download = data.fileName;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Word document downloaded!");
     },
+    onError: (e) => toast.error(e.message || "Failed to generate Word document."),
+  });
+
+  // Google Docs export mutation
+  const exportGoogleDocsMutation = trpc.proposals.exportGoogleDocs.useMutation({
+    onSuccess: (data) => {
+      window.open(data.googleDocsViewerUrl, "_blank");
+      toast.success("Opening in Google Docs viewer. Click 'Open with Google Docs' to edit.");
+    },
+    onError: (e) => toast.error(e.message || "Failed to export to Google Docs."),
   });
 
   if (authLoading || isLoading) {
@@ -199,23 +221,41 @@ export default function ProposalDetail() {
               >
                 <Edit2 className="w-4 h-4 mr-1" /> Edit
               </Button>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleDownloadPDF}
-                disabled={exportPdfMutation.isPending}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {exportPdfMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generating...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4 mr-1" /> Download PDF
-                  </>
-                )}
-              </Button>
+              {/* Export dropdown */}
+              <div className="relative group">
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                  disabled={exportPdfMutation.isPending || exportWordMutation.isPending || exportGoogleDocsMutation.isPending}
+                >
+                  {(exportPdfMutation.isPending || exportWordMutation.isPending || exportGoogleDocsMutation.isPending) ? (
+                    <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generating...</>
+                  ) : (
+                    <><Download className="w-4 h-4 mr-1" /> Export ▾</>
+                  )}
+                </Button>
+                <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-border rounded-lg shadow-lg py-1 z-50 hidden group-hover:block">
+                  <button
+                    onClick={() => exportPdfMutation.mutate({ id: proposal.id })}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4 text-red-500" /> Download PDF
+                  </button>
+                  <button
+                    onClick={() => exportWordMutation.mutate({ id: proposal.id })}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4 text-blue-500" /> Download Word (.docx)
+                  </button>
+                  <button
+                    onClick={() => exportGoogleDocsMutation.mutate({ id: proposal.id })}
+                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
+                  >
+                    <FileText className="w-4 h-4 text-green-500" /> Open in Google Docs
+                  </button>
+                </div>
+              </div>
               <Button size="sm" onClick={() => {
                 setSendEmail(proposal.clientEmail || "");
                 setSendName(proposal.clientName || "");

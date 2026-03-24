@@ -429,3 +429,19 @@
 - [x] Update Dashboard TRADE_LABELS with all new trade types
 - [x] Add trade-specific AI context for each trade (terminology, materials, specs)
 - [x] All 27 tests pass
+
+## Phase 28: Template-Driven Proposal Platform Rebuild (COMPLETED)
+- [x] Design template data model (shared/templateDefs.ts) with 8 templates across 6 trades
+- [x] Add templateId and templateFields columns to proposals table (DB migration applied)
+- [x] Build TemplatePicker UI (/templates/pick) — browse by trade/style with visual previews
+- [x] Build NewProposalFromTemplate form (/proposals/from-template) — trade-specific field inputs
+- [x] Build AI fill engine (generateFromTemplate mutation) — expands inputs into polished sections
+- [x] Build data visualization generator (visualizationGenerator.ts) — Chart.js charts via Puppeteer
+- [x] Build template-aware PDF renderer (templatePdfRenderer.ts) — per-template layout
+- [x] Build Word (.docx) export (wordExporter.ts) using docx package
+- [x] Build Google Docs export (googleDocsExporter.ts) — .docx upload + Google Docs viewer URL
+- [x] Add exportWord and exportGoogleDocs tRPC endpoints to proposals router
+- [x] Add Export dropdown to ProposalDetail (PDF / Word / Google Docs)
+- [x] Add "From Template" button to Dashboard header and empty state
+- [x] Add /proposals/from-template and /templates/pick routes to App.tsx
+- [x] All 27 tests pass

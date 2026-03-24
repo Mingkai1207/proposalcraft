@@ -86,6 +86,8 @@ export const proposals = mysqlTable("proposals", {
   totalCost: varchar("totalCost", { length: 64 }),
   generatedContent: text("generatedContent"),
   pdfUrl: text("pdfUrl"),
+  templateId: varchar("templateId", { length: 128 }), // Template used to generate this proposal
+  templateFields: text("templateFields"), // JSON-encoded field values from the template form
   status: mysqlEnum("status", ["draft", "sent", "viewed", "accepted", "declined"]).default("draft").notNull(),
   trackingToken: varchar("trackingToken", { length: 128 }).unique(),
   sentAt: timestamp("sentAt"),
