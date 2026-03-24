@@ -14,6 +14,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Refund from "./pages/Refund";
 import ClientPortal from "./pages/ClientPortal";
+import { Templates } from "./pages/Templates";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/proposals/new" component={NewProposal} />
       <Route path="/proposals/:id" component={ProposalDetail} />
       <Route path="/settings" component={Settings} />
+      <Route path="/templates" component={Templates} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />

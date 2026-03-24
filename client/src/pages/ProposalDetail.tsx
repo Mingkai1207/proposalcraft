@@ -86,6 +86,13 @@ export default function ProposalDetail() {
     onError: (e) => toast.error(e.message),
   });
 
+  const saveTemplateMutation = trpc.templates.create.useMutation({
+    onSuccess: () => {
+      toast.success("Proposal saved as template!");
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
   if (authLoading || isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   }
@@ -227,6 +234,25 @@ export default function ProposalDetail() {
                   <Mail className="w-4 h-4 mr-1" /> {followUpMutation.isPending ? "Sending..." : "Send Follow-up"}
                 </Button>
               )}
+              <Button variant="outline" size="sm" onClick={() => {
+                saveTemplateMutation.mutate({
+                  name: proposal.title,
+                  tradeType: proposal.tradeType,
+                  description: `Template from ${proposal.clientName || "proposal"}`,
+                  content: proposal.generatedContent || "",
+                  clientName: proposal.clientName,
+                  clientAddress: proposal.clientAddress,
+                  jobScope: proposal.jobScope,
+                  materials: proposal.materials,
+                  laborCost: proposal.laborCost,
+                  materialsCost: proposal.materialsCost,
+                  totalCost: proposal.totalCost,
+                  language: "english",
+                  expiryDays: proposal.expiryDays || 30,
+                });
+              }} disabled={saveTemplateMutation.isPending}>
+                <Zap className="w-4 h-4 mr-1" /> {saveTemplateMutation.isPending ? "Saving..." : "Save as Template"}
+              </Button>
             </>
           ) : (
             <>

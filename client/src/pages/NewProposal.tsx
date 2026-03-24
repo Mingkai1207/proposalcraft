@@ -10,6 +10,7 @@ import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import { ArrowLeft, ArrowRight, Zap, FileText, Wrench, Droplets, Bolt, Home as HomeIcon, HardHat, Globe } from "lucide-react";
+import { TemplateQuickCreate } from "@/components/TemplateQuickCreate";
 
 const TRADE_OPTIONS = [
   { value: "hvac", label: "HVAC", icon: Wrench, desc: "Heating, ventilation & air conditioning" },
@@ -147,6 +148,8 @@ export default function NewProposal() {
               <h2 className="text-xl font-bold text-foreground mb-1">Select Trade & Client Info</h2>
               <p className="text-muted-foreground text-sm">Choose your trade type and enter client details.</p>
             </div>
+
+            <TemplateQuickCreate form={form} setForm={setForm} />
 
             <div>
               <Label className="text-sm font-medium mb-2 block">Proposal Title <span className="text-destructive">*</span></Label>

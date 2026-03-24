@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
+import { PendingProposalsWidget } from "@/components/PendingProposalsWidget";
+import { ResponseAnalyticsWidget } from "@/components/ResponseAnalyticsWidget";
 import {
   FileText, Plus, Eye, Send, Trash2, Clock,
   CheckCircle, AlertCircle, Mail, BarChart3,
@@ -228,6 +230,17 @@ export default function Dashboard() {
               <Plus className="w-4 h-4" /> New Proposal
             </Button>
           </div>
+        </div>
+
+        {/* Pending Proposals Widget */}
+        <div className="mb-8">
+          <PendingProposalsWidget />
+        </div>
+
+        {/* Response Analytics */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Proposal Performance</h2>
+          <ResponseAnalyticsWidget />
         </div>
 
         {/* Stats */}
