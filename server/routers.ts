@@ -12,6 +12,7 @@ import { exportRouter } from "./routers/export";
 import { templatesRouter } from "./routers/templates";
 import { versionsRouter } from "./routers/versions";
 import { feedbackRouter } from "./routers/feedback";
+import { recommendationsRouter } from "./routers/recommendations";
 
 export const appRouter = router({
   system: systemRouter,
@@ -33,6 +34,7 @@ export const appRouter = router({
   templates: templatesRouter,
   versions: versionsRouter,
   feedback: feedbackRouter,
+  recommendations: recommendationsRouter,
 });
 
 export type AppRouter = typeof appRouter;

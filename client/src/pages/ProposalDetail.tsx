@@ -10,6 +10,7 @@ import { useLocation, useParams } from "wouter";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
+import { VersionHistory } from "@/components/VersionHistory";
 import {
   ArrowLeft, Send, Download, Eye, Clock, CheckCircle,
   Mail, AlertCircle, Edit2, Save, X, Zap, Share2
@@ -320,6 +321,12 @@ export default function ProposalDetail() {
                   <span className="ml-2 text-foreground">{new Date(proposal.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
+            </div>
+
+            {/* Version History */}
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="font-semibold text-sm text-foreground mb-3">Version History</h3>
+              <VersionHistory proposalId={proposal.id} />
             </div>
 
             {/* Tracking */}

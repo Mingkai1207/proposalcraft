@@ -6,6 +6,8 @@ import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { PendingProposalsWidget } from "@/components/PendingProposalsWidget";
 import { ResponseAnalyticsWidget } from "@/components/ResponseAnalyticsWidget";
+import { FeedbackAnalyticsWidget } from "@/components/FeedbackAnalyticsWidget";
+import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import {
   FileText, Plus, Eye, Send, Trash2, Clock,
   CheckCircle, AlertCircle, Mail, BarChart3,
@@ -241,6 +243,18 @@ export default function Dashboard() {
         <div className="mb-8">
           <h2 className="text-lg font-semibold text-foreground mb-4">Proposal Performance</h2>
           <ResponseAnalyticsWidget />
+        </div>
+
+        {/* Feedback Analytics */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Client Feedback</h2>
+          <FeedbackAnalyticsWidget />
+        </div>
+
+        {/* Recommendations */}
+        <div className="mb-8">
+          <h2 className="text-lg font-semibold text-foreground mb-4">Improvement Recommendations</h2>
+          <RecommendationsWidget />
         </div>
 
         {/* Stats */}
