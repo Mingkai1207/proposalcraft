@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `proposals` MODIFY COLUMN `updatedAt` timestamp NOT NULL DEFAULT (now());\nALTER TABLE `proposals` ADD `expiryDays` int DEFAULT 30;\nALTER TABLE `proposals` ADD `acceptedAt` timestamp;\nALTER TABLE `proposals` ADD `declinedAt` timestamp;\nALTER TABLE `proposals` ADD `clientPortalToken` varchar(64);\nALTER TABLE `proposals` ADD CONSTRAINT `proposals_clientPortalToken_unique` UNIQUE(`clientPortalToken`);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user FeC7Hhjo94vzeQP.root --database TxoyTEEFMfksnn9C3wscL4 --execute ALTER TABLE `proposals` MODIFY COLUMN `updatedAt` timestamp NOT NULL DEFAULT (now());\nALTER TABLE `proposals` ADD `expiryDays` int DEFAULT 30;\nALTER TABLE `proposals` ADD `acceptedAt` timestamp;\nALTER TABLE `proposals` ADD `declinedAt` timestamp;\nALTER TABLE `proposals` ADD `clientPortalToken` varchar(64);\nALTER TABLE `proposals` ADD CONSTRAINT `proposals_clientPortalToken_unique` UNIQUE(`clientPortalToken`);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3700
+}

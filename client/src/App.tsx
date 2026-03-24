@@ -13,6 +13,7 @@ import Pricing from "./pages/Pricing";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Refund from "./pages/Refund";
+import ClientPortal from "./pages/ClientPortal";
 
 function Router() {
   return (
@@ -26,6 +27,7 @@ function Router() {
       <Route path="/terms" component={Terms} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/refund" component={Refund} />
+      <Route path="/client-portal" component={ClientPortal} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

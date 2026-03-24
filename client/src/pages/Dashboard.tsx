@@ -7,7 +7,7 @@ import { getLoginUrl } from "@/const";
 import {
   FileText, Plus, Eye, Send, Trash2, Clock,
   CheckCircle, AlertCircle, Mail, BarChart3,
-  Settings, LogOut, Home, Zap
+  Settings, LogOut, Home, Zap, Download
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -48,6 +48,25 @@ export default function Dashboard() {
     onSuccess: () => { toast.success("Proposal deleted"); refetch(); setDeleteId(null); },
     onError: (e) => toast.error(e.message),
   });
+  const exportQuery = trpc.export.bulkExportProposals.useQuery(undefined, { enabled: false });
+
+  const handleBulkExport = async () => {
+    try {
+      toast.loading("Exporting proposals...");
+      const result = await exportQuery.refetch();
+      if (result.data) {
+        const link = document.createElement("a");
+        link.href = `data:application/zip;base64,${result.data.data}`;
+        link.download = result.data.filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success("Proposals exported successfully");
+      }
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Export failed");
+    }
+  };
 
   if (authLoading) {
     return (
@@ -199,9 +218,16 @@ export default function Dashboard() {
               Welcome back, {user?.name?.split(" ")[0] || "Contractor"}
             </p>
           </div>
-          <Button onClick={() => navigate("/proposals/new")} className="gap-2">
-            <Plus className="w-4 h-4" /> New Proposal
-          </Button>
+          <div className="flex gap-2">
+            {proposals && proposals.length > 0 && (
+              <Button onClick={handleBulkExport} variant="outline" className="gap-2">
+                <Download className="w-4 h-4" /> Export All
+              </Button>
+            )}
+            <Button onClick={() => navigate("/proposals/new")} className="gap-2">
+              <Plus className="w-4 h-4" /> New Proposal
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}

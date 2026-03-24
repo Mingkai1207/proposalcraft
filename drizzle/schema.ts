@@ -89,10 +89,14 @@ export const proposals = mysqlTable("proposals", {
   trackingToken: varchar("trackingToken", { length: 128 }).unique(),
   sentAt: timestamp("sentAt"),
   viewedAt: timestamp("viewedAt"),
-  followUpSentAt: timestamp("followUpSentAt"),
   followUpOpenedAt: timestamp("followUpOpenedAt"),
+  followUpSentAt: timestamp("followUpSentAt"),
+  expiryDays: int("expiryDays").default(30), // Days until proposal expires (null = never)
+  acceptedAt: timestamp("acceptedAt"), // When client accepted the proposal
+  declinedAt: timestamp("declinedAt"), // When client declined the proposal
+  clientPortalToken: varchar("clientPortalToken", { length: 64 }).unique(), // Unique token for client portal link
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
 });
 
 export type Proposal = typeof proposals.$inferSelect;

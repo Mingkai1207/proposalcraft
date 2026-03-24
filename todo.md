@@ -219,3 +219,13 @@
 - [x] Update follow-up tracking to distinguish between original and follow-up opens
 - [x] Display follow-up engagement in proposal analytics
 - [x] Test automatic follow-up scheduling and template customization
+
+
+## Phase 7: Complete Missing Plan Features
+- [x] Add proposal expiry date field to schema and form
+- [x] Add expiry validation when viewing/sending proposals
+- [x] Display expiry status on proposal detail page
+- [x] Build client portal for accepting/declining proposals
+- [x] Create shareable client portal links
+- [x] Implement bulk export feature (ZIP download)
+- [x] Test all three features end-to-end
