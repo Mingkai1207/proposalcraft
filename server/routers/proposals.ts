@@ -1087,11 +1087,26 @@ HTML DOCUMENT REQUIREMENTS:
 - Use a professional, modern design with a color scheme appropriate for a ${tradeName} contractor
 - Include a header with the contractor business name and client info
 - Include these sections: Executive Summary, Scope of Work, Materials & Equipment, Project Timeline, Investment Summary, Why Choose Us, Terms & Conditions
-- Include at least one visual chart using inline SVG (e.g. cost breakdown pie chart or payment schedule bar chart)
 - Use real data throughout — never use placeholders like [Your Name] or [Client Name]
 - Do NOT include signature blocks, Accepted By sections, or Contact Information sections
-- The document should be print-ready (8.5in wide, proper margins, page breaks where appropriate)
+- The document should be print-ready at 8.5in wide with 0.75in margins on all sides
 - Make it visually impressive — this is a sales document
+
+PAGE BREAK RULES (CRITICAL — prevents content being cut mid-sentence):
+- Every paragraph, list item, and card element MUST have: page-break-inside: avoid; break-inside: avoid;
+- Every section heading MUST have: page-break-after: avoid; break-after: avoid; (keeps heading with its first paragraph)
+- Every section container MUST have: page-break-inside: avoid; break-inside: avoid; margin-bottom: 24px;
+- Add sufficient bottom padding (at least 40px) before natural page break points so content never gets clipped at the page edge
+- Never allow a heading to appear as the last element on a page — always keep it with at least 2 lines of following content
+- Apply orphan: 3; widows: 3; to all paragraph elements
+
+ANALYTIC CHARTS (REQUIRED — use inline SVG, no external libraries):
+1. Cost Breakdown Chart: A pie or donut chart showing labor cost vs. materials cost vs. other costs with labeled percentages and a legend
+2. Payment Schedule Chart: A horizontal bar or stacked bar chart showing the payment milestones (deposit, progress payments, final payment) with dollar amounts
+3. Project Timeline Chart: A Gantt-style horizontal bar chart showing each project phase with start day and duration
+- All charts must be self-contained inline SVG with hardcoded data values from the proposal
+- Charts should be visually polished with colors matching the document theme, clear labels, and a title
+- Place charts in contextually relevant sections (cost chart in Investment Summary, timeline chart in Project Timeline)
 
 STRICT OUTPUT RULE: Return ONLY the raw HTML document. No markdown, no code fences, no explanation. Start with <!DOCTYPE html> and end with </html>.`;
 
@@ -1103,7 +1118,7 @@ STRICT OUTPUT RULE: Return ONLY the raw HTML document. No markdown, no code fenc
           role: "user",
           content: `Use this proposal draft to generate the complete HTML proposal document:\n\n${input.approvedSummary}`,
         }],
-        maxTokens: 16000,
+        maxTokens: 20000,
       });
 
       // Extract raw HTML — strip any accidental markdown code fences

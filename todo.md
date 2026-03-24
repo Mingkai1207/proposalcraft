@@ -584,3 +584,7 @@
 - [x] Store the raw HTML in the database (generatedContent column) so it can be re-rendered anytime
 - [x] Update ProposalDetail preview to render the stored HTML in an iframe (auto-resizing, sandboxed)
 - [x] Keep Word/Google Doc export working (exportWord now uses Claude HTML directly for new proposals)
+
+## Prompt Improvements (Page Breaks & Charts)
+- [x] Add page-break prevention CSS rules to the HTML prompt (avoid-inside on paragraphs/cards, keep-together on headings, proper bottom margins before page breaks)
+- [x] Add mandatory analytic charts requirement to the prompt (cost breakdown pie, payment schedule bar, project timeline Gantt-style)
