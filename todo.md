@@ -588,3 +588,7 @@
 ## Prompt Improvements (Page Breaks & Charts)
 - [x] Add page-break prevention CSS rules to the HTML prompt (avoid-inside on paragraphs/cards, keep-together on headings, proper bottom margins before page breaks)
 - [x] Add mandatory analytic charts requirement to the prompt (cost breakdown pie, payment schedule bar, project timeline Gantt-style)
+
+## Waiting Page Fix
+- [x] Update time estimate from "30-90 seconds" to "3-5 minutes"
+- [x] Replace fake step-by-step progress animation with an honest simple waiting UI (spinner + progress bar + rotating tip messages)
