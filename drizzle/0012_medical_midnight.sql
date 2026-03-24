@@ -1,0 +1,1 @@
+ALTER TABLE `proposals` MODIFY COLUMN `tradeType` enum('hvac','plumbing','electrical','roofing','general','painting','flooring','landscaping','carpentry','concrete','masonry','insulation','drywall','windows','solar') NOT NULL;

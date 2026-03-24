@@ -43,12 +43,28 @@ function fmt(n: number): string {
 
 /**
  * Convert markdown to sanitised HTML.
- * We strip the free-plan watermark line if present.
+ * Strips free-plan watermark, placeholder text, and AI-generated signature/contact blocks.
  */
 function mdToHtml(md: string): string {
   if (!md) return "<p>No content available.</p>";
-  // Remove free-plan watermark
-  let cleaned = md.replace(/---\n\*This proposal was generated with ProposAI Free[\s\S]*$/m, "").trim();
+  let cleaned = md
+    // Remove free-plan watermark
+    .replace(/---\n\*This proposal was generated with ProposAI Free[\s\S]*$/m, "")
+    // Remove entire "Contact Information" section (AI sometimes adds this)
+    .replace(/#{1,6}\s*Contact\s*Information[\s\S]*?(?=#{1,6}\s|$)/gi, "")
+    // Remove entire "Accepted By" / signature block sections
+    .replace(/#{1,6}\s*(Accepted By|Acceptance)[\s\S]*?(?=#{1,6}\s|$)/gi, "")
+    // Remove standalone placeholder lines like [Your Phone Number]
+    .replace(/^\[Your[^\]]+\]\s*$/gm, "")
+    // Remove inline placeholders
+    .replace(/\[Your[^\]]+\]/g, "")
+    // Remove signature lines (underscores)
+    .replace(/^_{5,}\s*$/gm, "")
+    // Remove "Signature: ____" style lines
+    .replace(/^(Signature|Printed Name|Title|Date):\s*_{3,}\s*$/gm, "")
+    // Clean up excessive blank lines
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
   // Convert markdown → HTML
   const html = marked.parse(cleaned, { async: false, gfm: true, breaks: true }) as string;
   return html;

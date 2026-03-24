@@ -75,7 +75,7 @@ export const proposals = mysqlTable("proposals", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull(),
   title: varchar("title", { length: 512 }).notNull(),
-  tradeType: mysqlEnum("tradeType", ["hvac", "plumbing", "electrical", "roofing", "general"]).notNull(),
+  tradeType: mysqlEnum("tradeType", ["hvac", "plumbing", "electrical", "roofing", "general", "painting", "flooring", "landscaping", "carpentry", "concrete", "masonry", "insulation", "drywall", "windows", "solar"]).notNull(),
   clientName: varchar("clientName", { length: 255 }),
   clientEmail: varchar("clientEmail", { length: 320 }),
   clientAddress: text("clientAddress"),

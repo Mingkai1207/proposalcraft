@@ -32,7 +32,10 @@ const STATUS_CONFIG = {
 
 const TRADE_LABELS: Record<string, string> = {
   hvac: "HVAC", plumbing: "Plumbing", electrical: "Electrical",
-  roofing: "Roofing", general: "General",
+  roofing: "Roofing", general: "General", painting: "Painting",
+  flooring: "Flooring", landscaping: "Landscaping", carpentry: "Carpentry",
+  concrete: "Concrete", masonry: "Masonry", insulation: "Insulation",
+  drywall: "Drywall", windows: "Windows & Doors", solar: "Solar",
 };
 
 export default function Dashboard() {

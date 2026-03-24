@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Zap, FileText, Wrench, Droplets, Bolt, Home as HomeIcon, HardHat, Globe } from "lucide-react";
+import { ArrowLeft, ArrowRight, Zap, FileText, Wrench, Droplets, Bolt, Home as HomeIcon, HardHat, Globe, Paintbrush, Layers, Leaf, Hammer, Building2, Wind, Square, Sun, Grid3x3 } from "lucide-react";
 import { TemplateQuickCreate } from "@/components/TemplateQuickCreate";
 
 const TRADE_OPTIONS = [
@@ -17,6 +17,16 @@ const TRADE_OPTIONS = [
   { value: "plumbing", label: "Plumbing", icon: Droplets, desc: "Pipes, fixtures & water systems" },
   { value: "electrical", label: "Electrical", icon: Bolt, desc: "Wiring, panels & electrical systems" },
   { value: "roofing", label: "Roofing", icon: HomeIcon, desc: "Roof installation, repair & replacement" },
+  { value: "painting", label: "Painting", icon: Paintbrush, desc: "Interior & exterior painting" },
+  { value: "flooring", label: "Flooring", icon: Layers, desc: "Hardwood, tile, carpet & vinyl" },
+  { value: "landscaping", label: "Landscaping", icon: Leaf, desc: "Lawn care, grading & outdoor design" },
+  { value: "carpentry", label: "Carpentry", icon: Hammer, desc: "Custom woodwork & trim" },
+  { value: "concrete", label: "Concrete", icon: Building2, desc: "Foundations, driveways & slabs" },
+  { value: "masonry", label: "Masonry", icon: Grid3x3, desc: "Brick, stone & block work" },
+  { value: "insulation", label: "Insulation", icon: Wind, desc: "Spray foam, batt & blown-in" },
+  { value: "drywall", label: "Drywall", icon: Square, desc: "Hanging, taping & finishing" },
+  { value: "windows", label: "Windows & Doors", icon: Square, desc: "Installation & replacement" },
+  { value: "solar", label: "Solar", icon: Sun, desc: "Solar panel installation & battery storage" },
   { value: "general", label: "General Contracting", icon: HardHat, desc: "General construction & renovation" },
 ];
 

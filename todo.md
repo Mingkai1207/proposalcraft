@@ -411,3 +411,21 @@
 - [x] Update exportPdf endpoint to pass raw AI content
 - [x] Test end-to-end with a real generated proposal
 - [x] Verify PDF faithfully represents what the AI wrote
+
+## Phase 27: PDF Formatting Fixes & More Templates
+- [ ] Fix placeholder text in PDF ([Your Phone Number], [Your Email], etc.)
+- [ ] Fix duplicate signature blocks (should be side-by-side, not stacked)
+- [ ] Fix dark background bleeding into content area
+- [ ] Add more proposal templates (plumbing, electrical, roofing, painting, flooring, landscaping, carpentry, concrete)
+- [ ] Ensure all templates auto-fill from contractor profile data
+
+## Phase 27: PDF Formatting Fixes + More Trade Templates
+- [x] Fix AI prompt to not generate Contact Information section or signature blocks
+- [x] Add post-processing to strip [Your X] placeholders from AI output before saving
+- [x] Add mdToHtml cleanup to strip placeholders from existing proposals on PDF export
+- [x] Expand tradeType enum from 5 to 15 trade types (painting, flooring, landscaping, carpentry, concrete, masonry, insulation, drywall, windows, solar)
+- [x] Run DB migration to expand tradeType enum
+- [x] Update NewProposal.tsx with 15 trade type options and icons
+- [x] Update Dashboard TRADE_LABELS with all new trade types
+- [x] Add trade-specific AI context for each trade (terminology, materials, specs)
+- [x] All 27 tests pass

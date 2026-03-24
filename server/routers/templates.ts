@@ -36,7 +36,7 @@ export const templatesRouter = router({
     .input(
       z.object({
         name: z.string().min(1),
-        tradeType: z.enum(["hvac", "plumbing", "electrical", "roofing", "general"]),
+        tradeType: z.enum(["hvac", "plumbing", "electrical", "roofing", "general", "painting", "flooring", "landscaping", "carpentry", "concrete", "masonry", "insulation", "drywall", "windows", "solar"]),
         description: z.string().optional(),
         content: z.string().min(1),
         clientName: z.string().nullable().optional(),
