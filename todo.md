@@ -399,3 +399,6 @@
 
 ## Bug Fix: Contractor Profile Not Found on PDF Export
 - [x] Fix exportPdf to gracefully handle missing contractor profile (use defaults instead of throwing)
+
+## Admin Plan Bypass
+- [x] Allow admin users to bypass free plan proposal generation limit (also exempt from watermark)

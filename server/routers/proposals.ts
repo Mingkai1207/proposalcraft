@@ -65,16 +65,19 @@ export const proposalRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // Check subscription limits
+      // Check subscription limits (admin users bypass all limits)
+      const isAdmin = ctx.user.role === "admin";
       const sub = await ensureSubscription(ctx.user.id);
       if (!sub) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Subscription error" });
 
-      const limit = getPlanLimit(sub.plan);
-      if (sub.proposalsUsedThisMonth >= limit) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: `You've reached your ${sub.plan} plan limit of ${limit} proposals/month. Please upgrade to continue.`,
-        });
+      if (!isAdmin) {
+        const limit = getPlanLimit(sub.plan);
+        if (sub.proposalsUsedThisMonth >= limit) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `You've reached your ${sub.plan} plan limit of ${limit} proposals/month. Please upgrade to continue.`,
+          });
+        }
       }
 
       // Get contractor profile for branding
@@ -148,8 +151,8 @@ const generatedContent = typeof rawContent === "string" ? rawContent : "";
       const trackingToken = nanoid(32);
 
       // Save proposal to DB
-      // Append watermark text for free-plan proposals (enforced at generation time)
-      const isFree = sub.plan === "free";
+      // Append watermark text for free-plan proposals (admin users are exempt)
+      const isFree = sub.plan === "free" && !isAdmin;
       const watermarkedContent = isFree
         ? `${generatedContent}\n\n---\n*This proposal was generated with ProposAI Free. Upgrade to remove this watermark and unlock email delivery, tracking, and custom branding.*`
         : generatedContent;
