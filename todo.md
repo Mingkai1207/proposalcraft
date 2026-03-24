@@ -316,3 +316,12 @@
 - [x] Add pie chart showing labor vs materials breakdown
 - [x] Regenerate all 4 sample proposals with charts
 - [x] Upload to CDN and verify
+
+
+## Phase 18: Fix PDF Proposal Formatting Issues
+- [x] Replace pdf-lib with HTML-to-PDF conversion (puppeteer)
+- [x] Create professional HTML proposal template with CSS
+- [x] Add proper text wrapping and pagination
+- [x] Create price breakdown chart using Chart.js or SVG
+- [x] Regenerate all 4 sample proposals with new system
+- [x] Verify PDF output looks professional
