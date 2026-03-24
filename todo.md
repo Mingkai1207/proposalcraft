@@ -372,3 +372,27 @@
 - [x] Improve overall visual hierarchy
 - [x] Add more visual appeal to match sample proposals
 - [x] Test and verify visual quality
+
+
+## Phase 24: Complete PDF Generation System Rebuild (Core Product)
+- [ ] Research professional contractor proposal templates
+- [ ] Design new HTML template from scratch
+- [ ] Build multi-page professional layout
+- [ ] Implement proper content sections with visual elements
+- [ ] Add pricing table with visual chart
+- [ ] Integrate into proposal generation pipeline
+- [ ] Self-check: generate test PDF and review
+- [ ] Refine based on self-check findings
+- [ ] Final self-check and polish
+
+
+## Phase 25: Fix Actual User-Facing Proposal Output (CRITICAL)
+- [x] Trace user flow: how proposals are displayed and downloaded
+- [x] Identify that ProposalDetail uses browser print (raw markdown) instead of exportPdf
+- [x] Wire up professional PDF export endpoint to Download PDF button
+- [x] Fix ProposalDetail page to render content properly (not raw markdown)
+- [x] Add prominent "Download PDF" button that calls exportPdf endpoint
+- [x] Test end-to-end: generate proposal → view → download professional PDF
+- [x] Self-check downloaded PDF matches illustration quality
+- [x] Add PDF export unit tests (content parser tests)
+- [x] Add loading state and CTA section for PDF download
