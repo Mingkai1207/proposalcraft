@@ -259,8 +259,8 @@ export default function Dashboard() {
                 <Download className="w-4 h-4" /> Export All
               </Button>
             )}
-            <Button onClick={() => navigate("/templates/pick")} variant="outline" className="gap-2">
-              <FileText className="w-4 h-4" /> From Template
+            <Button onClick={() => navigate("/templates")} variant="outline" className="gap-2">
+              <FileText className="w-4 h-4" /> My Templates
             </Button>
             <Button onClick={() => navigate("/proposals/new")} className="gap-2">
               <Plus className="w-4 h-4" /> New Proposal
@@ -352,8 +352,8 @@ export default function Dashboard() {
               <h3 className="font-semibold text-foreground mb-1">No proposals yet</h3>
               <p className="text-muted-foreground text-sm mb-6">Get started in two ways:</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={() => navigate("/templates/pick")} size="sm">
-                  <FileText className="w-4 h-4 mr-1" /> Start from Template
+                <Button onClick={() => navigate("/templates")} size="sm">
+                  <FileText className="w-4 h-4 mr-1" /> My Templates
                 </Button>
                 <Button onClick={() => navigate("/proposals/new")} variant="outline" size="sm">
                   <Plus className="w-4 h-4 mr-1" /> Create with AI

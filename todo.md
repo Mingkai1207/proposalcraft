@@ -529,3 +529,8 @@
 - [x] Build My Templates page showing saved templates + uploaded documents
 - [x] Template-based form: same as Function 1 form but without style preferences
 - [x] Template generation: send summary + template to Claude, follow template structure
+
+## Templates Section Cleanup
+- [x] Remove any built-in style cards (Modern, Classic, etc.) from My Templates page
+- [x] Templates page should only show user-saved and uploaded templates
+- [x] Style selection belongs on the New Proposal form only

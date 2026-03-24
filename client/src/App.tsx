@@ -17,7 +17,6 @@ import ClientPortal from "./pages/ClientPortal";
 import Templates from "./pages/Templates";
 import ProposalImport from "./pages/ProposalImport";
 import ProposalEditor from "./pages/ProposalEditor";
-import TemplatePicker from "./pages/TemplatePicker";
 import NewProposalFromTemplate from "./pages/NewProposalFromTemplate";
 
 function Router() {
@@ -26,7 +25,6 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/proposals/new" component={NewProposal} />
-      <Route path="/templates/pick" component={TemplatePicker} />
       <Route path="/proposals/from-template" component={NewProposalFromTemplate} />
       <Route path="/proposals/:id/edit" component={(props: any) => <ProposalEditor proposalId={parseInt(props.params.id)} />} />
       <Route path="/proposals/:id" component={ProposalDetail} />
