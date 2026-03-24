@@ -161,20 +161,24 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
       background: white;
       overflow: hidden;
       page-break-after: always;
+      display: flex;
+      flex-direction: column;
     }
 
     .header {
       background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
       color: white;
-      padding: 0.3in 0.25in;
-      margin: -0.4in -0.4in 0.25in -0.4in;
-      border-bottom: 3px solid #1e40af;
+      padding: 0.35in 0.3in;
+      margin: -0.4in -0.4in 0.2in -0.4in;
+      border-bottom: 4px solid #1e40af;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
     }
 
     .company-name {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: 700;
       margin-bottom: 0.08in;
+      letter-spacing: -0.5px;
     }
 
     .company-info {
@@ -191,31 +195,33 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
       font-size: 18px;
       font-weight: 600;
       color: #1a1a1a;
-      margin: 0.15in 0 0.1in 0;
-      border-bottom: 2px solid #2563eb;
+      margin: 0.12in 0 0.08in 0;
+      border-bottom: 3px solid #2563eb;
       padding-bottom: 0.08in;
     }
 
     .info-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 0.12in;
-      margin: 0.15in 0;
+      gap: 0.1in;
+      margin: 0.12in 0;
       font-size: 9px;
     }
 
     .info-box {
-      background: #f8f9fa;
-      border-left: 3px solid #2563eb;
+      background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
+      border-left: 4px solid #2563eb;
       padding: 0.12in;
-      border-radius: 2px;
+      border-radius: 3px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
 
     .info-box-label {
-      font-weight: 600;
+      font-weight: 700;
       color: #2563eb;
       font-size: 8px;
       text-transform: uppercase;
+      letter-spacing: 0.5px;
       margin-bottom: 0.04in;
     }
 
@@ -225,30 +231,37 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
       font-size: 9px;
     }
 
+    .content-area {
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
     .section {
-      margin: 0.15in 0;
+      margin: 0.1in 0;
     }
 
     .section-title {
       font-size: 12px;
       font-weight: 700;
       color: #1a1a1a;
-      margin: 0.1in 0 0.08in 0;
+      margin: 0.08in 0 0.06in 0;
       padding-bottom: 0.06in;
-      border-bottom: 2px solid #e5e7eb;
+      border-bottom: 2px solid #2563eb;
     }
 
     .bullet-list {
-      margin: 0.08in 0 0.08in 0.15in;
+      margin: 0.06in 0 0.06in 0.15in;
       list-style: none;
     }
 
     .bullet-list li {
-      margin: 0.04in 0;
+      margin: 0.03in 0;
       padding-left: 0.12in;
       position: relative;
-      font-size: 10px;
-      line-height: 1.4;
+      font-size: 9px;
+      line-height: 1.35;
     }
 
     .bullet-list li:before {
@@ -257,38 +270,49 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
       left: 0;
       color: #2563eb;
       font-weight: bold;
+      font-size: 10px;
     }
 
     .summary-text {
-      font-size: 10px;
-      line-height: 1.5;
+      font-size: 9px;
+      line-height: 1.4;
       color: #333;
-      margin: 0.08in 0;
+      margin: 0.06in 0;
+    }
+
+    .pricing-section {
+      background: linear-gradient(135deg, #f8f9fa 0%, #f0f4f8 100%);
+      border-radius: 4px;
+      padding: 0.15in;
+      margin: 0.12in 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
     }
 
     .pricing-summary {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.12in;
-      margin: 0.12in 0;
+      gap: 0.1in;
+      margin-bottom: 0.12in;
       font-size: 9px;
     }
 
     .price-item {
-      background: #f8f9fa;
-      padding: 0.08in;
+      background: white;
+      padding: 0.1in;
       border-radius: 3px;
-      border-left: 2px solid #2563eb;
+      border-left: 3px solid #2563eb;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
 
     .price-label {
       font-weight: 600;
       color: #666;
       font-size: 8px;
+      text-transform: uppercase;
     }
 
     .price-value {
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 700;
       color: #2563eb;
       margin-top: 0.02in;
@@ -298,31 +322,46 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
       grid-column: 1 / -1;
       background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
       color: white;
-      padding: 0.1in;
+      padding: 0.12in;
       border-radius: 3px;
       text-align: center;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
     }
 
     .total-price .price-label {
       color: rgba(255,255,255,0.9);
+      text-transform: uppercase;
     }
 
     .total-price .price-value {
       color: white;
-      font-size: 14px;
+      font-size: 16px;
+      margin-top: 0.03in;
     }
 
     .chart-container {
-      margin: 0.12in 0;
+      margin: 0.1in 0;
       text-align: center;
-      height: 1.4in;
+      height: 2.2in;
+      background: white;
+      border-radius: 4px;
+      padding: 0.1in;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .chart-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 0.08in;
+      text-align: center;
     }
 
     .footer {
       font-size: 8px;
       color: #999;
       text-align: center;
-      margin-top: 0.15in;
+      margin-top: auto;
       padding-top: 0.08in;
       border-top: 1px solid #e5e7eb;
     }
@@ -365,54 +404,47 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
       </div>
     </div>
 
-    <div class="section">
-      <div class="section-title">Executive Summary</div>
-      <div class="summary-text">${sanitized.executiveSummary}</div>
-    </div>
+    <div class="content-area">
+      <div class="section">
+        <div class="section-title">Executive Summary</div>
+        <div class="summary-text">${sanitized.executiveSummary}</div>
+      </div>
 
-    <div class="section">
-      <div class="section-title">Scope of Work</div>
-      <ul class="bullet-list">
-        ${sanitized.scopeOfWork.map(item => `<li>${item}</li>`).join('')}
-      </ul>
-    </div>
+      <div class="section">
+        <div class="section-title">Scope of Work</div>
+        <ul class="bullet-list">
+          ${sanitized.scopeOfWork.slice(0, 3).map(item => `<li>${item}</li>`).join('')}
+        </ul>
+      </div>
 
-    <div class="section">
-      <div class="section-title">Materials & Equipment</div>
-      <ul class="bullet-list">
-        ${sanitized.materials.map(item => `<li>${item}</li>`).join('')}
-      </ul>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Investment Summary</div>
-      <div class="pricing-summary">
-        <div class="price-item">
-          <div class="price-label">Labor</div>
-          <div class="price-value">$${sanitized.laborCost.toLocaleString()}</div>
-        </div>
-        <div class="price-item">
-          <div class="price-label">Materials</div>
-          <div class="price-value">$${sanitized.materialsCost.toLocaleString()}</div>
-        </div>
-        <div class="price-item total-price">
-          <div class="price-label">Total</div>
-          <div class="price-value">$${sanitized.totalCost.toLocaleString()}</div>
+      <div class="section">
+        <div class="section-title">Investment Summary</div>
+        <div class="pricing-section">
+          <div class="pricing-summary">
+            <div class="price-item">
+              <div class="price-label">Labor</div>
+              <div class="price-value">$${sanitized.laborCost.toLocaleString()}</div>
+            </div>
+            <div class="price-item">
+              <div class="price-label">Materials</div>
+              <div class="price-value">$${sanitized.materialsCost.toLocaleString()}</div>
+            </div>
+            <div class="price-item total-price">
+              <div class="price-label">Total Investment</div>
+              <div class="price-value">$${sanitized.totalCost.toLocaleString()}</div>
+            </div>
+          </div>
+          <div class="chart-title">Cost Breakdown</div>
+          <div class="chart-container">
+            <canvas id="priceChart"></canvas>
+          </div>
         </div>
       </div>
-      <div class="chart-container">
-        <canvas id="priceChart"></canvas>
+
+      <div class="section">
+        <div class="section-title">Why Choose Us</div>
+        <div class="summary-text">${sanitized.whyChooseUs}</div>
       </div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Why Choose Us</div>
-      <div class="summary-text">${sanitized.whyChooseUs}</div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Terms & Conditions</div>
-      <div class="summary-text">${sanitized.termsAndConditions}</div>
     </div>
 
     <div class="footer">
@@ -432,7 +464,8 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
               data: [${laborPercent}, ${materialsPercent}],
               backgroundColor: ['#2563eb', '#f97316'],
               borderColor: ['#1e40af', '#ea580c'],
-              borderWidth: 2
+              borderWidth: 3,
+              borderRadius: 6
             }]
           },
           options: {
@@ -441,13 +474,29 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
             plugins: {
               legend: {
                 position: 'bottom',
-                labels: { font: { size: 10 }, padding: 10 }
+                labels: {
+                  font: { size: 11, weight: 'bold' },
+                  padding: 15,
+                  usePointStyle: true,
+                  pointStyle: 'circle'
+                }
+              },
+              tooltip: {
+                backgroundColor: 'rgba(0,0,0,0.8)',
+                padding: 12,
+                titleFont: { size: 12, weight: 'bold' },
+                bodyFont: { size: 11 },
+                callbacks: {
+                  label: function(context) {
+                    return context.label + ': ' + context.parsed + '%';
+                  }
+                }
               }
             }
           }
         });
       }
-    }, 500);
+    }, 800);
   </script>
 </body>
 </html>
@@ -461,7 +510,7 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
   try {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
     const pdfBuffer = await page.pdf({
       format: 'A4',
