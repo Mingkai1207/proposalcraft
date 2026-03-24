@@ -445,3 +445,8 @@
 - [x] Add "From Template" button to Dashboard header and empty state
 - [x] Add /proposals/from-template and /templates/pick routes to App.tsx
 - [x] All 27 tests pass
+
+## Fix: Template Dropdown Shows Only 1 Template
+- [x] Fix /proposals/new Quick Start dropdown to show all 8 built-in templates from templateDefs.ts
+- [x] Add "Browse Full Template Library" link in the dropdown that navigates to /templates/pick
+- [x] Always show the template picker card (removed the early return when no user templates exist)
