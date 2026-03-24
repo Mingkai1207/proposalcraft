@@ -659,3 +659,7 @@
 - [x] Update Puppeteer PDF settings: A4 format, 800px centered
 - [x] Update reviseWithAI prompt to match new style (inline CSS, no external fonts)
 - [x] Update refineProposal prompt to match new style
+
+## Prompt Fix: Remove "never abbreviate" rule
+- [x] Remove "Never omit, abbreviate, or skip" from generateFromSummary prompt
+- [x] Remove same rule from reviseWithAI and refineProposal prompts

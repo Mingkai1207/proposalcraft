@@ -1113,7 +1113,6 @@ RULES:
 STRICT OUTPUT RULES:
 - Return ONLY raw HTML starting with <!DOCTYPE html>. No markdown, no backticks, no text before or after.
 - Inline CSS only. No external stylesheets or fonts.
-- Never omit, abbreviate, or skip any information from the summary.
 
 DESIGN:
 - Make the document visually appealing and professional. You have full creative freedom over layout, typography, and color scheme.
@@ -1233,7 +1232,6 @@ STRUCTURE:
 STRICT OUTPUT RULES:
 - Return ONLY raw HTML starting with <!DOCTYPE html>. No markdown, no backticks, no text before or after.
 - Inline CSS only. No external stylesheets or fonts.
-- Never omit, abbreviate, or skip any information from the original document.
 
 Your job:
 1. Understand exactly what the user wants to change.
@@ -1582,7 +1580,6 @@ Business: ${businessName}`;
 STRICT OUTPUT RULES:
 - Return ONLY raw HTML starting with <!DOCTYPE html>. No markdown, no backticks, no text before or after.
 - Inline CSS only. No external stylesheets or fonts.
-- Never omit, abbreviate, or skip any information from the original document.
 
 Your job:
 1. Understand exactly what the user wants to change.
