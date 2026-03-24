@@ -27,35 +27,104 @@ export interface ProposalPdfData {
   totalCost: number;
 }
 
-// Clean text by removing markdown artifacts
-function cleanText(text: string | undefined): string {
+/**
+ * AGGRESSIVE text cleaning - removes ALL markdown and formatting artifacts
+ */
+function sanitizeText(text: string | undefined): string {
   if (!text) return '';
-  return text
-    .replace(/^#+\s*/gm, '') // Remove markdown headers
-    .replace(/\*\*/g, '') // Remove bold markers
-    .replace(/###/g, '') // Remove ### markers
-    .replace(/\*\s*/g, '') // Remove bullet markers
-    .replace(/^\s*-\s*/gm, '') // Remove dash markers
-    .replace(/about:blank/g, '') // Remove placeholder text
-    .trim();
+  
+  let cleaned = String(text);
+  
+  // Remove markdown headers
+  cleaned = cleaned.replace(/^#+\s+/gm, '');
+  
+  // Remove markdown formatting
+  cleaned = cleaned.replace(/\*\*(.+?)\*\*/g, '$1');
+  cleaned = cleaned.replace(/\*(.+?)\*/g, '$1');
+  cleaned = cleaned.replace(/__(.+?)__/g, '$1');
+  cleaned = cleaned.replace(/_(.+?)_/g, '$1');
+  
+  // Remove code blocks
+  cleaned = cleaned.replace(/```[\s\S]*?```/g, '');
+  cleaned = cleaned.replace(/`(.+?)`/g, '$1');
+  
+  // Remove HTML
+  cleaned = cleaned.replace(/<[^>]*>/g, '');
+  
+  // Remove list markers
+  cleaned = cleaned.replace(/^[\s]*[-*+•]\s+/gm, '');
+  cleaned = cleaned.replace(/^[\s]*\d+\.\s+/gm, '');
+  
+  // Remove links
+  cleaned = cleaned.replace(/\[(.+?)\]\(.+?\)/g, '$1');
+  
+  // Remove images
+  cleaned = cleaned.replace(/!\[(.+?)\]\(.+?\)/g, '$1');
+  
+  // Remove horizontal rules
+  cleaned = cleaned.replace(/^[\s]*[-*_]{3,}[\s]*$/gm, '');
+  
+  // Remove blockquotes
+  cleaned = cleaned.replace(/^>\s+/gm, '');
+  
+  // Clean up whitespace
+  cleaned = cleaned.replace(/\s{2,}/g, ' ');
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n');
+  
+  // Final trim
+  return cleaned.trim();
+}
+
+/**
+ * Sanitize array of items
+ */
+function sanitizeArray(items: string[] | undefined): string[] {
+  if (!Array.isArray(items)) return [];
+  
+  return items
+    .map(item => sanitizeText(item))
+    .filter(item => item.length > 0 && item !== 'about:blank')
+    .slice(0, 5); // Limit to 5 items max
 }
 
 export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer> {
-  const laborPercent = Math.round((data.laborCost / data.totalCost) * 100);
+  // SANITIZE ALL INPUT DATA
+  const sanitized = {
+    businessName: sanitizeText(data.businessName) || 'Your Business',
+    businessPhone: sanitizeText(data.businessPhone) || '(555) 000-0000',
+    businessEmail: sanitizeText(data.businessEmail) || 'info@business.com',
+    businessAddress: sanitizeText(data.businessAddress) || '123 Main St, City, ST 12345',
+    licenseNumber: sanitizeText(data.licenseNumber) || 'License #',
+    clientName: sanitizeText(data.clientName) || 'Valued Client',
+    clientAddress: sanitizeText(data.clientAddress) || 'Client Address',
+    jobTitle: sanitizeText(data.jobTitle) || 'Proposal',
+    preparedDate: sanitizeText(data.preparedDate) || new Date().toLocaleDateString(),
+    validUntil: sanitizeText(data.validUntil) || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+    jobSite: sanitizeText(data.jobSite) || 'Job Site',
+    executiveSummary: sanitizeText(data.executiveSummary) || 'Professional proposal for your project.',
+    scopeOfWork: sanitizeArray(data.scopeOfWork),
+    materials: sanitizeArray(data.materials),
+    timeline: sanitizeArray(data.timeline),
+    whyChooseUs: sanitizeText(data.whyChooseUs) || 'Professional service backed by experience.',
+    termsAndConditions: sanitizeText(data.termsAndConditions) || '50% deposit required. Balance on completion.',
+    laborCost: Math.max(0, data.laborCost || 0),
+    materialsCost: Math.max(0, data.materialsCost || 0),
+    totalCost: Math.max(1, data.totalCost || 5000),
+  };
+
+  // Ensure we have at least some scope items
+  if (sanitized.scopeOfWork.length === 0) {
+    sanitized.scopeOfWork = ['Professional assessment', 'Installation', 'Quality assurance'];
+  }
+  if (sanitized.materials.length === 0) {
+    sanitized.materials = ['Premium materials', 'Professional equipment'];
+  }
+  if (sanitized.timeline.length === 0) {
+    sanitized.timeline = ['Day 1: Preparation', 'Day 2: Installation'];
+  }
+
+  const laborPercent = Math.round((sanitized.laborCost / sanitized.totalCost) * 100);
   const materialsPercent = 100 - laborPercent;
-
-  // Clean and prepare data
-  const scopeItems = Array.isArray(data.scopeOfWork)
-    ? data.scopeOfWork.map(item => cleanText(item)).filter(item => item.length > 0)
-    : ['Professional assessment', 'Installation', 'Quality assurance'];
-
-  const materials = Array.isArray(data.materials)
-    ? data.materials.map(item => cleanText(item)).filter(item => item.length > 0)
-    : ['Premium materials', 'Professional equipment'];
-
-  const timeline = Array.isArray(data.timeline)
-    ? data.timeline.map(item => cleanText(item)).filter(item => item.length > 0)
-    : ['Day 1: Preparation', 'Day 2: Installation', 'Day 3: Final inspection'];
 
   const html = `
 <!DOCTYPE html>
@@ -63,7 +132,7 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${cleanText(data.jobTitle)}</title>
+  <title>${sanitized.jobTitle}</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <style>
     * {
@@ -79,113 +148,107 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
 
     body {
       font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      line-height: 1.6;
+      line-height: 1.5;
       color: #1a1a1a;
-      background: #f5f5f5;
+      background: white;
     }
 
     .page {
       width: 8.5in;
       height: 11in;
-      margin: 0.5in auto;
-      padding: 0.5in;
+      margin: 0 auto;
+      padding: 0.4in;
       background: white;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      page-break-after: always;
       overflow: hidden;
+      page-break-after: always;
     }
 
     .header {
       background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
       color: white;
-      padding: 0.4in 0.3in;
-      margin: -0.5in -0.5in 0.3in -0.5in;
+      padding: 0.3in 0.25in;
+      margin: -0.4in -0.4in 0.25in -0.4in;
       border-bottom: 3px solid #1e40af;
     }
 
     .company-name {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 700;
-      margin-bottom: 0.1in;
-      letter-spacing: -0.5px;
+      margin-bottom: 0.08in;
     }
 
     .company-info {
-      font-size: 11px;
-      line-height: 1.4;
+      font-size: 10px;
+      line-height: 1.3;
       opacity: 0.95;
     }
 
     .company-info p {
-      margin: 2px 0;
+      margin: 1px 0;
     }
 
     .job-title {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 600;
       color: #1a1a1a;
-      margin: 0.2in 0 0.15in 0;
+      margin: 0.15in 0 0.1in 0;
       border-bottom: 2px solid #2563eb;
-      padding-bottom: 0.1in;
+      padding-bottom: 0.08in;
     }
 
     .info-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 0.15in;
-      margin: 0.2in 0;
-      font-size: 10px;
+      gap: 0.12in;
+      margin: 0.15in 0;
+      font-size: 9px;
     }
 
     .info-box {
       background: #f8f9fa;
       border-left: 3px solid #2563eb;
-      padding: 0.15in;
+      padding: 0.12in;
       border-radius: 2px;
     }
 
     .info-box-label {
       font-weight: 600;
       color: #2563eb;
-      font-size: 9px;
+      font-size: 8px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 0.05in;
+      margin-bottom: 0.04in;
     }
 
     .info-box-content {
       color: #1a1a1a;
-      line-height: 1.4;
+      line-height: 1.3;
+      font-size: 9px;
     }
 
     .section {
-      margin: 0.2in 0;
+      margin: 0.15in 0;
     }
 
     .section-title {
-      font-size: 14px;
+      font-size: 12px;
       font-weight: 700;
       color: #1a1a1a;
-      margin: 0.15in 0 0.1in 0;
-      padding-bottom: 0.08in;
+      margin: 0.1in 0 0.08in 0;
+      padding-bottom: 0.06in;
       border-bottom: 2px solid #e5e7eb;
     }
 
-    .section-content {
-      font-size: 11px;
-      line-height: 1.5;
-      color: #333;
-    }
-
     .bullet-list {
-      margin: 0.1in 0 0.1in 0.2in;
+      margin: 0.08in 0 0.08in 0.15in;
       list-style: none;
     }
 
     .bullet-list li {
-      margin: 0.05in 0;
-      padding-left: 0.15in;
+      margin: 0.04in 0;
+      padding-left: 0.12in;
       position: relative;
+      font-size: 10px;
+      line-height: 1.4;
     }
 
     .bullet-list li:before {
@@ -197,29 +260,23 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
     }
 
     .summary-text {
-      font-size: 11px;
-      line-height: 1.6;
+      font-size: 10px;
+      line-height: 1.5;
       color: #333;
-      margin: 0.1in 0;
-    }
-
-    .chart-container {
-      margin: 0.15in 0;
-      text-align: center;
-      height: 1.8in;
+      margin: 0.08in 0;
     }
 
     .pricing-summary {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0.15in;
-      margin: 0.15in 0;
-      font-size: 10px;
+      gap: 0.12in;
+      margin: 0.12in 0;
+      font-size: 9px;
     }
 
     .price-item {
       background: #f8f9fa;
-      padding: 0.1in;
+      padding: 0.08in;
       border-radius: 3px;
       border-left: 2px solid #2563eb;
     }
@@ -227,24 +284,23 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
     .price-label {
       font-weight: 600;
       color: #666;
-      font-size: 9px;
+      font-size: 8px;
     }
 
     .price-value {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       color: #2563eb;
-      margin-top: 0.03in;
+      margin-top: 0.02in;
     }
 
     .total-price {
       grid-column: 1 / -1;
       background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
       color: white;
-      padding: 0.12in;
+      padding: 0.1in;
       border-radius: 3px;
       text-align: center;
-      border: none;
     }
 
     .total-price .price-label {
@@ -253,24 +309,22 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
 
     .total-price .price-value {
       color: white;
-      font-size: 16px;
+      font-size: 14px;
+    }
+
+    .chart-container {
+      margin: 0.12in 0;
+      text-align: center;
+      height: 1.4in;
     }
 
     .footer {
-      font-size: 9px;
+      font-size: 8px;
       color: #999;
       text-align: center;
-      margin-top: 0.2in;
-      padding-top: 0.1in;
+      margin-top: 0.15in;
+      padding-top: 0.08in;
       border-top: 1px solid #e5e7eb;
-    }
-
-    .page-number {
-      position: absolute;
-      bottom: 0.2in;
-      right: 0.3in;
-      font-size: 9px;
-      color: #999;
     }
 
     @media print {
@@ -280,7 +334,6 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
       .page {
         margin: 0;
         box-shadow: none;
-        page-break-after: always;
       }
     }
   </style>
@@ -288,83 +341,65 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
 <body>
   <div class="page">
     <div class="header">
-      <div class="company-name">${cleanText(data.businessName)}</div>
+      <div class="company-name">${sanitized.businessName}</div>
       <div class="company-info">
-        <p>${cleanText(data.businessPhone)} • ${cleanText(data.businessEmail)}</p>
-        <p>${cleanText(data.businessAddress)} • License: ${cleanText(data.licenseNumber)}</p>
+        <p>${sanitized.businessPhone} • ${sanitized.businessEmail}</p>
+        <p>${sanitized.businessAddress} • Lic: ${sanitized.licenseNumber}</p>
       </div>
     </div>
 
-    <div class="job-title">${cleanText(data.jobTitle)}</div>
+    <div class="job-title">${sanitized.jobTitle}</div>
 
     <div class="info-grid">
       <div class="info-box">
         <div class="info-box-label">Client</div>
-        <div class="info-box-content">
-          <strong>${cleanText(data.clientName)}</strong><br>
-          ${cleanText(data.clientAddress)}
-        </div>
+        <div class="info-box-content"><strong>${sanitized.clientName}</strong><br>${sanitized.clientAddress}</div>
       </div>
       <div class="info-box">
         <div class="info-box-label">Job Site</div>
-        <div class="info-box-content">
-          ${cleanText(data.jobSite)}
-        </div>
+        <div class="info-box-content">${sanitized.jobSite}</div>
       </div>
       <div class="info-box">
-        <div class="info-box-label">Project Info</div>
-        <div class="info-box-content">
-          Valid until: ${cleanText(data.validUntil)}
-        </div>
+        <div class="info-box-label">Valid Until</div>
+        <div class="info-box-content">${sanitized.validUntil}</div>
       </div>
     </div>
 
     <div class="section">
       <div class="section-title">Executive Summary</div>
-      <div class="summary-text">
-        ${cleanText(data.executiveSummary)}
-      </div>
+      <div class="summary-text">${sanitized.executiveSummary}</div>
     </div>
 
     <div class="section">
       <div class="section-title">Scope of Work</div>
       <ul class="bullet-list">
-        ${scopeItems.slice(0, 4).map(item => `<li>${item}</li>`).join('')}
+        ${sanitized.scopeOfWork.map(item => `<li>${item}</li>`).join('')}
       </ul>
     </div>
 
     <div class="section">
       <div class="section-title">Materials & Equipment</div>
       <ul class="bullet-list">
-        ${materials.slice(0, 3).map(item => `<li>${item}</li>`).join('')}
-      </ul>
-    </div>
-
-    <div class="section">
-      <div class="section-title">Project Timeline</div>
-      <ul class="bullet-list">
-        ${timeline.slice(0, 3).map(item => `<li>${item}</li>`).join('')}
+        ${sanitized.materials.map(item => `<li>${item}</li>`).join('')}
       </ul>
     </div>
 
     <div class="section">
       <div class="section-title">Investment Summary</div>
-      
       <div class="pricing-summary">
         <div class="price-item">
           <div class="price-label">Labor</div>
-          <div class="price-value">$${data.laborCost.toLocaleString()}</div>
+          <div class="price-value">$${sanitized.laborCost.toLocaleString()}</div>
         </div>
         <div class="price-item">
           <div class="price-label">Materials</div>
-          <div class="price-value">$${data.materialsCost.toLocaleString()}</div>
+          <div class="price-value">$${sanitized.materialsCost.toLocaleString()}</div>
         </div>
         <div class="price-item total-price">
-          <div class="price-label">Total Investment</div>
-          <div class="price-value">$${data.totalCost.toLocaleString()}</div>
+          <div class="price-label">Total</div>
+          <div class="price-value">$${sanitized.totalCost.toLocaleString()}</div>
         </div>
       </div>
-
       <div class="chart-container">
         <canvas id="priceChart"></canvas>
       </div>
@@ -372,23 +407,17 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
 
     <div class="section">
       <div class="section-title">Why Choose Us</div>
-      <div class="summary-text">
-        ${cleanText(data.whyChooseUs)}
-      </div>
+      <div class="summary-text">${sanitized.whyChooseUs}</div>
     </div>
 
     <div class="section">
       <div class="section-title">Terms & Conditions</div>
-      <div class="summary-text" style="font-size: 10px;">
-        ${cleanText(data.termsAndConditions)}
-      </div>
+      <div class="summary-text">${sanitized.termsAndConditions}</div>
     </div>
 
     <div class="footer">
-      Proposal prepared on ${cleanText(data.preparedDate)} • Valid until ${cleanText(data.validUntil)}
+      Prepared: ${sanitized.preparedDate} • Valid until: ${sanitized.validUntil}
     </div>
-
-    <div class="page-number">Page 1 of 1</div>
   </div>
 
   <script>
@@ -403,8 +432,7 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
               data: [${laborPercent}, ${materialsPercent}],
               backgroundColor: ['#2563eb', '#f97316'],
               borderColor: ['#1e40af', '#ea580c'],
-              borderWidth: 2,
-              borderRadius: 4
+              borderWidth: 2
             }]
           },
           options: {
@@ -413,18 +441,7 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
             plugins: {
               legend: {
                 position: 'bottom',
-                labels: {
-                  font: { size: 11 },
-                  padding: 12,
-                  usePointStyle: true
-                }
-              },
-              tooltip: {
-                callbacks: {
-                  label: function(context) {
-                    return context.label + ': ' + context.parsed + '%';
-                  }
-                }
+                labels: { font: { size: 10 }, padding: 10 }
               }
             }
           }
@@ -444,9 +461,7 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
   try {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'networkidle0' });
-    
-    // Wait for Chart.js to render
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     const pdfBuffer = await page.pdf({
       format: 'A4',

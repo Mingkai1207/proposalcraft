@@ -350,3 +350,16 @@
 - [x] Rebuild HTML template from scratch
 - [x] Test with real proposal data
 - [x] Verify professional appearance
+
+
+## Phase 22: Complete PDF Generation Debugging & Fixing
+- [ ] Debug actual content being passed to PDF generator
+- [ ] Identify where markdown is coming from (LLM output or parser)
+- [ ] Fix markdown removal comprehensively (#### symbols still showing)
+- [ ] Fix garbled text in addresses
+- [ ] Reduce PDF to 1-2 pages max
+- [ ] Remove "about:blank" and placeholder text completely
+- [ ] Validate all data before rendering
+- [ ] Test with real proposal data
+- [ ] Self-check and iterate until perfect
+- [ ] Document the fix for future reference

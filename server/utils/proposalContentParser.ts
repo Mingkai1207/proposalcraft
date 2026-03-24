@@ -1,6 +1,8 @@
 /**
  * Parse LLM-generated proposal content and extract structured sections
+ * CRITICAL: Clean markdown FIRST, then parse
  */
+
 export interface ParsedProposalContent {
   executiveSummary: string;
   scopeOfWork: string[];
@@ -10,8 +12,74 @@ export interface ParsedProposalContent {
   termsAndConditions: string;
 }
 
+/**
+ * Aggressively clean markdown and formatting artifacts
+ */
+function cleanMarkdown(text: string): string {
+  if (!text) return '';
+  
+  return text
+    // Remove markdown headers (# ## ### #### etc)
+    .replace(/^#+\s+/gm, '')
+    // Remove bold/italic markers
+    .replace(/\*\*(.+?)\*\*/g, '$1')
+    .replace(/\*(.+?)\*/g, '$1')
+    .replace(/__(.+?)__/g, '$1')
+    .replace(/_(.+?)_/g, '$1')
+    // Remove code blocks and inline code
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`(.+?)`/g, '$1')
+    // Remove HTML tags
+    .replace(/<[^>]*>/g, '')
+    // Remove markdown list markers
+    .replace(/^[\s]*[-*+]\s+/gm, '')
+    .replace(/^[\s]*\d+\.\s+/gm, '')
+    // Remove markdown link syntax
+    .replace(/\[(.+?)\]\(.+?\)/g, '$1')
+    // Remove markdown image syntax
+    .replace(/!\[(.+?)\]\(.+?\)/g, '$1')
+    // Remove horizontal rules
+    .replace(/^[\s]*[-*_]{3,}[\s]*$/gm, '')
+    // Remove blockquote markers
+    .replace(/^>\s+/gm, '')
+    // Clean up multiple spaces
+    .replace(/\s{2,}/g, ' ')
+    // Clean up multiple newlines
+    .replace(/\n{3,}/g, '\n\n')
+    // Trim
+    .trim();
+}
+
+/**
+ * Extract clean bullet points from text
+ */
+function extractBulletPoints(text: string): string[] {
+  const lines = text.split('\n');
+  const points: string[] = [];
+  
+  for (const line of lines) {
+    let cleaned = line
+      .replace(/^[\s]*[-*+•]\s+/g, '') // Remove bullet markers
+      .replace(/^[\s]*\d+\.\s+/g, '') // Remove numbered list markers
+      .replace(/^\s*\*\s+/g, '') // Remove asterisk bullets
+      .trim();
+    
+    // Remove markdown from the line
+    cleaned = cleanMarkdown(cleaned);
+    
+    // Only add non-empty lines that are reasonable length
+    if (cleaned.length > 5 && cleaned.length < 300) {
+      points.push(cleaned);
+    }
+  }
+  
+  return points.length > 0 ? points : [];
+}
+
 export function parseProposalContent(content: string): ParsedProposalContent {
-  const lines = content.split('\n').filter(line => line.trim().length > 0);
+  // CRITICAL: Clean the entire content first
+  const cleanedContent = cleanMarkdown(content);
+  const lines = cleanedContent.split('\n').filter(line => line.trim().length > 0);
   
   const result: ParsedProposalContent = {
     executiveSummary: "",
@@ -27,46 +95,47 @@ export function parseProposalContent(content: string): ParsedProposalContent {
 
   for (const line of lines) {
     const trimmed = line.trim();
+    const lowerTrimmed = trimmed.toLowerCase();
     
-    // Detect section headers
-    if (trimmed.toLowerCase().includes("executive summary") || trimmed.toLowerCase().includes("summary")) {
+    // Detect section headers (case-insensitive)
+    if (lowerTrimmed.includes("executive summary") || lowerTrimmed.includes("summary")) {
       if (currentSection && currentItems.length > 0) {
         assignSectionItems(result, currentSection, currentItems);
       }
       currentSection = "summary";
       currentItems = [];
-    } else if (trimmed.toLowerCase().includes("scope of work") || trimmed.toLowerCase().includes("scope")) {
+    } else if (lowerTrimmed.includes("scope of work") || lowerTrimmed.includes("scope")) {
       if (currentSection && currentItems.length > 0) {
         assignSectionItems(result, currentSection, currentItems);
       }
       currentSection = "scope";
       currentItems = [];
-    } else if (trimmed.toLowerCase().includes("materials") || trimmed.toLowerCase().includes("equipment")) {
+    } else if (lowerTrimmed.includes("materials") || lowerTrimmed.includes("equipment")) {
       if (currentSection && currentItems.length > 0) {
         assignSectionItems(result, currentSection, currentItems);
       }
       currentSection = "materials";
       currentItems = [];
-    } else if (trimmed.toLowerCase().includes("timeline") || trimmed.toLowerCase().includes("schedule")) {
+    } else if (lowerTrimmed.includes("timeline") || lowerTrimmed.includes("schedule")) {
       if (currentSection && currentItems.length > 0) {
         assignSectionItems(result, currentSection, currentItems);
       }
       currentSection = "timeline";
       currentItems = [];
-    } else if (trimmed.toLowerCase().includes("why choose") || trimmed.toLowerCase().includes("why us")) {
+    } else if (lowerTrimmed.includes("why choose") || lowerTrimmed.includes("why us")) {
       if (currentSection && currentItems.length > 0) {
         assignSectionItems(result, currentSection, currentItems);
       }
       currentSection = "whyChoose";
       currentItems = [];
-    } else if (trimmed.toLowerCase().includes("terms") || trimmed.toLowerCase().includes("conditions")) {
+    } else if (lowerTrimmed.includes("terms") || lowerTrimmed.includes("conditions")) {
       if (currentSection && currentItems.length > 0) {
         assignSectionItems(result, currentSection, currentItems);
       }
       currentSection = "terms";
       currentItems = [];
     } else if (currentSection && trimmed.length > 0) {
-      // Add to current section
+      // Add to current section - already cleaned
       currentItems.push(trimmed);
     }
   }
@@ -76,13 +145,16 @@ export function parseProposalContent(content: string): ParsedProposalContent {
     assignSectionItems(result, currentSection, currentItems);
   }
 
-  // Ensure we have defaults
+  // Ensure we have defaults if parsing failed
+  if (!result.executiveSummary || result.executiveSummary.length < 10) {
+    result.executiveSummary = "Professional proposal for your project.";
+  }
+
   if (result.scopeOfWork.length === 0) {
     result.scopeOfWork = [
       "Complete project assessment",
       "Professional installation",
       "Quality assurance",
-      "Customer satisfaction guaranteed",
     ];
   }
 
@@ -90,7 +162,6 @@ export function parseProposalContent(content: string): ParsedProposalContent {
     result.materials = [
       "Premium materials",
       "Professional equipment",
-      "Safety compliance",
     ];
   }
 
@@ -102,16 +173,12 @@ export function parseProposalContent(content: string): ParsedProposalContent {
     ];
   }
 
-  if (!result.executiveSummary) {
-    result.executiveSummary = "Professional proposal for your project.";
+  if (!result.whyChooseUs || result.whyChooseUs.length < 10) {
+    result.whyChooseUs = "Professional service backed by experience.";
   }
 
-  if (!result.whyChooseUs) {
-    result.whyChooseUs = "We provide professional, reliable service backed by years of experience and customer satisfaction.";
-  }
-
-  if (!result.termsAndConditions) {
-    result.termsAndConditions = "50% deposit required to schedule. Balance due upon completion. 1-year warranty on all work.";
+  if (!result.termsAndConditions || result.termsAndConditions.length < 10) {
+    result.termsAndConditions = "50% deposit required. Balance on completion. 1-year warranty.";
   }
 
   return result;
@@ -122,40 +189,22 @@ function assignSectionItems(result: ParsedProposalContent, section: string, item
 
   switch (section) {
     case "summary":
-      result.executiveSummary = text.substring(0, 500);
+      result.executiveSummary = cleanMarkdown(text).substring(0, 500);
       break;
     case "scope":
-      result.scopeOfWork = extractBulletPoints(items);
+      result.scopeOfWork = extractBulletPoints(text);
       break;
     case "materials":
-      result.materials = extractBulletPoints(items);
+      result.materials = extractBulletPoints(text);
       break;
     case "timeline":
-      result.timeline = extractBulletPoints(items);
+      result.timeline = extractBulletPoints(text);
       break;
     case "whyChoose":
-      result.whyChooseUs = text.substring(0, 300);
+      result.whyChooseUs = cleanMarkdown(text).substring(0, 300);
       break;
     case "terms":
-      result.termsAndConditions = text.substring(0, 300);
+      result.termsAndConditions = cleanMarkdown(text).substring(0, 300);
       break;
   }
-}
-
-function extractBulletPoints(items: string[]): string[] {
-  const bullets: string[] = [];
-
-  for (const item of items) {
-    // Remove common bullet point markers
-    let cleaned = item
-      .replace(/^[\*\-\•\+\d+\.]+\s*/, "")
-      .replace(/^[\*\*]+/, "")
-      .trim();
-
-    if (cleaned.length > 0 && cleaned.length < 200) {
-      bullets.push(cleaned);
-    }
-  }
-
-  return bullets.length > 0 ? bullets : items.slice(0, 5);
 }
