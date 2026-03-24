@@ -68,10 +68,10 @@ const TRADES = [
 const GUARANTEE_BADGE_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposai-guarantee-badge-iVr29Hp4v4FN5DhPsDtUwF.webp";
 
 const TRADE_SAMPLE_PDFS: Record<string, string> = {
-  HVAC: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_hvac_ab0f7423.pdf",
-  Plumbing: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_plumbing_53e048cc.pdf",
-  Electrical: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_electrical_7652da55.pdf",
-  Roofing: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_roofing_0b5d8354.pdf",
+  HVAC: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_hvac_1b529b86.pdf",
+  Plumbing: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_plumbing_da05dcab.pdf",
+  Electrical: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_electrical_4dd05396.pdf",
+  Roofing: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_roofing_f517591e.pdf",
 };
 
 const SAMPLE_PDF_URL = TRADE_SAMPLE_PDFS.HVAC;
