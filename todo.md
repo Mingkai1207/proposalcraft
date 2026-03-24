@@ -653,3 +653,9 @@
 - [x] Added invalidation on exportPdf success so pdfUrl is cached for future downloads
 - [x] Write tests for Puppeteer PDF exports and CSS sanitization (35 tests passing)
 - [x] Verify end-to-end: form → summary → HTML + auto PDF → direct download
+
+## New System Prompt (User-Provided)
+- [x] Replace HTML generation system prompt with user's new prompt (inline CSS only, A4, creative freedom, acceptance block)
+- [x] Update Puppeteer PDF settings: A4 format, 800px centered
+- [x] Update reviseWithAI prompt to match new style (inline CSS, no external fonts)
+- [x] Update refineProposal prompt to match new style

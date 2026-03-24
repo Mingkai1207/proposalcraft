@@ -1108,49 +1108,26 @@ RULES:
       };
       const tradeContext = TRADE_CONTEXT[proposal.tradeType] || TRADE_CONTEXT.general;
 
-      const systemPrompt = `You are an expert ${tradeName} proposal writer. Generate a complete, professional contractor proposal as a single self-contained HTML document.
+      const systemPrompt = `You are a professional proposal document generator. The user will send you a project summary. Transform it into a single, complete, self-contained HTML document ready for PDF conversion via Puppeteer.
 
-Trade expertise: ${tradeContext}
+STRICT OUTPUT RULES:
+- Return ONLY raw HTML starting with <!DOCTYPE html>. No markdown, no backticks, no text before or after.
+- Inline CSS only. No external stylesheets or fonts.
+- Never omit, abbreviate, or skip any information from the summary.
 
-HTML DOCUMENT REQUIREMENTS:
-- Return a complete <!DOCTYPE html>...</html> document with all CSS embedded in a <style> block in <head>
-- Use @page CSS rules for print layout: size: letter; margin: 1in 0.8in;
-- Design a visually impressive header section with the contractor business name, client info, proposal date, and project title
-- Use a professional color scheme with 2-3 accent colors (not just black and white)
-- Include these sections: Executive Summary, Scope of Work, Materials & Equipment, Project Timeline, Investment Summary, Why Choose Us, Terms & Conditions
-- Use real data throughout — never use placeholders like [Your Name] or [Client Name]
-- Do NOT include signature blocks, Accepted By sections, or Contact Information sections
+DESIGN:
+- Make the document visually appealing and professional. You have full creative freedom over layout, typography, and color scheme.
+- Optimized for A4 PDF output (800px centered, printBackground: true in Puppeteer).
 
-PAGE BREAK RULES (CRITICAL — browser print must produce multiple pages):
-- NEVER use break-inside: avoid-page or page-break-inside: avoid on section-level divs — this causes all content after the first overflow to be cut off
-- NEVER use position: running() or @page @top-right/@bottom-center content: element() — these are not supported by Chrome/Safari print
-- NEVER set body { height: 100vh } or overflow: hidden on body/html — content must flow freely
-- DO use break-inside: avoid only on small atomic elements: table rows (tr), individual callout boxes, chart containers (max 300px tall)
-- DO use break-after: avoid on h2/h3 headings to keep them with their first paragraph
-- DO use orphans: 3; widows: 3; on paragraphs
-- DO use page-break-before: always on the very first section after the cover header only
-- Sections MUST be allowed to break across pages — they contain too much content to fit on one page
-- Add a simple page counter footer using CSS: @page { @bottom-center { content: "Page " counter(page); } } — this IS supported by Chrome
+CHARTS (required):
+- Identify data in the summary that benefits from visualization — cost breakdowns, timelines, material quantities, payment schedules, efficiency ratings, etc.
+- Render all charts as inline SVG (no JavaScript, no external libraries).
+- Charts must be accurate, clearly labeled, and visually integrated with the document's design.
+- Examples: bar chart for cost breakdown, Gantt-style chart for timeline, donut chart for budget allocation, comparison bars for equipment specs.
 
-ANALYTIC CHARTS (REQUIRED — use inline SVG):
-1. Cost Breakdown: An SVG bar chart or pie chart showing labor cost vs. materials cost with dollar labels
-2. Payment Schedule: An SVG bar chart showing payment milestones (deposit, progress payment, final) with amounts
-3. Project Timeline: An SVG Gantt-style horizontal bar chart showing each project phase with duration
-- All SVG charts must use hardcoded data values from the proposal
-- Size each SVG to fit within the page: width="100%" viewBox="0 0 700 250" (adjust height as needed)
-- Include a title and axis labels on each chart
-- Use the same accent colors as the rest of the document
-
-TYPOGRAPHY & LAYOUT:
-- Use Google Fonts via @import: choose a professional font pair (e.g., Playfair Display + Source Sans Pro, or Merriweather + Open Sans)
-- Font size: body 11pt, h1 22pt, h2 14pt
-- Line height: 1.6 for body text
-- Use colored section headers with a left border accent or bottom border
-- Use alternating row colors in tables
-- Use a highlighted total row in cost tables
-- Wrap each section in a <div class="section"> for consistent spacing
-
-STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no explanation. Start with <!DOCTYPE html> and end with </html>.`;
+STRUCTURE:
+- Organize content into logical sections with clear headings.
+- End with an Acceptance & Signature block for both parties.`;
 
       const { invokeAnthropic } = await import("../utils/anthropicLLM");
       const result = await invokeAnthropic({
@@ -1158,7 +1135,7 @@ STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no ex
         systemPrompt,
         messages: [{
           role: "user",
-          content: `Use this proposal draft to generate the complete HTML proposal document:\n\n${input.approvedSummary}`,
+          content: input.approvedSummary,
         }],
         maxTokens: 20000,
       });
@@ -1251,18 +1228,19 @@ STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no ex
         // HTML-based proposals: ask Claude to return updated HTML
         const result = await invokeAnthropic({
           model: "claude-sonnet-4-6-thinking",
-          systemPrompt: `You are a professional proposal editor. The user has a contractor proposal written as a complete HTML document and wants to make specific changes.
+          systemPrompt: `You are a professional proposal document editor. The user has a contractor proposal written as a complete, self-contained HTML document and wants to make specific changes.
+
+STRICT OUTPUT RULES:
+- Return ONLY raw HTML starting with <!DOCTYPE html>. No markdown, no backticks, no text before or after.
+- Inline CSS only. No external stylesheets or fonts.
+- Never omit, abbreviate, or skip any information from the original document.
 
 Your job:
-1. Understand exactly what the user wants to change
-2. Rewrite ONLY the affected section(s) of the HTML
-3. Return the COMPLETE updated HTML document (not just the changed section)
-4. Maintain the same professional design, CSS styles, and structure
-5. Keep all SVG charts, Google Fonts imports, and @media print rules intact
-6. Do NOT add placeholder text like [Your Phone Number]
-7. Do NOT add signature blocks or Contact Information sections
-
-STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no explanation. Start with <!DOCTYPE html> and end with </html>.`,
+1. Understand exactly what the user wants to change.
+2. Apply the requested changes to the affected section(s).
+3. Return the COMPLETE updated HTML document (not just the changed section).
+4. Maintain the same professional design, inline CSS styles, SVG charts, and structure.
+5. Keep the document optimized for A4 PDF output (800px centered, printBackground: true in Puppeteer).`,
           messages: [{
             role: "user",
             content: `Here is the current proposal HTML:\n\n${currentContent}\n\n---\n\nRevision request: ${input.message}`,
@@ -1599,18 +1577,19 @@ Business: ${businessName}`;
         const { invokeAnthropic } = await import("../utils/anthropicLLM");
         const result = await invokeAnthropic({
           model: "claude-sonnet-4-6-thinking",
-          systemPrompt: `You are a professional proposal editor. The user has a contractor proposal written as a complete HTML document and wants to make specific changes.
+          systemPrompt: `You are a professional proposal document editor. The user has a contractor proposal written as a complete, self-contained HTML document and wants to make specific changes.
+
+STRICT OUTPUT RULES:
+- Return ONLY raw HTML starting with <!DOCTYPE html>. No markdown, no backticks, no text before or after.
+- Inline CSS only. No external stylesheets or fonts.
+- Never omit, abbreviate, or skip any information from the original document.
 
 Your job:
-1. Understand exactly what the user wants to change
-2. Rewrite ONLY the affected section(s) of the HTML
-3. Return the COMPLETE updated HTML document (not just the changed section)
-4. Maintain the same professional design, CSS styles, and structure
-5. Keep all SVG charts, Google Fonts imports, and @media print rules intact
-6. Do NOT add placeholder text like [Your Phone Number]
-7. Do NOT add signature blocks or Contact Information sections
-
-STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no explanation. Start with <!DOCTYPE html> and end with </html>.`,
+1. Understand exactly what the user wants to change.
+2. Apply the requested changes to the affected section(s).
+3. Return the COMPLETE updated HTML document (not just the changed section).
+4. Maintain the same professional design, inline CSS styles, SVG charts, and structure.
+5. Keep the document optimized for A4 PDF output (800px centered, printBackground: true in Puppeteer).`,
           messages: [{
             role: "user",
             content: `Here is the current proposal HTML:\n\n${currentContent}\n\n---\n\nRevision request: ${input.message}`,
