@@ -663,3 +663,24 @@
 ## Prompt Fix: Remove "never abbreviate" rule
 - [x] Remove "Never omit, abbreviate, or skip" from generateFromSummary prompt
 - [x] Remove same rule from reviseWithAI and refineProposal prompts
+
+## Increase maxTokens to 100,000
+- [ ] Update maxTokens from 20,000 to 100,000 in generateFromSummary
+- [ ] Update maxTokens in reviseWithAI and refineProposal to match
+- [ ] Re-test proposal generation to verify full content renders
+
+## Page Margins Fix
+- [ ] Update system prompt: require proper top/bottom page margins via CSS @page
+- [ ] Update Puppeteer PDF settings: add top/bottom margins
+- [ ] Also fix: SVG chart labels getting clipped at right edge
+- [ ] Re-test PDF output
+- [ ] Update prompt: sections should not start at the bottom of a page — use page-break-before when section would start in bottom 20% of page
+
+## Comprehensive Prompt Refinement (Research-Based)
+- [x] Research professional proposal formatting standards (Proposify, PandaDoc, Smartsheet templates)
+- [x] Research CSS print best practices for Chrome/Puppeteer (orphans, widows, page-break rules)
+- [x] Analyze current PDF output page-by-page: orphaned headings on pages 2 & 3, SVG label clipping, emoji in headers
+- [x] Rewrite system prompt: h2/h3 ::before orphan prevention hack, tr break-inside, SVG 640px viewBox with 50/70px padding, no emoji, system fonts only
+- [x] Apply same improvements to reviseWithAI and refineProposal prompts
+- [x] Mark maxTokens and page margins items as completed (already done in previous sessions)
+- [x] All 35 tests passing

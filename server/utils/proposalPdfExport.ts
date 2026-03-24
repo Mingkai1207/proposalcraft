@@ -130,9 +130,9 @@ export async function generatePdfFromHtml(html: string): Promise<Buffer> {
 
     const pdfBuffer = await page.pdf({
       format: "A4",
-      margin: { top: "0", right: "0", bottom: "0", left: "0" },
+      margin: { top: "0.6in", right: "0.4in", bottom: "0.6in", left: "0.4in" },
       printBackground: true,
-      preferCSSPageSize: true,
+      preferCSSPageSize: false,
     }) as Buffer;
 
     return Buffer.from(pdfBuffer as Uint8Array);
