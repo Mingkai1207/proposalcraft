@@ -213,7 +213,7 @@ export default function ProposalDetail() {
             <>
               <Button
                 variant="outline" size="sm"
-                onClick={() => { setEditContent(proposal.generatedContent || ""); setEditing(true); }}
+                onClick={() => navigate(`/proposals/${proposal.id}/edit`)}
               >
                 <Edit2 className="w-4 h-4 mr-1" /> Edit
               </Button>

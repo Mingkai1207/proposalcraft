@@ -291,3 +291,13 @@
 - [x] Add empty state banner when user has no proposals
 - [x] Ensure Onboarding Modal shows on first login
 - [x] Test new user experience end-to-end
+
+
+## Phase 15: Fix Sample Proposal & Add Rich Text Editor
+- [x] Fix sample proposal formatting (overlapping text, proper layout)
+- [x] Find and fix the sample proposal generation code
+- [x] Add rich text editor component for proposal editing
+- [x] Create proposal editor page/modal
+- [x] Integrate editor into proposal workflow (after generation, before PDF)
+- [x] Add save and preview functionality
+- [x] Test end-to-end proposal editing flow

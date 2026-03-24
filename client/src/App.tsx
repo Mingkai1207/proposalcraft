@@ -16,6 +16,7 @@ import Refund from "./pages/Refund";
 import ClientPortal from "./pages/ClientPortal";
 import { Templates } from "./pages/Templates";
 import ProposalImport from "./pages/ProposalImport";
+import ProposalEditor from "./pages/ProposalEditor";
 
 function Router() {
   return (
@@ -23,6 +24,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/proposals/new" component={NewProposal} />
+      <Route path="/proposals/:id/edit" component={(props: any) => <ProposalEditor proposalId={parseInt(props.params.id)} />} />
       <Route path="/proposals/:id" component={ProposalDetail} />
       <Route path="/settings" component={Settings} />
       <Route path="/templates" component={Templates} />
