@@ -545,3 +545,8 @@
 - [x] Update Home page feature highlights to match actual capabilities
 - [x] Remove any outdated references to old template picker / style cards
 - [x] Ensure all plan gates match what is actually implemented (PDF free, Word/Google Doc Starter+, AI revision Starter+)
+
+## VectorEngine API Integration
+- [x] Store VECTOR_ENGINE_API_KEY and VECTOR_ENGINE_BASE_URL as secrets
+- [x] Update anthropicLLM.ts to call VectorEngine with claude-sonnet-4-6-thinking
+- [x] Test proposal generation with real Claude model
