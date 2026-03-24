@@ -605,3 +605,9 @@
 
 ## LaTeX TEXMFVAR Fix
 - [x] Fix pdflatex "format directory not writable" error: removed TEXMFVAR/TEXMFSYSVAR overrides (they broke pdftex.map symlink), pdflatex now uses default ~/.texlive2021/texmf-var which is writable
+
+## LaTeX Undefined Control Sequence Fix
+- [x] Retrieve generated LaTeX from DB, identify undefined control sequence (fontawesome5, fontspec, setmainfont)
+- [x] Harden prompt: restrict Claude to only safe/available packages, add pre-compilation validation
+- [x] Add fallback: save LaTeX to DB BEFORE compilation so it can be debugged/retried
+- [x] Add sanitizeLatex() function that strips 10+ known problematic packages/commands Claude tends to use

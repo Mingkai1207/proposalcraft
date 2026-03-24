@@ -1,0 +1,15 @@
+{
+  "query": "SELECT id, title, LEFT(generatedContent, 5000) as latex_preview FROM proposals ORDER BY id DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user FeC7Hhjo94vzeQP.root --database TxoyTEEFMfksnn9C3wscL4 --execute SELECT id, title, LEFT(generatedContent, 5000) as latex_preview FROM proposals ORDER BY id DESC LIMIT 1;",
+  "rows": [
+    {
+      "id": "270003",
+      "title": "HVAC System Replacement – 123 Main St",
+      "latex_preview": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tlatex_preview\n270003\tHVAC System Replacement – 123 Main St\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 389
+}

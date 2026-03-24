@@ -1168,6 +1168,12 @@ STRICT OUTPUT RULE: Return ONLY the raw LaTeX source. No markdown, no code fence
 
       const generatedContent = generatedLatex;
 
+      // Save LaTeX to DB BEFORE compilation so it can be debugged if compilation fails
+      await updateProposal(proposal.id, ctx.user.id, {
+        generatedContent,
+        summaryContent: input.approvedSummary,
+      });
+
       // Compile LaTeX to PDF
       const { latexToPdf } = await import("../utils/latexToPdf");
       const pdfBuffer = await latexToPdf(generatedLatex);
