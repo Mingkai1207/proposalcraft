@@ -710,43 +710,68 @@ ${relevantFields || fieldContext}`;
       const validUntil = new Date(new Date(proposal.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
 
       try {
-        const { exportToWord } = await import("../utils/wordExporter");
+        const { htmlToDocx } = await import("../utils/htmlToDocx");
         const { getTemplateById, TEMPLATE_DEFS } = await import("../../shared/templateDefs");
+        const { buildHtml } = await import("../utils/templatePdfRenderer");
+        const { generateProposalPdf, buildProposalHtml } = await import("../utils/proposalPdfExport");
 
-        const template = proposal.templateId ? getTemplateById(proposal.templateId) : TEMPLATE_DEFS[0];
-        if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Template not found" });
+        let html: string;
 
-        const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
-        const sectionContents: Record<string, string> = {};
-        const content = proposal.generatedContent || "";
-        const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n\n([\s\S]*?)(?=\n\n## |$)/g));
-        for (const match of sectionMatches) {
-          const sectionTitle = match[1].trim();
-          const section = template.sections.find(s => s.title === sectionTitle);
-          if (section) sectionContents[section.id] = match[2].trim();
+        if (proposal.templateId) {
+          // Template-based proposal: use the same HTML as the PDF renderer
+          const template = getTemplateById(proposal.templateId) || TEMPLATE_DEFS[0];
+          const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
+          const sectionContents: Record<string, string> = {};
+          const content = proposal.generatedContent || "";
+          const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
+          for (const match of sectionMatches) {
+            const sectionTitle = match[1].trim();
+            const section = template.sections.find(s => s.title === sectionTitle);
+            if (section) sectionContents[section.id] = match[2].trim();
+          }
+          if (Object.keys(sectionContents).length === 0) {
+            sectionContents["content"] = content;
+          }
+          html = await buildHtml({
+            template,
+            title: proposal.title,
+            businessName,
+            businessPhone: profile?.phone || "",
+            businessEmail: profile?.email || ctx.user.email || "",
+            businessAddress: profile?.address || "",
+            licenseNumber: profile?.licenseNumber || "",
+            clientName: proposal.clientName || "Valued Client",
+            clientAddress: proposal.clientAddress || "",
+            clientEmail: proposal.clientEmail || "",
+            preparedDate,
+            validUntil,
+            sectionContents,
+            fields,
+          });
+        } else {
+          // Legacy proposal: use the markdown-based HTML builder
+          html = buildProposalHtml({
+            businessName,
+            businessPhone: profile?.phone || "",
+            businessEmail: profile?.email || ctx.user.email || "",
+            businessAddress: profile?.address || "",
+            licenseNumber: profile?.licenseNumber || "",
+            clientName: proposal.clientName || "Valued Client",
+            clientAddress: proposal.clientAddress || "",
+            clientPhone: "",
+            clientEmail: proposal.clientEmail || "",
+            jobTitle: proposal.title,
+            preparedDate,
+            validUntil,
+            laborCost: parseInt(proposal.laborCost || "2000") || 2000,
+            materialsCost: parseInt(proposal.materialsCost || "3000") || 3000,
+            totalCost: parseInt(proposal.totalCost || "5000") || 5000,
+            proposalMarkdown: proposal.generatedContent || "No proposal content available.",
+            termsOverride: profile?.defaultTerms || undefined,
+          });
         }
-        // If no sections matched, put all content in a generic section
-        if (Object.keys(sectionContents).length === 0) {
-          sectionContents["content"] = content;
-        }
 
-        const docxBuffer = await exportToWord({
-          template,
-          title: proposal.title,
-          businessName,
-          businessPhone: profile?.phone || "",
-          businessEmail: profile?.email || ctx.user.email || "",
-          businessAddress: profile?.address || "",
-          licenseNumber: profile?.licenseNumber || "",
-          clientName: proposal.clientName || "Valued Client",
-          clientAddress: proposal.clientAddress || "",
-          clientEmail: proposal.clientEmail || "",
-          preparedDate,
-          validUntil,
-          sectionContents,
-          fields,
-        });
-
+        const docxBuffer = await htmlToDocx(html);
         const fileName = `proposal-${proposal.id}-${Date.now()}.docx`;
         const { url } = await storagePut(
           fileName,
@@ -813,5 +838,53 @@ ${relevantFields || fieldContext}`;
         console.error(`[Google Docs Export] Failed:`, error);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to generate Google Docs export." });
       }
+    }),
+
+  /**
+   * AI refinement chat: user sends a message requesting changes to the proposal,
+   * AI rewrites the specified section(s) and returns the updated content.
+   */
+  refineProposal: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      message: z.string().min(1).max(2000),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await getProposalById(input.id);
+      if (!proposal || proposal.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
+      }
+
+      const currentContent = proposal.generatedContent || "";
+
+      const { invokeLLM } = await import("../_core/llm");
+
+      const systemPrompt = `You are a professional proposal editor. The user has a contractor proposal and wants to make specific changes to it.
+
+Your job is to:
+1. Understand exactly what the user wants to change
+2. Rewrite ONLY the affected section(s) of the proposal
+3. Return the COMPLETE updated proposal content (not just the changed section)
+4. Maintain the same professional tone, formatting, and structure
+5. Keep all sections that were NOT requested to change exactly as they are
+6. Do NOT add placeholder text like [Your Phone Number] or [Your Email]
+7. Do NOT add signature blocks or contact information sections at the end
+
+Return ONLY the updated proposal content in markdown format. No preamble, no explanation.`;
+
+      const response = await invokeLLM({
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Here is the current proposal content:\n\n${currentContent}\n\n---\n\nUser request: ${input.message}` },
+        ],
+      });
+
+      const rawContent = response.choices[0]?.message?.content;
+      const updatedContent = typeof rawContent === "string" ? rawContent : currentContent;
+
+      // Save the updated content to the database
+      await updateProposal(input.id, ctx.user.id, { generatedContent: updatedContent });
+
+      return { content: updatedContent };
     }),
 });

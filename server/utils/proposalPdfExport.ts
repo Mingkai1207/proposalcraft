@@ -72,7 +72,11 @@ function mdToHtml(md: string): string {
 
 /* ── main export ────────────────────────────────────────────── */
 
-export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer> {
+/**
+ * Build the HTML string for a legacy (non-template) proposal.
+ * Exported so the Word exporter can reuse the same HTML for DOCX conversion.
+ */
+export function buildProposalHtml(data: ProposalPdfData): string {
   const biz = {
     name:    data.businessName || "Your Company",
     phone:   data.businessPhone || "",
@@ -99,14 +103,52 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
 
   const licLine = biz.license ? " &middot; Lic# " + esc(biz.license) : "";
 
-  // Render the full AI content as HTML
   const proposalBodyHtml = mdToHtml(data.proposalMarkdown);
-
-  // Terms: prefer profile override, otherwise let the AI content speak for itself
   const termsHtml = data.termsOverride
     ? "<p>" + esc(data.termsOverride).replace(/\n/g, "<br>") + "</p>"
     : "";
 
+  // Delegate to the shared HTML builder
+  return _buildLegacyHtml({ biz, client, jobTitle, preparedDate, validUntil, laborCost, materialsCost, totalCost, laborPct, matPct, deposit, licLine, proposalBodyHtml, termsHtml });
+}
+
+export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer> {
+  const html = buildProposalHtml(data);
+
+  /* ── render with Puppeteer ─────────────────────────────── */
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+    await new Promise((r) => setTimeout(r, 2500));
+
+    const pdfBuffer = await page.pdf({
+      format: "Letter",
+      margin: { top: "0", right: "0", bottom: "0", left: "0" },
+      printBackground: true,
+      preferCSSPageSize: false,
+    }) as Buffer;
+
+    return Buffer.from(pdfBuffer as Uint8Array);
+  } finally {
+    await browser.close();
+  }
+}
+
+// Internal helper — builds the full HTML string for legacy proposals
+function _buildLegacyHtml(p: {
+  biz: { name: string; phone: string; email: string; address: string; license: string };
+  client: { name: string; address: string; phone: string; email: string };
+  jobTitle: string; preparedDate: string; validUntil: string;
+  laborCost: number; materialsCost: number; totalCost: number;
+  laborPct: number; matPct: number; deposit: string;
+  licLine: string; proposalBodyHtml: string; termsHtml: string;
+}): string {
+  const { biz, client, jobTitle, preparedDate, validUntil, laborCost, materialsCost, totalCost, laborPct, matPct, deposit, licLine, proposalBodyHtml, termsHtml } = p;
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -464,27 +506,5 @@ setTimeout(()=>{
 <\/script>
 </body>
 </html>`;
-
-  /* ── render with Puppeteer ─────────────────────────────── */
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
-    await new Promise((r) => setTimeout(r, 2500));
-
-    const pdfBuffer = await page.pdf({
-      format: "Letter",
-      margin: { top: "0", right: "0", bottom: "0", left: "0" },
-      printBackground: true,
-      preferCSSPageSize: false,
-    }) as Buffer;
-
-    return Buffer.from(pdfBuffer as Uint8Array);
-  } finally {
-    await browser.close();
-  }
+  return html;
 }

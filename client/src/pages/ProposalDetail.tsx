@@ -18,6 +18,11 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from "@/components/ui/dialog";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle
+} from "@/components/ui/sheet";
+import { AIChatBox } from "@/components/AIChatBox";
+import type { Message } from "@/components/AIChatBox";
 
 const STATUS_CONFIG = {
   draft: { label: "Draft", color: "bg-gray-100 text-gray-700", icon: Clock },
@@ -39,6 +44,15 @@ export default function ProposalDetail() {
   const [sendMessage, setSendMessage] = useState("");
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
+
+  // AI refinement chat state
+  const [refineOpen, setRefineOpen] = useState(false);
+  const [refineMessages, setRefineMessages] = useState<Message[]>([
+    {
+      role: "assistant",
+      content: "Hi! I can help you refine this proposal. Tell me what you'd like to change — for example:\n\n- \"Make the scope of work more detailed\"\n- \"Change payment terms to net-30\"\n- \"Add a section about safety precautions\"\n- \"Make the tone more formal\""
+    }
+  ]);
 
   const { data: proposal, isLoading, refetch } = trpc.proposals.get.useQuery(
     { id: proposalId },
@@ -125,6 +139,29 @@ export default function ProposalDetail() {
     },
     onError: (e) => toast.error(e.message || "Failed to generate Word document."),
   });
+
+  // AI refinement mutation
+  const refineMutation = trpc.proposals.refineProposal.useMutation({
+    onSuccess: () => {
+      setRefineMessages(prev => [
+        ...prev,
+        { role: "assistant", content: "Done! I've updated the proposal. You can see the changes in the content panel on the left. Export when you're ready." }
+      ]);
+      refetch();
+    },
+    onError: (e) => {
+      setRefineMessages(prev => [
+        ...prev,
+        { role: "assistant", content: `Sorry, I couldn't apply that change: ${e.message}` }
+      ]);
+    },
+  });
+
+  const handleRefineMessage = (message: string) => {
+    if (!proposal) return;
+    setRefineMessages(prev => [...prev, { role: "user", content: message }]);
+    refineMutation.mutate({ id: proposal.id, message });
+  };
 
   // Google Docs export mutation
   const exportGoogleDocsMutation = trpc.proposals.exportGoogleDocs.useMutation({
@@ -215,13 +252,19 @@ export default function ProposalDetail() {
         <div className="flex items-center gap-2">
           {!editing ? (
             <>
-              <Button
-                variant="outline" size="sm"
+              <Button variant="outline" size="sm"
                 onClick={() => navigate(`/proposals/${proposal.id}/edit`)}
               >
                 <Edit2 className="w-4 h-4 mr-1" /> Edit
               </Button>
-              {/* Export buttons — three separate clickable buttons */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
+                onClick={() => setRefineOpen(true)}
+              >
+                <Zap className="w-4 h-4 mr-1" /> Refine with AI
+              </Button>             {/* Export buttons — three separate clickable buttons */}
               <Button
                 variant="default"
                 size="sm"
@@ -491,6 +534,36 @@ export default function ProposalDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI Refinement Chat Panel */}
+      <Sheet open={refineOpen} onOpenChange={setRefineOpen}>
+        <SheetContent side="right" className="w-[420px] sm:max-w-[420px] flex flex-col p-0">
+          <SheetHeader className="px-5 py-4 border-b border-border flex-shrink-0">
+            <SheetTitle className="flex items-center gap-2">
+              <Zap className="w-4 h-4 text-purple-600" />
+              Refine with AI
+            </SheetTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Ask the AI to update any part of your proposal. Changes are saved automatically.
+            </p>
+          </SheetHeader>
+          <div className="flex-1 min-h-0">
+            <AIChatBox
+              messages={refineMessages}
+              onSendMessage={handleRefineMessage}
+              isLoading={refineMutation.isPending}
+              placeholder="e.g. Make the payment terms net-30..."
+              height="100%"
+              suggestedPrompts={[
+                "Make the scope of work more detailed",
+                "Change payment terms to net-30",
+                "Make the tone more formal",
+                "Add a warranty section",
+              ]}
+            />
+          </div>
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

@@ -455,3 +455,19 @@
 - [x] Fix blank Word (.docx) export — added fallback to render full raw content when section IDs don't match
 - [x] Fix blank Google Docs export — reuses wordExporter so fix applies automatically
 - [x] Replace finicky hover-based export dropdown with three separate clickable buttons (PDF / Word / Google Docs)
+
+## Phase 29: Word Quality + Pre-Export AI Chat
+- [ ] Make Word export use same HTML template as PDF (convert HTML→DOCX via LibreOffice/html-to-docx)
+- [ ] Build pre-export AI refinement chat panel on ProposalDetail page
+- [ ] Wire AI chat to edit specific proposal sections and save changes to DB
+- [ ] Show chat panel as a slide-in drawer before exporting
+
+## Phase 29: Word Quality + Pre-Export AI Refinement Chat
+- [x] Refactor proposalPdfExport.ts to export buildProposalHtml separately
+- [x] Build htmlToDocx.ts using LibreOffice two-step HTML->ODT->DOCX conversion
+- [x] Update exportWord endpoint to use HTML->DOCX pipeline (same HTML as PDF)
+- [x] Add refineProposal tRPC mutation (AI edits specific sections, saves to DB)
+- [x] Add "Refine with AI" button to ProposalDetail top bar
+- [x] Build AI refinement Sheet panel using AIChatBox component
+- [x] Wire up refinement chat: user message -> AI -> save -> refetch proposal
+- [x] All 27 tests pass

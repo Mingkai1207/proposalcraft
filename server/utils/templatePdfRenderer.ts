@@ -618,6 +618,11 @@ async function buildHtml(input: TemplatePdfInput): Promise<string> {
 }
 
 /**
+ * Build and return the HTML string for a proposal (exported for reuse by Word exporter)
+ */
+export { buildHtml };
+
+/**
  * Render the template proposal to a PDF buffer using Puppeteer
  */
 export async function renderTemplatePdf(input: TemplatePdfInput): Promise<Buffer> {
