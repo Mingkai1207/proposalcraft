@@ -284,3 +284,10 @@
 - [x] Add "Skip" option to onboarding to allow users to proceed without importing
 - [x] Implement PDF/DOCX parsing for better extraction accuracy
 - [x] Test end-to-end import workflow with profile auto-population
+
+
+## Phase 14: Make Import Feature Obvious for New Users
+- [x] Add "Import Proposals" button to Dashboard sidebar navigation
+- [x] Add empty state banner when user has no proposals
+- [x] Ensure Onboarding Modal shows on first login
+- [x] Test new user experience end-to-end

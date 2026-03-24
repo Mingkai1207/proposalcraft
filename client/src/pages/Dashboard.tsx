@@ -11,7 +11,7 @@ import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import {
   FileText, Plus, Eye, Send, Trash2, Clock,
   CheckCircle, AlertCircle, Mail, BarChart3,
-  Settings, LogOut, Home, Zap, Download
+  Settings, LogOut, Home, Zap, Download, Upload
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -140,6 +140,12 @@ export default function Dashboard() {
             <Plus className="w-4 h-4" /> New Proposal
           </button>
           <button
+            onClick={() => navigate("/import")}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
+          >
+            <Upload className="w-4 h-4" /> Import Proposals
+          </button>
+          <button
             onClick={() => navigate("/settings")}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
           >
@@ -255,10 +261,32 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Empty State Banner for New Users */}
+        {proposals?.length === 0 && !isLoading && (
+          <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Upload className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="flex-1 text-left">
+                <h3 className="font-semibold text-blue-900 mb-1">Have past proposals? Import them!</h3>
+                <p className="text-sm text-blue-800 mb-3">
+                  Upload your previous proposals (PDF, Word, or text files) and our AI will extract client info, pricing, and scope to create reusable templates.
+                </p>
+                <Button onClick={() => navigate("/import")} size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <Upload className="w-4 h-4 mr-2" /> Import Proposals Now
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Pending Proposals Widget */}
-        <div className="mb-8">
-          <PendingProposalsWidget />
-        </div>
+        {proposals && proposals.length > 0 && (
+          <div className="mb-8">
+            <PendingProposalsWidget />
+          </div>
+        )}
 
         {/* Response Analytics */}
         <div className="mb-8">
@@ -315,10 +343,15 @@ export default function Dashboard() {
                 <FileText className="w-7 h-7 text-muted-foreground" />
               </div>
               <h3 className="font-semibold text-foreground mb-1">No proposals yet</h3>
-              <p className="text-muted-foreground text-sm mb-4">Generate your first AI-powered proposal in 60 seconds.</p>
-              <Button onClick={() => navigate("/proposals/new")} size="sm">
-                <Plus className="w-4 h-4 mr-1" /> Create First Proposal
-              </Button>
+              <p className="text-muted-foreground text-sm mb-6">Get started in two ways:</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Button onClick={() => navigate("/proposals/new")} size="sm">
+                  <Plus className="w-4 h-4 mr-1" /> Create New Proposal
+                </Button>
+                <Button onClick={() => navigate("/import")} variant="outline" size="sm">
+                  <Upload className="w-4 h-4 mr-1" /> Import Past Proposals
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="overflow-x-auto">
