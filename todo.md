@@ -266,3 +266,13 @@
 - [x] Create feedback analytics dashboard with charts and insights
 - [x] Add automated proposal recommendations based on feedback
 - [ ] Identify and implement next improvements based on usage patterns
+
+
+## Phase 12: Proposal Import & AI Data Extraction
+- [x] Create proposal import UI page for first-time users
+- [x] Build file upload handler (PDF, Word, text files)
+- [x] Create AI extraction backend to parse proposals and extract data
+- [x] Extract client names, addresses, pricing, scope, trade types
+- [ ] Auto-populate user profile from extracted data
+- [x] Create proposal templates from extracted proposals
+- [ ] Test end-to-end import workflow

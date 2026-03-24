@@ -13,6 +13,7 @@ import { templatesRouter } from "./routers/templates";
 import { versionsRouter } from "./routers/versions";
 import { feedbackRouter } from "./routers/feedback";
 import { recommendationsRouter } from "./routers/recommendations";
+import { importRouter } from "./routers/import";
 
 export const appRouter = router({
   system: systemRouter,
@@ -25,6 +26,7 @@ export const appRouter = router({
     }),
   }),
   proposals: proposalRouter,
+  import: importRouter,
   profile: profileRouter,
   subscription: subscriptionRouter,
   tracking: trackingRouter,
