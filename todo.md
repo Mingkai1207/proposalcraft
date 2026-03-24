@@ -602,3 +602,6 @@
 
 ## LaTeX Font Fix
 - [x] Fix pdflatex font expansion error: use lmodern scalable fonts, disable microtype expansion (expansion=false), add safe package order, run updmap-sys on first use
+
+## LaTeX TEXMFVAR Fix
+- [x] Fix pdflatex "format directory not writable" error: removed TEXMFVAR/TEXMFSYSVAR overrides (they broke pdftex.map symlink), pdflatex now uses default ~/.texlive2021/texmf-var which is writable

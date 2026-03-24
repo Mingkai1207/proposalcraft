@@ -52,13 +52,12 @@ export async function latexToPdf(latexSource: string): Promise<Buffer> {
       texFile,
     ];
 
-    // pdflatex needs access to the system font maps
+    // Use default environment — pdflatex uses ~/.texlive2021/texmf-var (writable) by default
+    // Do NOT override TEXMFVAR/TEXMFSYSVAR as it breaks the pdftex.map symlink lookup
     const latexEnv = {
       ...process.env,
       PATH: process.env.PATH || "/usr/bin:/bin",
-      // Point to the system-wide updmap-generated font map
-      TEXMFVAR: "/var/lib/texmf",
-      TEXMFSYSVAR: "/var/lib/texmf",
+      HOME: process.env.HOME || "/home/ubuntu",
     };
 
     // Run pdflatex twice to resolve references (TOC, labels, etc.)
