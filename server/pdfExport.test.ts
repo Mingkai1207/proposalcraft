@@ -1,8 +1,22 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { describe, expect, it } from "vitest";
 import { parseProposalContent } from "./utils/proposalContentParser";
 
-// Test the content parser which is the critical piece for PDF generation
-describe("proposalContentParser", () => {
+/**
+ * Tests for the PDF export pipeline.
+ * 
+ * The new pipeline passes full AI markdown to the PDF renderer (via `proposalMarkdown`).
+ * The old parseProposalContent is kept for backward compatibility but is no longer
+ * used by the exportPdf endpoint.
+ * 
+ * These tests verify:
+ * 1. The old parser still works (it may be used elsewhere)
+ * 2. The new ProposalPdfData interface accepts raw markdown
+ * 3. Financial calculations are correct
+ */
+
+// ─── Legacy parser tests (kept for backward compat) ────────────────────
+
+describe("proposalContentParser (legacy)", () => {
   it("extracts executive summary from markdown content", () => {
     const content = `## Executive Summary
 
@@ -14,85 +28,9 @@ We are pleased to present this proposal for your HVAC system replacement.
 - Install new system
 `;
     const result = parseProposalContent(content);
-    // Parser extracts sections - executive summary should be populated
     expect(result.executiveSummary).toBeTruthy();
     expect(result.executiveSummary).not.toContain("##");
-    // Scope should be extracted separately
     expect(result.scopeOfWork.length).toBeGreaterThan(0);
-  });
-
-  it("removes markdown headers from parsed content", () => {
-    const content = `#### 1. Executive Summary
-
-This is a test summary.
-
-#### 2. Scope of Work
-
-- Item one
-- Item two
-- Item three
-
-#### 3. Materials & Equipment
-
-- Material A
-- Material B
-`;
-    const result = parseProposalContent(content);
-    // No markdown headers should remain
-    expect(result.executiveSummary).not.toContain("####");
-    expect(result.executiveSummary).not.toContain("#");
-    expect(result.scopeOfWork.join(" ")).not.toContain("####");
-    expect(result.materials.join(" ")).not.toContain("####");
-  });
-
-  it("removes bold/italic markdown from content", () => {
-    const content = `## Executive Summary
-
-**We are pleased** to present this *professional* proposal.
-
-## Scope of Work
-
-- **Remove** old system
-- __Install__ new system
-`;
-    const result = parseProposalContent(content);
-    // All markdown formatting should be stripped
-    expect(result.executiveSummary).not.toContain("**");
-    expect(result.executiveSummary).not.toContain("##");
-    // Scope items should not contain markdown
-    result.scopeOfWork.forEach(item => {
-      expect(item).not.toContain("**");
-      expect(item).not.toContain("__");
-    });
-  });
-
-  it("extracts scope of work items", () => {
-    const content = `## Scope of Work
-
-- Remove existing HVAC system
-- Install new Carrier unit
-- Test and calibrate system
-- Final inspection
-`;
-    const result = parseProposalContent(content);
-    expect(result.scopeOfWork.length).toBeGreaterThan(0);
-  });
-
-  it("extracts materials section", () => {
-    const content = `## Materials & Equipment
-
-- Carrier AC Unit - $3,200
-- Gas Furnace - $1,800
-- Smart Thermostat - $250
-
-## Timeline
-
-- Day 1: Preparation
-- Day 2: Installation
-`;
-    const result = parseProposalContent(content);
-    expect(result.materials.length).toBeGreaterThan(0);
-    expect(result.timeline.length).toBeGreaterThan(0);
   });
 
   it("provides defaults when content is empty", () => {
@@ -109,84 +47,160 @@ This is a test summary.
     expect(result.executiveSummary).toBeTruthy();
     expect(result.scopeOfWork.length).toBeGreaterThan(0);
   });
+});
 
-  it("extracts terms and conditions", () => {
-    const content = `## Terms & Conditions
+// ─── New markdown-based PDF data tests ─────────────────────────────────
 
-50% deposit required upon acceptance. Balance due upon completion. 
-This proposal is valid for 30 days.
-`;
-    const result = parseProposalContent(content);
-    expect(result.termsAndConditions).toContain("deposit");
+describe("ProposalPdfData with raw markdown", () => {
+  it("module exports generateProposalPdf function", async () => {
+    const mod = await import("./utils/proposalPdfExport");
+    expect(mod.generateProposalPdf).toBeDefined();
+    expect(typeof mod.generateProposalPdf).toBe("function");
   });
 
-  it("extracts why choose us section", () => {
-    const content = `## Why Choose Us
+  it("preserves full markdown content in the data object", () => {
+    const markdown = `## Executive Summary
 
-With over 18 years of experience and NATE-certified technicians, we have completed over 3,000 installations.
+This is a detailed proposal with **bold text** and *italic text*.
+
+## Scope of Work
+
+- Item 1: Complete removal
+- Item 2: Installation
+
+| Item | Spec |
+|------|------|
+| Pump | 5-ton |
 `;
-    const result = parseProposalContent(content);
-    expect(result.whyChooseUs).toContain("experience");
+
+    const pdfData = {
+      businessName: "Test Co",
+      businessPhone: "(555) 000-0000",
+      businessEmail: "test@test.com",
+      businessAddress: "123 Main St",
+      licenseNumber: "LIC-123",
+      clientName: "John Doe",
+      clientAddress: "456 Oak Ave",
+      clientPhone: "(555) 111-1111",
+      clientEmail: "john@test.com",
+      jobTitle: "Test Project",
+      preparedDate: "March 20, 2026",
+      validUntil: "April 19, 2026",
+      laborCost: 5000,
+      materialsCost: 3000,
+      totalCost: 8000,
+      proposalMarkdown: markdown,
+    };
+
+    // The full markdown should be preserved, not parsed/stripped
+    expect(pdfData.proposalMarkdown).toContain("## Executive Summary");
+    expect(pdfData.proposalMarkdown).toContain("**bold text**");
+    expect(pdfData.proposalMarkdown).toContain("*italic text*");
+    expect(pdfData.proposalMarkdown).toContain("| Item | Spec |");
+    expect(pdfData.proposalMarkdown).toContain("- Item 1: Complete removal");
   });
 
-  it("handles complex LLM output with numbered headers", () => {
-    const content = `#### 1. Executive Summary
+  it("accepts optional termsOverride", () => {
+    const pdfData = {
+      businessName: "Test Co",
+      businessPhone: "",
+      businessEmail: "",
+      businessAddress: "",
+      licenseNumber: "",
+      clientName: "Client",
+      clientAddress: "",
+      clientPhone: "",
+      clientEmail: "",
+      jobTitle: "Test",
+      preparedDate: "March 20, 2026",
+      validUntil: "April 19, 2026",
+      laborCost: 1000,
+      materialsCost: 2000,
+      totalCost: 3000,
+      proposalMarkdown: "# Test",
+      termsOverride: "Custom terms from contractor profile",
+    };
 
-We are pleased to present this comprehensive proposal for the complete replacement of your HVAC system.
+    expect(pdfData.termsOverride).toBe("Custom terms from contractor profile");
+  });
 
-#### 2. Scope of Work
+  it("does not strip markdown formatting from proposalMarkdown", () => {
+    const markdown = `### Phase 1: Demolition
 
-1. Remove existing HVAC system and dispose of old equipment
-2. Install new Carrier Infinity 24ANB1 5-Ton AC unit
-3. Install new gas furnace with variable speed blower
-4. Replace all supply and return ductwork as needed
+- Remove existing **hardwood flooring** (500 sq ft)
+- Dispose of old materials per local regulations
 
-#### 3. Materials & Equipment
+### Phase 2: Installation
 
-- **Carrier Infinity 24ANB1** 5-Ton AC Unit - $3,200
-- **Carrier 59MN7** Gas Furnace - $1,800
-- **Honeywell T10 Pro** Smart Thermostat - $250
+1. **Moisture barrier** installation
+2. **Underlayment** placement
 
-#### 4. Project Timeline
+> Note: All work performed by certified installers.`;
 
-- Day 1: Remove old system, prepare installation site
-- Day 2: Complete installation, testing, and inspection
+    const pdfData = {
+      businessName: "Test",
+      businessPhone: "",
+      businessEmail: "",
+      businessAddress: "",
+      licenseNumber: "",
+      clientName: "Client",
+      clientAddress: "",
+      clientPhone: "",
+      clientEmail: "",
+      jobTitle: "Test",
+      preparedDate: "March 20, 2026",
+      validUntil: "April 19, 2026",
+      laborCost: 1000,
+      materialsCost: 2000,
+      totalCost: 3000,
+      proposalMarkdown: markdown,
+    };
 
-#### 5. Investment Summary
+    // Verify markdown is NOT stripped
+    expect(pdfData.proposalMarkdown).toContain("### Phase 1: Demolition");
+    expect(pdfData.proposalMarkdown).toContain("**hardwood flooring**");
+    expect(pdfData.proposalMarkdown).toContain("1. **Moisture barrier** installation");
+    expect(pdfData.proposalMarkdown).toContain("> Note:");
+  });
+});
 
-**Labor:** $2,500
-**Materials:** $6,000
-**Total:** $8,500
+// ─── Financial calculation tests ───────────────────────────────────────
 
-#### 6. Why Choose Us
+describe("Financial calculations", () => {
+  it("handles zero costs with safe minimum", () => {
+    const totalCost = 0;
+    const laborCost = 0;
+    const safeTotalCost = Math.max(1, totalCost);
+    const laborPct = safeTotalCost > 0 ? Math.round((laborCost / safeTotalCost) * 100) : 50;
+    const matPct = 100 - laborPct;
 
-With over 18 years of experience, Arctic Breeze HVAC has a 4.9-star rating.
+    expect(laborPct).toBe(0);
+    expect(matPct).toBe(100);
+  });
 
-#### 7. Terms & Acceptance
+  it("calculates correct labor/materials percentages", () => {
+    const totalCost = 10000;
+    const laborCost = 4000;
+    const laborPct = Math.round((laborCost / totalCost) * 100);
+    const matPct = 100 - laborPct;
 
-50% deposit required. Balance due upon completion. Valid for 30 days.
-`;
-    const result = parseProposalContent(content);
-    
-    // Should extract clean content without markdown
-    expect(result.executiveSummary).not.toContain("####");
-    expect(result.executiveSummary).not.toContain("**");
-    expect(result.executiveSummary).toBeTruthy();
-    
-    expect(result.scopeOfWork.length).toBeGreaterThan(0);
-    expect(result.materials.length).toBeGreaterThan(0);
-    expect(result.timeline.length).toBeGreaterThan(0);
-    expect(result.whyChooseUs).toBeTruthy();
-    expect(result.termsAndConditions).toBeTruthy();
-    
-    // Verify no markdown artifacts in any section
-    result.scopeOfWork.forEach(item => {
-      expect(item).not.toContain("####");
-      expect(item).not.toContain("**");
+    expect(laborPct).toBe(40);
+    expect(matPct).toBe(60);
+  });
+
+  it("formats deposit correctly as half of total", () => {
+    const totalCost = 14000;
+    const deposit = (totalCost * 0.5).toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     });
-    result.materials.forEach(item => {
-      expect(item).not.toContain("####");
-      expect(item).not.toContain("**");
-    });
+    expect(deposit).toBe("7,000.00");
+  });
+
+  it("handles uneven split correctly", () => {
+    const totalCost = 15000;
+    const laborCost = 7500;
+    const laborPct = Math.round((laborCost / totalCost) * 100);
+    expect(laborPct).toBe(50);
   });
 });

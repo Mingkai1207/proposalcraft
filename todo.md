@@ -402,3 +402,12 @@
 
 ## Admin Plan Bypass
 - [x] Allow admin users to bypass free plan proposal generation limit (also exempt from watermark)
+
+## Phase 26: PDF Generation Overhaul — Use Full AI Content
+- [x] Audit current PDF pipeline to identify where AI content is discarded
+- [x] Rebuild PDF export to render full AI-generated markdown as the PDF body
+- [x] Keep professional header/footer/branding as a wrapper around real content
+- [x] Add cost breakdown chart only when numeric cost data is available
+- [x] Update exportPdf endpoint to pass raw AI content
+- [x] Test end-to-end with a real generated proposal
+- [x] Verify PDF faithfully represents what the AI wrote

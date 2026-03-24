@@ -19,7 +19,6 @@ import { storagePut } from "../storage";
 import { nanoid } from "nanoid";
 import { ENV } from "../_core/env";
 import { generateProposalPdf, type ProposalPdfData } from "../utils/proposalPdfExport";
-import { parseProposalContent } from "../utils/proposalContentParser";
 
 const TRADE_TEMPLATES: Record<string, string> = {
   hvac: "HVAC (Heating, Ventilation & Air Conditioning)",
@@ -426,18 +425,6 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       const profile = await getContractorProfile(ctx.user.id);
       // Gracefully handle missing profile — use user info and sensible defaults
 
-      // Parse proposal content to extract structured sections
-      const parsedContent = proposal.generatedContent 
-        ? parseProposalContent(proposal.generatedContent)
-        : {
-            executiveSummary: "Professional proposal for your project.",
-            scopeOfWork: ["Complete project assessment", "Professional installation", "Quality assurance"],
-            materials: ["Premium materials", "Professional equipment"],
-            timeline: ["Day 1: Site preparation", "Day 2: Installation"],
-            whyChooseUs: "Professional service backed by experience.",
-            termsAndConditions: "50% deposit required. Balance on completion.",
-          };
-
       const pdfData: ProposalPdfData = {
         businessName: profile?.businessName || ctx.user.name || "Your Business",
         businessPhone: profile?.phone || "",
@@ -445,24 +432,18 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
         businessAddress: profile?.address || "",
         licenseNumber: profile?.licenseNumber || "",
         clientName: proposal.clientName || "Valued Client",
-        clientAddress: proposal.clientAddress || "Client Address",
-        clientPhone: "(555) 000-0000",
-        clientEmail: proposal.clientEmail || "client@email.com",
+        clientAddress: proposal.clientAddress || "",
+        clientPhone: "",
+        clientEmail: proposal.clientEmail || "",
         jobTitle: proposal.title,
         preparedDate: new Date(proposal.createdAt).toLocaleDateString(),
         validUntil: new Date(new Date(proposal.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-        jobSite: proposal.clientAddress || "Job Site Address",
-        jobDetails: proposal.jobScope?.substring(0, 100) || "Project details",
-        projectDetails: `Start: ${new Date(proposal.createdAt).toLocaleDateString()}\nDuration: TBD\nPermit: Included`,
-        executiveSummary: parsedContent.executiveSummary,
-        scopeOfWork: parsedContent.scopeOfWork,
-        materials: parsedContent.materials,
-        timeline: parsedContent.timeline,
-        whyChooseUs: parsedContent.whyChooseUs,
-        termsAndConditions: profile?.defaultTerms || parsedContent.termsAndConditions,
         laborCost: parseInt(proposal.laborCost || "2000") || 2000,
         materialsCost: parseInt(proposal.materialsCost || "3000") || 3000,
         totalCost: parseInt(proposal.totalCost || "5000") || 5000,
+        // Pass the FULL AI-generated content as markdown — the PDF renderer will convert it
+        proposalMarkdown: proposal.generatedContent || "No proposal content available.",
+        termsOverride: profile?.defaultTerms || undefined,
       };
 
       try {
