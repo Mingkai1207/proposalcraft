@@ -1095,8 +1095,24 @@ Trade expertise: ${tradeContext}
 
 LATEX DOCUMENT REQUIREMENTS:
 - Use \\documentclass[11pt,letterpaper]{article}
-- Include these packages: geometry (margins=1in), xcolor, tikz, pgfplots, booktabs, array, tabularx, hyperref, parskip, titlesec, enumitem, microtype, lmodern, fontenc (T1), inputenc (utf8)
-- Set pgfplotsset{compat=1.18}
+- Use EXACTLY this package order at the top (critical for font rendering):
+  \\usepackage[T1]{fontenc}
+  \\usepackage[utf8]{inputenc}
+  \\usepackage{lmodern}
+  \\usepackage[expansion=false,protrusion=true]{microtype}
+  \\usepackage[margin=1in]{geometry}
+  \\usepackage{xcolor}
+  \\usepackage{tikz}
+  \\usepackage{pgfplots}
+  \\usepackage{booktabs}
+  \\usepackage{array}
+  \\usepackage{tabularx}
+  \\usepackage{float}
+  \\usepackage{parskip}
+  \\usepackage{titlesec}
+  \\usepackage{enumitem}
+  \\pgfplotsset{compat=1.18}
+- IMPORTANT: microtype MUST use expansion=false to avoid font errors. lmodern MUST come before microtype.
 - Design a professional header with the contractor business name prominently displayed
 - Include client info, proposal date, and project title in the header area
 - Include these sections: Executive Summary, Scope of Work, Materials \\& Equipment, Project Timeline, Investment Summary, Why Choose Us, Terms \\& Conditions

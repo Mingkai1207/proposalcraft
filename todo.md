@@ -599,3 +599,6 @@
 - [x] Update exportPdf to detect LaTeX proposals (generatedContent starts with \documentclass) and recompile
 - [x] Update ProposalDetail preview: render LaTeX proposals as PDF embed (object tag pointing to pdfUrl)
 - [x] Update exportWord: for LaTeX proposals, Word export points to PDF (best fidelity, opens in Google Docs)
+
+## LaTeX Font Fix
+- [x] Fix pdflatex font expansion error: use lmodern scalable fonts, disable microtype expansion (expansion=false), add safe package order, run updmap-sys on first use
