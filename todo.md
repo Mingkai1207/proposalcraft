@@ -550,3 +550,7 @@
 - [x] Store VECTOR_ENGINE_API_KEY and VECTOR_ENGINE_BASE_URL as secrets
 - [x] Update anthropicLLM.ts to call VectorEngine with claude-sonnet-4-6-thinking
 - [x] Test proposal generation with real Claude model
+
+## Bug Fix: compileSummary LLM Error
+- [x] Fix compileSummary to use invokeAnthropic instead of invokeLLM
+- [x] Audit all mutations in proposals.ts that still call invokeLLM directly

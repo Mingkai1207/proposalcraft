@@ -1066,7 +1066,7 @@ IMPORTANT RULES:
 
       const { invokeAnthropic } = await import("../utils/anthropicLLM");
       const result = await invokeAnthropic({
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-6-thinking",
         systemPrompt,
         messages: [{
           role: "user",
@@ -1216,7 +1216,7 @@ IMPORTANT RULES:
 
       const { invokeAnthropic } = await import("../utils/anthropicLLM");
       const result = await invokeAnthropic({
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-6-thinking",
         systemPrompt: `You are a professional proposal editor. The user has a contractor proposal and wants to make specific changes.\n\nYour job:\n1. Understand exactly what the user wants to change\n2. Rewrite ONLY the affected section(s)\n3. Return the COMPLETE updated proposal in markdown format\n4. Maintain the same professional tone, formatting, and structure\n5. Do NOT add placeholder text like [Your Phone Number]\n6. Do NOT add signature blocks or contact information sections`,
         messages: [{
           role: "user",
@@ -1373,7 +1373,7 @@ Business: ${businessName}`;
 
       const { invokeAnthropic } = await import("../utils/anthropicLLM");
       const result = await invokeAnthropic({
-        model: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-6-thinking",
         systemPrompt,
         messages: [{
           role: "user",
