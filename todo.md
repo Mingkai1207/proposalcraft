@@ -628,3 +628,12 @@
 - [x] Update generateFromSummary: removed WeasyPrint call, just stores HTML and returns proposal ID
 - [x] No /proposals/:id/print route needed — window.open + document.write approach works cleanly
 - [x] exportPdf mutation kept for legacy LaTeX/markdown proposals only
+
+## Bug Fixes (Post Browser-Print Migration)
+- [x] Fix exportPdf: HTML proposals should return HTML content for client-side printing, not call WeasyPrint
+- [x] Audit refineProposal/reviseWithAI mutations for HTML-content compatibility
+- [x] Check ProposalDetail "Download PDF" button flow end-to-end for HTML proposals with no pdfUrl
+- [x] Fix reviseWithAI: HTML proposals now get updated HTML back (not markdown), skip server-side PDF generation
+- [x] Fix refineProposal: HTML proposals use Anthropic API and return updated HTML
+- [x] Fix exportGoogleDocs: HTML proposals use htmlToDocx directly instead of template-based renderer
+- [x] Fix NewProposalFromTemplate waiting screen: replaced fake 34-second stage animation with honest 3-5 minute progress bar

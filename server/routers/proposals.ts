@@ -845,6 +845,26 @@ ${fieldContext}`;
       const validUntil = new Date(new Date(proposal.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
 
       try {
+        const content = proposal.generatedContent || "";
+
+        // HTML-based proposals: use Claude's HTML directly via htmlToDocx
+        if (content.trimStart().toLowerCase().startsWith("<!doctype")) {
+          const { htmlToDocx } = await import("../utils/htmlToDocx");
+          const docxBuffer = await htmlToDocx(content);
+          const fileName = `proposal-${proposal.id}-${Date.now()}.docx`;
+          const { url: docxUrl } = await storagePut(
+            fileName,
+            docxBuffer,
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          );
+          const googleDocsViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(docxUrl)}&embedded=false`;
+          return {
+            docxUrl,
+            googleDocsViewerUrl,
+            instruction: "Click 'Open with Google Docs' in the viewer toolbar to create an editable copy in your Google Drive.",
+          };
+        }
+
         const { exportToGoogleDocs } = await import("../utils/googleDocsExporter");
         const { getTemplateStyle, TEMPLATE_STYLES } = await import("../../shared/templateDefs");
 
@@ -860,7 +880,6 @@ ${fieldContext}`;
           "Terms & Conditions": "terms",
         };
         const sectionContents: Record<string, string> = {};
-        const content = proposal.generatedContent || "";
         const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
         for (const match of sectionMatches) {
           const sectionTitle = match[1].trim();
@@ -1209,10 +1228,61 @@ STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no ex
       }
 
       const currentContent = proposal.generatedContent || "";
+      const isHtmlProposal = currentContent.trimStart().toLowerCase().startsWith("<!doctype");
       const profile = await getContractorProfile(ctx.user.id);
       const businessName = profile?.businessName || ctx.user.name || "Your Business";
 
       const { invokeAnthropic } = await import("../utils/anthropicLLM");
+
+      let updatedContent: string;
+
+      if (isHtmlProposal) {
+        // HTML-based proposals: ask Claude to return updated HTML
+        const result = await invokeAnthropic({
+          model: "claude-sonnet-4-6-thinking",
+          systemPrompt: `You are a professional proposal editor. The user has a contractor proposal written as a complete HTML document and wants to make specific changes.
+
+Your job:
+1. Understand exactly what the user wants to change
+2. Rewrite ONLY the affected section(s) of the HTML
+3. Return the COMPLETE updated HTML document (not just the changed section)
+4. Maintain the same professional design, CSS styles, and structure
+5. Keep all SVG charts, Google Fonts imports, and @media print rules intact
+6. Do NOT add placeholder text like [Your Phone Number]
+7. Do NOT add signature blocks or Contact Information sections
+
+STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no explanation. Start with <!DOCTYPE html> and end with </html>.`,
+          messages: [{
+            role: "user",
+            content: `Here is the current proposal HTML:\n\n${currentContent}\n\n---\n\nRevision request: ${input.message}`,
+          }],
+          maxTokens: 20000,
+        });
+
+        // Extract raw HTML — strip any accidental markdown code fences
+        let rawHtml = result.content
+          .replace(/^```html\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/\s*```\s*$/i, "")
+          .trim();
+
+        // Ensure it starts with <!DOCTYPE html>
+        if (!rawHtml.toLowerCase().startsWith("<!doctype")) {
+          const idx = rawHtml.toLowerCase().indexOf("<!doctype");
+          if (idx > 0) rawHtml = rawHtml.slice(idx);
+        }
+
+        updatedContent = rawHtml;
+
+        // HTML proposals: PDF is generated client-side via browser print
+        await updateProposal(input.id, ctx.user.id, {
+          generatedContent: updatedContent,
+        });
+
+        return { content: updatedContent, pdfUrl: null, wordUrl: null, googleDocUrl: null };
+      }
+
+      // Legacy markdown-based proposals
       const result = await invokeAnthropic({
         model: "claude-sonnet-4-6-thinking",
         systemPrompt: `You are a professional proposal editor. The user has a contractor proposal and wants to make specific changes.\n\nYour job:\n1. Understand exactly what the user wants to change\n2. Rewrite ONLY the affected section(s)\n3. Return the COMPLETE updated proposal in markdown format\n4. Maintain the same professional tone, formatting, and structure\n5. Do NOT add placeholder text like [Your Phone Number]\n6. Do NOT add signature blocks or contact information sections`,
@@ -1223,14 +1293,14 @@ STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no ex
         maxTokens: 8192,
       });
 
-      let updatedContent = result.content
+      updatedContent = result.content
         .replace(/#{1,6}\s*Contact\s*Information[\s\S]*?(?=#{1,6}\s|$)/gi, "")
         .replace(/#{1,6}\s*(Accepted By|Acceptance|Signature)[\s\S]*?(?=#{1,6}\s|$)/gi, "")
         .replace(/\[Your[^\]]+\]/g, "")
         .replace(/\n{3,}/g, "\n\n")
         .trim();
 
-      // Re-export all documents
+      // Re-export all documents for legacy markdown proposals
       const TITLE_TO_ID: Record<string, string> = {
         "Executive Summary": "executive_summary",
         "Scope of Work": "scope_of_work",
@@ -1509,31 +1579,59 @@ Business: ${businessName}`;
       }
 
       const currentContent = proposal.generatedContent || "";
+      const isHtmlProposal = currentContent.trimStart().toLowerCase().startsWith("<!doctype");
 
-      const { invokeLLM } = await import("../_core/llm");
+      let updatedContent: string;
 
-      const systemPrompt = `You are a professional proposal editor. The user has a contractor proposal and wants to make specific changes to it.
+      if (isHtmlProposal) {
+        // HTML-based proposals: use Anthropic to return updated HTML
+        const { invokeAnthropic } = await import("../utils/anthropicLLM");
+        const result = await invokeAnthropic({
+          model: "claude-sonnet-4-6-thinking",
+          systemPrompt: `You are a professional proposal editor. The user has a contractor proposal written as a complete HTML document and wants to make specific changes.
 
-Your job is to:
+Your job:
 1. Understand exactly what the user wants to change
-2. Rewrite ONLY the affected section(s) of the proposal
-3. Return the COMPLETE updated proposal content (not just the changed section)
-4. Maintain the same professional tone, formatting, and structure
-5. Keep all sections that were NOT requested to change exactly as they are
-6. Do NOT add placeholder text like [Your Phone Number] or [Your Email]
-7. Do NOT add signature blocks or contact information sections at the end
+2. Rewrite ONLY the affected section(s) of the HTML
+3. Return the COMPLETE updated HTML document (not just the changed section)
+4. Maintain the same professional design, CSS styles, and structure
+5. Keep all SVG charts, Google Fonts imports, and @media print rules intact
+6. Do NOT add placeholder text like [Your Phone Number]
+7. Do NOT add signature blocks or Contact Information sections
 
-Return ONLY the updated proposal content in markdown format. No preamble, no explanation.`;
+STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no explanation. Start with <!DOCTYPE html> and end with </html>.`,
+          messages: [{
+            role: "user",
+            content: `Here is the current proposal HTML:\n\n${currentContent}\n\n---\n\nRevision request: ${input.message}`,
+          }],
+          maxTokens: 20000,
+        });
 
-      const response = await invokeLLM({
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: `Here is the current proposal content:\n\n${currentContent}\n\n---\n\nUser request: ${input.message}` },
-        ],
-      });
+        // Extract raw HTML — strip any accidental markdown code fences
+        let rawHtml = result.content
+          .replace(/^```html\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/\s*```\s*$/i, "")
+          .trim();
 
-      const rawContent = response.choices[0]?.message?.content;
-      const updatedContent = typeof rawContent === "string" ? rawContent : currentContent;
+        if (!rawHtml.toLowerCase().startsWith("<!doctype")) {
+          const idx = rawHtml.toLowerCase().indexOf("<!doctype");
+          if (idx > 0) rawHtml = rawHtml.slice(idx);
+        }
+
+        updatedContent = rawHtml;
+      } else {
+        // Legacy markdown proposals: use free built-in LLM
+        const { invokeLLM } = await import("../_core/llm");
+        const response = await invokeLLM({
+          messages: [
+            { role: "system", content: `You are a professional proposal editor. The user has a contractor proposal and wants to make specific changes to it.\n\nYour job is to:\n1. Understand exactly what the user wants to change\n2. Rewrite ONLY the affected section(s) of the proposal\n3. Return the COMPLETE updated proposal content (not just the changed section)\n4. Maintain the same professional tone, formatting, and structure\n5. Keep all sections that were NOT requested to change exactly as they are\n6. Do NOT add placeholder text like [Your Phone Number] or [Your Email]\n7. Do NOT add signature blocks or contact information sections at the end\n\nReturn ONLY the updated proposal content in markdown format. No preamble, no explanation.` },
+            { role: "user", content: `Here is the current proposal content:\n\n${currentContent}\n\n---\n\nUser request: ${input.message}` },
+          ],
+        });
+        const rawContent = response.choices[0]?.message?.content;
+        updatedContent = typeof rawContent === "string" ? rawContent : currentContent;
+      }
 
       // Save the updated content to the database
       await updateProposal(input.id, ctx.user.id, { generatedContent: updatedContent });
