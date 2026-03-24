@@ -592,6 +592,11 @@ ${fieldContext}`;
       return { id: proposal.id };
     }),
 
+  // ─── Helper: parse markdown sections by title and remap to canonical IDs ─────
+  // The AI generates markdown with ## Title headers. The template renderer
+  // looks up content by section ID (e.g. "executive_summary"). This helper
+  // bridges the gap by mapping titles → IDs.
+
   exportPdf: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
@@ -614,13 +619,27 @@ ${fieldContext}`;
             const { renderTemplatePdf } = await import("../utils/templatePdfRenderer");
             const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
 
-            // Parse section contents from generatedContent
+            // Parse section contents from generatedContent.
+            // The AI writes ## Title headers; the renderer expects ID keys.
+            // Map both title and ID so either lookup works.
+            const TITLE_TO_ID: Record<string, string> = {
+              "Executive Summary": "executive_summary",
+              "Scope of Work": "scope_of_work",
+              "Materials & Equipment": "materials_equipment",
+              "Project Timeline": "timeline",
+              "Investment Summary": "investment",
+              "Terms & Conditions": "terms",
+            };
             const sectionContents: Record<string, string> = {};
             const content = proposal.generatedContent || "";
             const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
             for (const match of sectionMatches) {
               const sectionTitle = match[1].trim();
-              if (sectionTitle) sectionContents[sectionTitle] = match[2].trim();
+              if (!sectionTitle) continue;
+              // Store by both title and ID so renderer can find it either way
+              sectionContents[sectionTitle] = match[2].trim();
+              const id = TITLE_TO_ID[sectionTitle];
+              if (id) sectionContents[id] = match[2].trim();
             }
             if (Object.keys(sectionContents).length === 0) sectionContents["content"] = content;
 
@@ -703,12 +722,23 @@ ${fieldContext}`;
           // Template-based proposal: use the same HTML as the PDF renderer
           const template = proposal.templateId ? getTemplateStyle(proposal.templateId) : TEMPLATE_STYLES[0];
           const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
+          const TITLE_TO_ID: Record<string, string> = {
+            "Executive Summary": "executive_summary",
+            "Scope of Work": "scope_of_work",
+            "Materials & Equipment": "materials_equipment",
+            "Project Timeline": "timeline",
+            "Investment Summary": "investment",
+            "Terms & Conditions": "terms",
+          };
           const sectionContents: Record<string, string> = {};
           const content = proposal.generatedContent || "";
           const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
           for (const match of sectionMatches) {
             const sectionTitle = match[1].trim();
-            if (sectionTitle) sectionContents[sectionTitle] = match[2].trim();
+            if (!sectionTitle) continue;
+            sectionContents[sectionTitle] = match[2].trim();
+            const id = TITLE_TO_ID[sectionTitle];
+            if (id) sectionContents[id] = match[2].trim();
           }
           if (Object.keys(sectionContents).length === 0) {
             sectionContents["content"] = content;
@@ -787,12 +817,23 @@ ${fieldContext}`;
         const template = proposal.templateId ? getTemplateStyle(proposal.templateId) : TEMPLATE_STYLES[0];
 
         const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
+        const TITLE_TO_ID: Record<string, string> = {
+          "Executive Summary": "executive_summary",
+          "Scope of Work": "scope_of_work",
+          "Materials & Equipment": "materials_equipment",
+          "Project Timeline": "timeline",
+          "Investment Summary": "investment",
+          "Terms & Conditions": "terms",
+        };
         const sectionContents: Record<string, string> = {};
         const content = proposal.generatedContent || "";
         const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
         for (const match of sectionMatches) {
           const sectionTitle = match[1].trim();
-          if (sectionTitle) sectionContents[sectionTitle] = match[2].trim();
+          if (!sectionTitle) continue;
+          sectionContents[sectionTitle] = match[2].trim();
+          const id = TITLE_TO_ID[sectionTitle];
+          if (id) sectionContents[id] = match[2].trim();
         }
         if (Object.keys(sectionContents).length === 0) sectionContents["content"] = content;
 

@@ -64,13 +64,14 @@ export default function Dashboard() {
     onSuccess: () => { toast.success("Proposal deleted"); refetch(); setDeleteId(null); },
     onError: (e) => toast.error(e.message),
   });
+  const updateProfileMutation = trpc.profile.update.useMutation();
   const exportQuery = trpc.export.bulkExportProposals.useQuery(undefined, { enabled: false });
 
   const handleOnboardingClose = async () => {
     setShowOnboarding(false);
     // Mark onboarding as completed
     try {
-      await trpc.profile.update.useMutation().mutateAsync({
+      await updateProfileMutation.mutateAsync({
         onboardingCompleted: true,
       });
     } catch (err) {

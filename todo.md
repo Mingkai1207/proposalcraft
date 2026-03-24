@@ -490,3 +490,12 @@
 - [x] Fix all TypeScript errors (0 errors after fixes)
 - [x] All 27 tests pass
 - [x] Fix copyright concern: TemplateQuickCreate, TemplatePicker, NewProposalFromTemplate all rewritten with original code
+
+## Phase 31: Fix PDF Section Content Missing Bug
+- [ ] Fix section key mismatch: exportPdf parses markdown by title but templatePdfRenderer looks up by ID
+- [ ] Fix same mismatch in exportWord and exportGoogleDocs
+- [ ] Verify generated markdown actually contains section headers matching PROPOSAL_SECTIONS titles
+- [ ] Test PDF export end-to-end with real proposal
+
+## Bug Fix: Invalid Hook Call on Dashboard
+- [x] Fix "Invalid hook call" error — trpc.profile.update.useMutation() was called inside handleOnboardingClose async handler instead of at component top level

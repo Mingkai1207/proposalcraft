@@ -61,6 +61,7 @@ async function buildVizHtml(
     materialsCost,
     totalCost,
     timeline: `${estimatedDays} days`,
+    estimatedDays,
     jobScope: fields.job_description || "",
     currentBill: 0,
     annualProduction: 0,

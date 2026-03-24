@@ -12,6 +12,7 @@ export interface VisualizationData {
   materialsCost?: number;
   totalCost?: number;
   timeline?: string;
+  estimatedDays?: number;
   jobScope?: string;
   currentBill?: number;
   annualProduction?: number;
@@ -117,23 +118,32 @@ function buildCostBreakdownPieConfig(data: VisualizationData) {
  * Generate a timeline Gantt-style bar chart
  */
 function buildTimelineGanttConfig(data: VisualizationData) {
-  // Parse job scope into phases
-  const scope = data.jobScope || "";
-  const lines = scope.split("\n").filter(l => l.trim().replace(/^[-*•]\s*/, "").length > 5).slice(0, 6);
+  // Use estimatedDays to build evenly-distributed phases
+  const estimatedDays = typeof data.estimatedDays === "number" ? data.estimatedDays : 0;
 
-  const phases = lines.length > 0 ? lines.map((l, i) => ({
-    label: l.replace(/^[-*•\d.]\s*/, "").substring(0, 40),
-    start: i,
-    duration: 1 + Math.floor(Math.random() * 2),
-  })) : [
-    { label: "Site Preparation", start: 0, duration: 1 },
-    { label: "Main Installation", start: 1, duration: 2 },
-    { label: "Testing & Inspection", start: 3, duration: 1 },
-    { label: "Final Walkthrough", start: 4, duration: 1 },
+  // Default phase templates scaled to the total days
+  const DEFAULT_PHASES = [
+    { label: "Site Preparation", weight: 0.1 },
+    { label: "Main Work", weight: 0.6 },
+    { label: "Testing & Inspection", weight: 0.2 },
+    { label: "Final Walkthrough", weight: 0.1 },
   ];
 
+  const totalDays = estimatedDays > 0 ? estimatedDays : 5;
+
+  // Build phases with proportional durations
+  let cursor = 0;
+  const phases: { label: string; start: number; duration: number }[] = DEFAULT_PHASES.map((p, i) => {
+    const duration = i === DEFAULT_PHASES.length - 1
+      ? totalDays - cursor  // last phase gets remaining days
+      : Math.max(1, Math.round(p.weight * totalDays));
+    const phase = { label: p.label, start: cursor, duration };
+    cursor += duration;
+    return phase;
+  });
+
   const maxDay = Math.max(...phases.map(p => p.start + p.duration));
-  const dayLabels = Array.from({ length: maxDay + 1 }, (_, i) => `Day ${i + 1}`);
+  const dayLabels = Array.from({ length: maxDay }, (_, i) => `Day ${i + 1}`);
 
   const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
 
@@ -161,7 +171,7 @@ function buildTimelineGanttConfig(data: VisualizationData) {
         y: { stacked: true, ticks: { font: { size: 11, family: "Arial" } } },
       },
       plugins: {
-        legend: { display: false },
+        legend: { display: true, position: "bottom", labels: { font: { size: 11, family: "Arial" }, padding: 10, boxWidth: 14 } },
         title: {
           display: true,
           text: data.timeline ? `Estimated Timeline: ${data.timeline}` : "Project Schedule",
