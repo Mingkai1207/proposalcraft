@@ -39,6 +39,7 @@ type FormData = {
   materialsCost: string;
   totalCost: string;
   language: string;
+  expiryDays: number;
 };
 
 export default function NewProposal() {
@@ -50,6 +51,7 @@ export default function NewProposal() {
     clientAddress: "", jobScope: "", materials: "",
     laborCost: "", materialsCost: "", totalCost: "",
     language: "english",
+    expiryDays: 30,
   });
 
   const MODEL_LABELS: Record<string, string> = {
@@ -88,7 +90,7 @@ export default function NewProposal() {
     return null;
   }
 
-  const update = (field: keyof FormData, value: string) => setForm(f => ({ ...f, [field]: value }));
+  const update = (field: keyof FormData, value: string | number) => setForm(f => ({ ...f, [field]: value }));
 
   const handleGenerate = () => {
     if (!form.title || !form.tradeType || !form.jobScope) {
@@ -107,6 +109,7 @@ export default function NewProposal() {
       materialsCost: form.materialsCost || undefined,
       totalCost: form.totalCost || undefined,
       language: form.language || undefined,
+      expiryDays: form.expiryDays,
     });
   };
 
@@ -298,6 +301,24 @@ export default function NewProposal() {
                 <Label className="text-sm font-medium mb-2 block">Total Investment ($)</Label>
                 <Input type="number" placeholder="4000" value={form.totalCost} onChange={e => update("totalCost", e.target.value)} />
               </div>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Proposal Expiry</Label>
+              <Select value={form.expiryDays.toString()} onValueChange={(val) => update("expiryDays", parseInt(val))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="7">7 days</SelectItem>
+                  <SelectItem value="14">14 days</SelectItem>
+                  <SelectItem value="30">30 days (recommended)</SelectItem>
+                  <SelectItem value="60">60 days</SelectItem>
+                  <SelectItem value="90">90 days</SelectItem>
+                  <SelectItem value="999">Never expires</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">Clients can accept or decline the proposal until this date. After expiry, the proposal becomes inactive.</p>
             </div>
 
             {/* Summary */}

@@ -59,6 +59,7 @@ export const proposalRouter = router({
         materialsCost: z.string().optional(),
         totalCost: z.string().optional(),
         language: z.string().optional(),
+        expiryDays: z.number().min(1).default(30),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -166,6 +167,7 @@ const generatedContent = typeof rawContent === "string" ? rawContent : "";
         generatedContent: watermarkedContent,
         trackingToken,
         status: "draft",
+        expiryDays: input.expiryDays,
       });
 
       // Increment usage
@@ -233,6 +235,7 @@ const generatedContent = typeof rawContent === "string" ? rawContent : "";
       const profile = await getContractorProfile(ctx.user.id);
       const businessName = profile?.businessName || ctx.user.name || "Your Contractor";
       const trackingUrl = `${ENV.oAuthServerUrl?.replace("api.", "") || "https://app.manus.space"}/api/track/${proposal.trackingToken}`;
+      const portalLink = `${ENV.oAuthServerUrl?.replace("api.", "") || "https://app.manus.space"}/client-portal?token=${proposal.trackingToken}`;
 
       // Build email HTML
       const emailHtml = `
@@ -251,10 +254,13 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
   <h2 style="margin:0">${businessName}</h2>
   <p style="margin:4px 0 0;opacity:0.8">Professional Proposal</p>
 </div>
-<div class="content">
+  <div class="content">
   <p>Dear ${input.clientName || "Valued Client"},</p>
   <p>${input.message || `Thank you for considering ${businessName} for your project. Please find our detailed proposal below.`}</p>
   <div class="proposal-box">${proposal.generatedContent || ""}</div>
+  <p style="text-align:center;margin-top:24px">
+    <a href="${portalLink}" class="cta">Review & Respond to Proposal</a>
+  </p>
   <p>We look forward to working with you. Please don't hesitate to reach out with any questions.</p>
   <p>Best regards,<br><strong>${businessName}</strong></p>
   ${profile?.phone ? `<p>📞 ${profile.phone}</p>` : ""}

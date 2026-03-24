@@ -229,3 +229,11 @@
 - [x] Create shareable client portal links
 - [x] Implement bulk export feature (ZIP download)
 - [x] Test all three features end-to-end
+
+
+## Phase 8: Expiry Selector & Email Portal Link
+- [x] Add expiry date dropdown selector to NewProposal form (7, 14, 30, 60, 90, never)
+- [x] Update proposal creation to save selected expiryDays
+- [x] Generate client portal link when proposal is sent
+- [x] Include client portal link in proposal delivery email
+- [x] Test expiry selector and email delivery with portal link
