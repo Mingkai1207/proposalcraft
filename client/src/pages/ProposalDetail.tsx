@@ -388,7 +388,27 @@ export default function ProposalDetail() {
                     rows={30}
                     className="font-mono text-sm resize-none"
                   />
+                ) : proposal.generatedContent?.trimStart().toLowerCase().startsWith("<!doctype") ? (
+                  // New HTML-based proposals: render in sandboxed iframe
+                  <iframe
+                    srcDoc={proposal.generatedContent}
+                    title="Proposal Preview"
+                    className="w-full border-0 rounded"
+                    style={{ minHeight: "1100px", height: "auto" }}
+                    sandbox="allow-same-origin"
+                    onLoad={(e) => {
+                      const iframe = e.currentTarget;
+                      try {
+                        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+                        if (doc) {
+                          const h = doc.documentElement.scrollHeight;
+                          if (h > 100) iframe.style.height = h + "px";
+                        }
+                      } catch {}
+                    }}
+                  />
                 ) : (
+                  // Legacy markdown proposals
                   <div className="prose prose-sm max-w-none text-foreground">
                     <Streamdown>{proposal.generatedContent || "No content generated yet."}</Streamdown>
                   </div>

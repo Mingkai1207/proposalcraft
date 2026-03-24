@@ -112,6 +112,35 @@ export function buildProposalHtml(data: ProposalPdfData): string {
   return _buildLegacyHtml({ biz, client, jobTitle, preparedDate, validUntil, laborCost, materialsCost, totalCost, laborPct, matPct, deposit, licLine, proposalBodyHtml, termsHtml });
 }
 
+/**
+ * Render a raw HTML string directly to PDF using Puppeteer.
+ * Used when Claude generates the full HTML document.
+ */
+export async function generatePdfFromHtml(html: string): Promise<Buffer> {
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+
+  try {
+    const page = await browser.newPage();
+    await page.setContent(html, { waitUntil: "networkidle0" });
+    // Give SVG charts and fonts time to render
+    await new Promise((r) => setTimeout(r, 2500));
+
+    const pdfBuffer = await page.pdf({
+      format: "Letter",
+      margin: { top: "0", right: "0", bottom: "0", left: "0" },
+      printBackground: true,
+      preferCSSPageSize: true,
+    }) as Buffer;
+
+    return Buffer.from(pdfBuffer as Uint8Array);
+  } finally {
+    await browser.close();
+  }
+}
+
 export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer> {
   const html = buildProposalHtml(data);
 

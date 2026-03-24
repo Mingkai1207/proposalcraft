@@ -619,6 +619,17 @@ ${fieldContext}`;
       const validUntil = new Date(new Date(proposal.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
 
       try {
+        // New HTML-based proposals: generatedContent is a full HTML document
+        const content = proposal.generatedContent || "";
+        if (content.trimStart().toLowerCase().startsWith("<!doctype")) {
+          const { generatePdfFromHtml } = await import("../utils/proposalPdfExport");
+          const pdfBuffer = await generatePdfFromHtml(content);
+          const fileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
+          const { url } = await storagePut(fileName, pdfBuffer, "application/pdf");
+          await updateProposal(proposal.id, ctx.user.id, { pdfUrl: url });
+          return { url, fileName };
+        }
+
         // Use template renderer if proposal was created from a template
         if (proposal.templateId) {
           const { getTemplateStyle } = await import("../../shared/templateDefs");
@@ -720,13 +731,16 @@ ${fieldContext}`;
 
       try {
         const { htmlToDocx } = await import("../utils/htmlToDocx");
-        const { getTemplateStyle, TEMPLATE_STYLES } = await import("../../shared/templateDefs");
-        const { buildHtml } = await import("../utils/templatePdfRenderer");
-        const { generateProposalPdf, buildProposalHtml } = await import("../utils/proposalPdfExport");
+        const wordContent = proposal.generatedContent || "";
 
         let html: string;
 
-        if (proposal.templateId) {
+        // New HTML-based proposals: use Claude's HTML directly
+        if (wordContent.trimStart().toLowerCase().startsWith("<!doctype")) {
+          html = wordContent;
+        } else if (proposal.templateId) {
+          const { getTemplateStyle, TEMPLATE_STYLES } = await import("../../shared/templateDefs");
+          const { buildHtml } = await import("../utils/templatePdfRenderer");
           // Template-based proposal: use the same HTML as the PDF renderer
           const template = proposal.templateId ? getTemplateStyle(proposal.templateId) : TEMPLATE_STYLES[0];
           const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
@@ -770,6 +784,7 @@ ${fieldContext}`;
           });
         } else {
           // Legacy proposal: use the markdown-based HTML builder
+          const { buildProposalHtml } = await import("../utils/proposalPdfExport");
           html = buildProposalHtml({
             businessName,
             businessPhone: profile?.phone || "",
@@ -1063,25 +1078,22 @@ RULES:
       };
       const tradeContext = TRADE_CONTEXT[proposal.tradeType] || TRADE_CONTEXT.general;
 
-      const systemPrompt = `You are an expert ${tradeName} proposal writer and editor. A contractor has prepared a complete draft proposal for your review. Your job is to polish and elevate it into a final, client-ready document.
+      const systemPrompt = `You are an expert ${tradeName} proposal writer. Generate a complete, professional contractor proposal as a single self-contained HTML document with embedded CSS.
 
 Trade expertise: ${tradeContext}
 
-Your editing instructions:
-1. Keep all real data exactly as provided — names, addresses, costs, dates, model numbers, specifications. Do NOT change or omit any factual information.
-2. Elevate the language to be highly professional, persuasive, and client-focused. Every sentence should build confidence in the contractor.
-3. Expand thin sections with trade-specific technical detail, professional justifications, and client benefits.
-4. Ensure the Scope of Work is numbered, exhaustive, and uses precise ${tradeName} terminology.
-5. Ensure the Investment Summary has a clear itemized breakdown and payment schedule with exact dollar amounts.
-6. Ensure the Terms & Conditions are complete and legally sound — covering payment, warranty, change orders, liability, permits, and client responsibilities.
-7. Add chart data annotations where relevant: for cost breakdown (labor vs materials), payment schedule, and project timeline — format as a JSON block inside a code fence labeled chart-data so the PDF renderer can generate visual charts.
-8. Maintain the exact section structure with ## headings.
+HTML DOCUMENT REQUIREMENTS:
+- Output a complete <!DOCTYPE html>...</html> document with all CSS embedded in a <style> tag
+- Use a professional, modern design with a color scheme appropriate for a ${tradeName} contractor
+- Include a header with the contractor business name and client info
+- Include these sections: Executive Summary, Scope of Work, Materials & Equipment, Project Timeline, Investment Summary, Why Choose Us, Terms & Conditions
+- Include at least one visual chart using inline SVG (e.g. cost breakdown pie chart or payment schedule bar chart)
+- Use real data throughout — never use placeholders like [Your Name] or [Client Name]
+- Do NOT include signature blocks, Accepted By sections, or Contact Information sections
+- The document should be print-ready (8.5in wide, proper margins, page breaks where appropriate)
+- Make it visually impressive — this is a sales document
 
-STRICT RULES:
-- Use the real business name and client name throughout. Never write [Your Name], [Client Name], or any placeholder.
-- Do NOT add a Contact Information section — it appears in the document header.
-- Do NOT add signature blocks or Accepted By sections.
-- Return ONLY the polished proposal. No preamble, no explanation, no meta-commentary.`;
+STRICT OUTPUT RULE: Return ONLY the raw HTML document. No markdown, no code fences, no explanation. Start with <!DOCTYPE html> and end with </html>.`;
 
       const { invokeAnthropic } = await import("../utils/anthropicLLM");
       const result = await invokeAnthropic({
@@ -1089,74 +1101,29 @@ STRICT RULES:
         systemPrompt,
         messages: [{
           role: "user",
-          content: `Here is the complete proposal draft prepared by the contractor at ${businessName}. Polish and elevate it into the final client-ready document following your instructions:\n\n${input.approvedSummary}\n\nReturn the polished final proposal now.`,
+          content: `Use this proposal draft to generate the complete HTML proposal document:\n\n${input.approvedSummary}`,
         }],
-        maxTokens: 8192,
+        maxTokens: 16000,
       });
 
-      let generatedContent = result.content
-        .replace(/#{1,6}\s*Contact\s*Information[\s\S]*?(?=#{1,6}\s|$)/gi, "")
-        .replace(/#{1,6}\s*(Accepted By|Acceptance|Signature)[\s\S]*?(?=#{1,6}\s|$)/gi, "")
-        .replace(/\[Your[^\]]+\]/g, "")
-        .replace(/^_{5,}\s*$/gm, "")
-        .replace(/\n{3,}/g, "\n\n")
+      // Extract raw HTML — strip any accidental markdown code fences
+      let generatedHtml = result.content
+        .replace(/^```html\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```\s*$/i, "")
         .trim();
 
-      const isFree = sub.plan === "free" && !isAdmin;
-      if (isFree) {
-        generatedContent += "\n\n---\n*This proposal was generated with ProposAI Free. Upgrade to remove this watermark and unlock Word & Google Docs export.*";
+      // Ensure it starts with DOCTYPE
+      if (!generatedHtml.toLowerCase().startsWith("<!doctype")) {
+        const idx = generatedHtml.toLowerCase().indexOf("<!doctype");
+        if (idx > 0) generatedHtml = generatedHtml.slice(idx);
       }
 
-      // Parse sections for export
-      const TITLE_TO_ID: Record<string, string> = {
-        "Executive Summary": "executive_summary",
-        "Scope of Work": "scope_of_work",
-        "Materials & Equipment": "materials_equipment",
-        "Project Timeline": "timeline",
-        "Investment Summary": "investment",
-        "Why Choose Us": "why_choose_us",
-        "Terms & Conditions": "terms",
-      };
-      const sectionContents: Record<string, string> = {};
-      const sectionMatches = Array.from(generatedContent.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
-      for (const match of sectionMatches) {
-        const sectionTitle = match[1].trim();
-        if (!sectionTitle) continue;
-        sectionContents[sectionTitle] = match[2].trim();
-        const id = TITLE_TO_ID[sectionTitle];
-        if (id) sectionContents[id] = match[2].trim();
-      }
-      if (Object.keys(sectionContents).length === 0) sectionContents["content"] = generatedContent;
+      const generatedContent = generatedHtml;
 
-      // Determine visual style (use templateId if set, else default to modern-wave)
-      const { getTemplateStyle } = await import("../../shared/templateDefs");
-      const style = getTemplateStyle(proposal.templateId || "modern-wave");
-
-      const preparedDate = new Date(proposal.createdAt).toLocaleDateString();
-      const validUntil = new Date(new Date(proposal.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
-      const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
-
-      const exportInput = {
-        style,
-        tradeType: proposal.tradeType || "General Contracting",
-        title: proposal.title,
-        businessName,
-        businessPhone: profile?.phone || "",
-        businessEmail: profile?.email || ctx.user.email || "",
-        businessAddress: profile?.address || "",
-        licenseNumber: profile?.licenseNumber || "",
-        clientName: proposal.clientName || "Valued Client",
-        clientAddress: proposal.clientAddress || "",
-        clientEmail: proposal.clientEmail || "",
-        preparedDate,
-        validUntil,
-        sectionContents,
-        fields,
-      };
-
-      // Generate PDF (all plans)
-      const { renderTemplatePdf } = await import("../utils/templatePdfRenderer");
-      const pdfBuffer = await renderTemplatePdf(exportInput);
+      // Generate PDF directly from Claude's HTML
+      const { generatePdfFromHtml } = await import("../utils/proposalPdfExport");
+      const pdfBuffer = await generatePdfFromHtml(generatedHtml);
       const pdfFileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
       const { url: pdfUrl } = await storagePut(pdfFileName, pdfBuffer, "application/pdf");
 
@@ -1167,9 +1134,7 @@ STRICT RULES:
       const canExportAdvanced = isAdmin || sub.plan === "starter" || sub.plan === "pro";
       if (canExportAdvanced) {
         const { htmlToDocx } = await import("../utils/htmlToDocx");
-        const { buildHtml } = await import("../utils/templatePdfRenderer");
-        const html = await buildHtml(exportInput);
-        const docxBuffer = await htmlToDocx(html);
+        const docxBuffer = await htmlToDocx(generatedHtml);
         const wordFileName = `proposal-${proposal.id}-${Date.now()}.docx`;
         const { url: wUrl } = await storagePut(
           wordFileName,

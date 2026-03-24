@@ -577,3 +577,10 @@
 - [x] Redesign compileSummary prompt: free LLM generates a fully pre-written draft proposal with all sections (Executive Summary, Scope of Work, Materials, Timeline, Investment, Why Choose Us, Terms)
 - [x] Redesign generateFromSummary prompt: paid Claude receives the complete draft and polishes it into a professional final document with charts
 - [x] Update Step 2 review page label from "Project Summary" to "Draft Proposal" to reflect new content
+
+## Claude HTML Proposal Generation (New Architecture)
+- [x] Update generateFromSummary: ask Claude to produce a complete self-contained HTML document (with embedded CSS, SVG charts) instead of markdown
+- [x] Update PDF export: render Claude's HTML directly with Puppeteer instead of injecting into our template
+- [x] Store the raw HTML in the database (generatedContent column) so it can be re-rendered anytime
+- [x] Update ProposalDetail preview to render the stored HTML in an iframe (auto-resizing, sandboxed)
+- [x] Keep Word/Google Doc export working (exportWord now uses Claude HTML directly for new proposals)
