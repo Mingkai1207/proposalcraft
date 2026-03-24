@@ -538,3 +538,10 @@
 ## Branding Fix: Remove Claude References from UI
 - [x] Replace all "Claude" mentions in frontend .tsx files with "ProposAI" branding
 - [x] Check waiting screens, empty states, how-it-works sections, and tooltips
+
+## Site-Wide Consistency Update
+- [x] Rewrite Pricing page feature matrix to match actual features (new workflow)
+- [x] Update Home page how-it-works section to reflect new 5-step workflow
+- [x] Update Home page feature highlights to match actual capabilities
+- [x] Remove any outdated references to old template picker / style cards
+- [x] Ensure all plan gates match what is actually implemented (PDF free, Word/Google Doc Starter+, AI revision Starter+)

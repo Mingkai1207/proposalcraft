@@ -22,32 +22,32 @@ import {
 const FEATURES = [
   {
     icon: Zap,
-    title: "AI-Powered in 60 Seconds",
-    desc: "Describe the job and our AI writes a complete, professional proposal instantly — no templates to fill, no hours wasted.",
+    title: "AI-Powered in Minutes",
+    desc: "Fill in a guided form, review an AI-compiled summary, then let ProposAI write a complete, professional proposal — with analytic charts included.",
     color: "bg-orange-50 text-orange-600",
   },
   {
     icon: FileText,
-    title: "Branded PDF Output",
-    desc: "Every proposal is a polished PDF with your logo, business info, and custom terms. Looks like you hired a copywriter.",
+    title: "PDF, Word & Google Doc",
+    desc: "Every proposal is exported as a polished PDF (free for all), plus Word and Google Doc for Starter and Pro users.",
     color: "bg-blue-50 text-blue-600",
   },
   {
-    icon: Mail,
-    title: "Send Directly to Clients",
-    desc: "Email proposals to homeowners and GCs right from the platform. No copy-pasting into Gmail.",
+    icon: Layers,
+    title: "Your Own Templates",
+    desc: "Upload a past proposal or save any generated proposal as a template. ProposAI will follow its exact structure for every new job.",
     color: "bg-purple-50 text-purple-600",
   },
   {
-    icon: Eye,
-    title: "Read Receipt Tracking",
-    desc: "Know the moment your client opens your proposal. Follow up at exactly the right time.",
+    icon: Sparkles,
+    title: "Revise with AI",
+    desc: "Not happy with a section? Describe the change and ProposAI rewrites the proposal and regenerates all your documents instantly.",
     color: "bg-green-50 text-green-600",
   },
   {
     icon: Shield,
-    title: "Trade-Specific Templates",
-    desc: "Pre-built templates for HVAC, plumbing, electrical, and roofing — trained on real contractor language.",
+    title: "Profile Auto-Fill",
+    desc: "Save your business details once — name, license, phone, logo — and ProposAI fills them into every proposal automatically.",
     color: "bg-indigo-50 text-indigo-600",
   },
   {
@@ -92,10 +92,10 @@ const PLANS = [
     proposals: "3 proposals/month",
     features: [
       "AI proposal generation",
+      "Guided form with profile auto-fill",
+      "AI summary review before generation",
       "PDF download",
-      "5 trade templates",
-      "English only",
-      "ProposAI watermark on PDF",
+      "Save & upload templates",
     ],
     cta: "Get Started Free",
     highlight: false,
@@ -108,14 +108,12 @@ const PLANS = [
     period: "/month",
     proposals: "20 proposals/month",
     features: [
-      "No watermark on PDF",
-      "Email delivery to clients",
-      "Proposal open & read tracking",
+      "Everything in Free — no watermark",
+      "Word (.docx) & Google Doc export",
+      "Revise with AI chatbot",
       "Custom logo & branding",
       "Multi-language (EN, ZH, ES, FR)",
-      "7 AI models incl. GPT-4o Mini",
-      "Auto follow-up email (48h)",
-      "Proposal expiry date",
+      "Template-based generation",
     ],
     cta: "Start Starter Plan",
     highlight: false,
@@ -129,12 +127,9 @@ const PLANS = [
     proposals: "Unlimited proposals",
     features: [
       "Everything in Starter",
-      "GPT-4o, Claude 3.7, DeepSeek R1",
-      "10+ trade proposal templates",
+      "Unlimited proposal generation",
       "Bulk export all proposals (ZIP)",
-      "Custom sender email domain",
-      "Analytics: open rate & win rate",
-      "Client portal (accept/decline)",
+      "Analytics: win rate & revenue",
       "Priority support (4h response)",
     ],
     cta: "Go Pro",
@@ -146,36 +141,37 @@ const PLANS = [
 const FAQS = [
   {
     q: "Do I need any tech skills to use ProposAI?",
-    a: "None at all. If you can type a text message, you can use ProposAI. Just describe the job in plain English and the AI does the rest.",
+    a: "None at all. Fill in a guided form, review the AI-compiled summary, and ProposAI generates a complete professional proposal with charts. No writing or formatting skills needed.",
   },
   {
-    q: "How does the AI know contractor language?",
-    a: "ProposAI is specifically trained on trade contractor proposals — HVAC, plumbing, electrical, and roofing. It understands job scopes, materials, and industry-standard terms.",
+    q: "What file formats does ProposAI export?",
+    a: "All users get a polished PDF. Starter and Pro users also get a Word (.docx) file and a Google Doc, all generated automatically in one step.",
+  },
+  {
+    q: "Can I use my own proposal format?",
+    a: "Yes. Upload any past proposal or save a generated one as a template. ProposAI will follow its exact structure and format when writing new proposals.",
+  },
+  {
+    q: "Can I edit the proposal after it's generated?",
+    a: "Yes. Starter and Pro users can use the \"Revise with AI\" chatbot to describe any changes. ProposAI rewrites the relevant sections and regenerates all your documents instantly.",
   },
   {
     q: "Can I add my own logo and business info?",
-    a: "Yes. Every proposal includes your business name, logo, license number, phone, and custom terms. Your branding is saved once and applied to every proposal automatically.",
-  },
-  {
-    q: "What happens when my client opens the proposal?",
-    a: "You get an instant notification the moment your client opens the email. This lets you follow up while the job is still top of mind — dramatically improving close rates.",
+    a: "Yes. Save your business name, logo, license number, and phone once in your profile. ProposAI auto-fills this information into every proposal you generate.",
   },
   {
     q: "Can I cancel anytime?",
-    a: "Yes. There are no long-term contracts. You can cancel your subscription at any time from your account settings. Your free tier access remains after cancellation.",
-  },
-  {
-    q: "Is my data secure?",
-    a: "Yes. All data is encrypted in transit and at rest. We never share your business information or client data with third parties.",
+    a: "Yes. No long-term contracts. Cancel from your account settings at any time. Free tier access remains after cancellation.",
   },
 ];
 
 const COMPARISON = [
-  { feature: "Time to write a proposal", manual: "1–3 hours", proposai: "Under 60 seconds" },
-  { feature: "Professional formatting", manual: "Inconsistent", proposai: "Always perfect" },
-  { feature: "Client email delivery", manual: "Copy-paste to Gmail", proposai: "One click from app" },
-  { feature: "Open tracking", manual: "Never know", proposai: "Real-time notification" },
-  { feature: "Custom branding", manual: "DIY in Word/PDF", proposai: "Auto-applied to every proposal" },
+  { feature: "Time to write a proposal", manual: "1–3 hours", proposai: "A few minutes" },
+  { feature: "Professional formatting", manual: "Inconsistent", proposai: "Always polished" },
+  { feature: "Export formats", manual: "Manual Word/PDF", proposai: "PDF, Word & Google Doc" },
+  { feature: "Charts & visuals", manual: "DIY in Excel", proposai: "Auto-generated by AI" },
+  { feature: "Reusable templates", manual: "Copy-paste old docs", proposai: "Save any proposal as template" },
+  { feature: "Revisions", manual: "Rewrite from scratch", proposai: "Describe change, AI rewrites" },
   { feature: "Cost", manual: "Your time = $$$", proposai: "From $0/month" },
 ];
 
@@ -505,10 +501,10 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-5">What you'll get</p>
               <div className="space-y-4">
                 {[
-                  { icon: FileText, color: "bg-blue-100 text-blue-600", title: "Professional PDF proposal", desc: "Itemized costs, scope of work, your logo & license number" },
-                  { icon: Mail, color: "bg-purple-100 text-purple-600", title: "One-click email delivery", desc: "Send directly to your client from the app" },
-                  { icon: Eye, color: "bg-green-100 text-green-600", title: "Open tracking notification", desc: "Get notified the moment your client reads it" },
-                  { icon: Phone, color: "bg-orange-100 text-orange-600", title: "Follow-up reminder", desc: "Auto follow-up email sent 48h after delivery" },
+                  { icon: FileText, color: "bg-blue-100 text-blue-600", title: "Professional PDF proposal", desc: "Itemized costs, scope of work, analytic charts, your logo & license" },
+                  { icon: FileCheck, color: "bg-purple-100 text-purple-600", title: "Word & Google Doc", desc: "Starter & Pro users get all three formats in one click" },
+                  { icon: Sparkles, color: "bg-green-100 text-green-600", title: "AI summary review", desc: "Review and edit the AI-compiled summary before generating" },
+                  { icon: Layers, color: "bg-orange-100 text-orange-600", title: "Save as template", desc: "Reuse this proposal's structure for future jobs" },
                 ].map(({ icon: Icon, color, title, desc }) => (
                   <div key={title} className="flex items-start gap-3">
                     <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center flex-shrink-0`}>
