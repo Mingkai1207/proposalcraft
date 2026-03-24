@@ -108,6 +108,89 @@ export const templatesRouter = router({
       return { success: true };
     }),
 
+  // Save a completed proposal as a template
+  saveAsTemplate: protectedProcedure
+    .input(
+      z.object({
+        proposalId: z.number(),
+        name: z.string().min(1),
+        description: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // Fetch the proposal
+      const { proposals } = await import("../../drizzle/schema");
+      const proposal = await db
+        .select()
+        .from(proposals)
+        .where(and(eq(proposals.id, input.proposalId), eq(proposals.userId, ctx.user.id)))
+        .then((r: any[]) => r[0]);
+
+      if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
+      if (!proposal.generatedContent) throw new TRPCError({ code: "BAD_REQUEST", message: "Proposal has no generated content to save as template" });
+
+      const result = await db.insert(proposalTemplates).values({
+        userId: ctx.user.id,
+        name: input.name,
+        tradeType: proposal.tradeType || "general",
+        description: input.description || null,
+        content: proposal.generatedContent,
+        clientName: null,
+        clientAddress: null,
+        jobScope: null,
+        materials: null,
+        laborCost: null,
+        materialsCost: null,
+        totalCost: null,
+        language: "english",
+        expiryDays: 30,
+        sourceType: "saved_from_proposal",
+        originalFileUrl: null,
+      });
+
+      return { success: true };
+    }),
+
+  // Upload a document as a template (stores the text content extracted from the file)
+  uploadTemplate: protectedProcedure
+    .input(
+      z.object({
+        name: z.string().min(1),
+        tradeType: z.string().min(1),
+        description: z.string().optional(),
+        content: z.string().min(10),  // extracted text content of the uploaded document
+        originalFileUrl: z.string().url().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      await db.insert(proposalTemplates).values({
+        userId: ctx.user.id,
+        name: input.name,
+        tradeType: input.tradeType,
+        description: input.description || null,
+        content: input.content,
+        clientName: null,
+        clientAddress: null,
+        jobScope: null,
+        materials: null,
+        laborCost: null,
+        materialsCost: null,
+        totalCost: null,
+        language: "english",
+        expiryDays: 30,
+        sourceType: "uploaded",
+        originalFileUrl: input.originalFileUrl || null,
+      });
+
+      return { success: true };
+    }),
+
   // Delete a template
   delete: protectedProcedure
     .input(z.object({ id: z.number() }))

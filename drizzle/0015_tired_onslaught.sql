@@ -1,0 +1,2 @@
+ALTER TABLE `proposal_templates` ADD `sourceType` enum('saved_from_proposal','uploaded') DEFAULT 'saved_from_proposal' NOT NULL;--> statement-breakpoint
+ALTER TABLE `proposal_templates` ADD `originalFileUrl` text;

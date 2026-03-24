@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -9,8 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Zap, FileText, Wrench, Droplets, Bolt, Home as HomeIcon, HardHat, Globe, Paintbrush, Layers, Leaf, Hammer, Building2, Wind, Square, Sun, Grid3x3 } from "lucide-react";
-import { TemplateQuickCreate } from "@/components/TemplateQuickCreate";
+import { useState, useEffect } from "react";
+import {
+  ArrowLeft, ArrowRight, FileText, Wrench, Droplets, Bolt, Home as HomeIcon,
+  HardHat, Paintbrush, Layers, Leaf, Hammer, Building2, Wind, Square, Sun,
+  Grid3x3, CheckCircle2, Loader2, Sparkles, Edit3, Clock, Palette,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const TRADE_OPTIONS = [
   { value: "hvac", label: "HVAC", icon: Wrench, desc: "Heating, ventilation & air conditioning" },
@@ -30,13 +36,38 @@ const TRADE_OPTIONS = [
   { value: "general", label: "General Contracting", icon: HardHat, desc: "General construction & renovation" },
 ];
 
-const LANGUAGE_OPTIONS = [
-  { value: "english", label: "English", flag: "🇺🇸" },
-  { value: "chinese", label: "Chinese (中文)", flag: "🇨🇳" },
-  { value: "spanish", label: "Spanish (Español)", flag: "🇪🇸" },
-  { value: "french", label: "French (Français)", flag: "🇫🇷" },
-  { value: "auto", label: "Auto (match job description)", flag: "🌐" },
+const TONE_OPTIONS = [
+  { value: "professional", label: "Professional", desc: "Formal and authoritative" },
+  { value: "friendly", label: "Friendly", desc: "Warm and approachable" },
+  { value: "confident", label: "Confident", desc: "Bold and assertive" },
+  { value: "technical", label: "Technical", desc: "Detailed and precise" },
 ];
+
+const STYLE_OPTIONS = [
+  { value: "modern", label: "Modern", desc: "Clean lines, contemporary feel" },
+  { value: "classic", label: "Classic", desc: "Traditional, formal layout" },
+  { value: "minimal", label: "Minimal", desc: "Simple, distraction-free" },
+  { value: "executive", label: "Executive", desc: "Structured, high-authority" },
+];
+
+const COLOR_OPTIONS = [
+  { value: "professional blue and white", label: "Blue & White", color: "#2563eb" },
+  { value: "teal and white", label: "Teal & White", color: "#0d9488" },
+  { value: "navy and gold", label: "Navy & Gold", color: "#1e3a5f" },
+  { value: "dark slate and orange", label: "Dark & Orange", color: "#0f172a" },
+  { value: "forest green and white", label: "Green & White", color: "#14532d" },
+  { value: "slate gray and blue", label: "Gray & Blue", color: "#475569" },
+];
+
+const PAYMENT_TERMS = [
+  "50% upfront, 50% on completion",
+  "33% upfront, 33% at midpoint, 34% on completion",
+  "100% on completion",
+  "Net-30 after completion",
+  "Weekly progress billing",
+];
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type FormData = {
   title: string;
@@ -49,66 +80,235 @@ type FormData = {
   laborCost: string;
   materialsCost: string;
   totalCost: string;
-  language: string;
+  estimatedDays: string;
+  startDate: string;
+  paymentTerms: string;
+  specialNotes: string;
   expiryDays: number;
+  // Style preferences
+  colorScheme: string;
+  tone: string;
+  documentStyle: string;
 };
 
+// ─── Step indicator ───────────────────────────────────────────────────────────
+
+const STEPS = [
+  { label: "Project Info" },
+  { label: "Job Details" },
+  { label: "Review Summary" },
+];
+
+function StepIndicator({ step }: { step: number }) {
+  return (
+    <div className="flex items-center gap-1">
+      {STEPS.map((s, i) => {
+        const n = i + 1;
+        const done = n < step;
+        const active = n === step;
+        return (
+          <div key={n} className="flex items-center gap-1">
+            <div className={`flex items-center gap-1.5 text-xs font-medium ${active ? "text-primary" : done ? "text-muted-foreground" : "text-muted-foreground/40"}`}>
+              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${active ? "bg-primary text-white" : done ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+                {done ? <CheckCircle2 className="w-3 h-3" /> : n}
+              </div>
+              <span className="hidden sm:inline">{s.label}</span>
+            </div>
+            {i < STEPS.length - 1 && <div className={`w-6 h-px ${n < step ? "bg-primary/40" : "bg-border"}`} />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Waiting screen ───────────────────────────────────────────────────────────
+
+const GENERATION_STEPS = [
+  { icon: "📋", label: "Analyzing your project details", duration: 3000 },
+  { icon: "🔍", label: "Researching trade-specific requirements", duration: 4000 },
+  { icon: "✍️", label: "Writing executive summary", duration: 5000 },
+  { icon: "📐", label: "Detailing scope of work", duration: 5000 },
+  { icon: "🛠️", label: "Listing materials & equipment", duration: 4000 },
+  { icon: "📅", label: "Building project timeline", duration: 3000 },
+  { icon: "💰", label: "Calculating investment summary", duration: 3000 },
+  { icon: "📊", label: "Generating analytic charts", duration: 5000 },
+  { icon: "📄", label: "Formatting PDF document", duration: 4000 },
+  { icon: "✅", label: "Finalizing your proposal", duration: 2000 },
+];
+
+function WaitingScreen() {
+  const [currentStep, setCurrentStep] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    let stepIndex = 0;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    function advance() {
+      if (stepIndex >= GENERATION_STEPS.length) return;
+      setCurrentStep(stepIndex);
+      const duration = GENERATION_STEPS[stepIndex].duration;
+      timeoutId = setTimeout(() => {
+        setCompletedSteps(prev => [...prev, stepIndex]);
+        stepIndex++;
+        advance();
+      }, duration);
+    }
+
+    advance();
+
+    const interval = setInterval(() => setElapsed(e => e + 1), 1000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = elapsed % 60;
+  const timeStr = minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4">
+      <div className="max-w-lg w-full">
+        {/* Header */}
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 border border-primary/30 mb-4">
+            <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Crafting Your Proposal</h2>
+          <p className="text-slate-400 text-sm">Claude AI is writing a professional, detailed proposal for you. This typically takes 30–90 seconds.</p>
+        </div>
+
+        {/* Steps */}
+        <div className="space-y-2 mb-8">
+          {GENERATION_STEPS.map((step, i) => {
+            const isDone = completedSteps.includes(i);
+            const isActive = currentStep === i && !isDone;
+            return (
+              <div
+                key={i}
+                className={`flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-500 ${
+                  isDone ? "bg-primary/10 border border-primary/20" :
+                  isActive ? "bg-white/10 border border-white/20" :
+                  "opacity-30"
+                }`}
+              >
+                <span className="text-lg w-6 text-center">{step.icon}</span>
+                <span className={`text-sm flex-1 ${isDone ? "text-primary" : isActive ? "text-white" : "text-slate-500"}`}>
+                  {step.label}
+                </span>
+                {isDone && <CheckCircle2 className="w-4 h-4 text-primary flex-shrink-0" />}
+                {isActive && <Loader2 className="w-4 h-4 text-white animate-spin flex-shrink-0" />}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Timer */}
+        <div className="text-center">
+          <div className="inline-flex items-center gap-2 text-slate-400 text-sm">
+            <Clock className="w-4 h-4" />
+            <span>Elapsed: {timeStr}</span>
+          </div>
+          <p className="text-slate-500 text-xs mt-2">Please keep this page open while your proposal is being generated.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
 export default function NewProposal() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading, user } = useAuth();
   const [, navigate] = useLocation();
   const [step, setStep] = useState(1);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [summaryText, setSummaryText] = useState("");
+  const [proposalId, setProposalId] = useState<number | null>(null);
+
   const [form, setForm] = useState<FormData>({
-    title: "", tradeType: "", clientName: "", clientEmail: "",
-    clientAddress: "", jobScope: "", materials: "",
-    laborCost: "", materialsCost: "", totalCost: "",
-    language: "english",
+    title: "",
+    tradeType: "",
+    clientName: "",
+    clientEmail: "",
+    clientAddress: "",
+    jobScope: "",
+    materials: "",
+    laborCost: "",
+    materialsCost: "",
+    totalCost: "",
+    estimatedDays: "",
+    startDate: "",
+    paymentTerms: "50% upfront, 50% on completion",
+    specialNotes: "",
     expiryDays: 30,
+    colorScheme: "professional blue and white",
+    tone: "professional",
+    documentStyle: "modern",
   });
 
-  const MODEL_LABELS: Record<string, string> = {
-    "gemini-2.5-flash": "Gemini 2.5 Flash",
-    "deepseek-v3": "DeepSeek V3",
-    "deepseek-r1": "DeepSeek R1",
-    "gpt-4o": "GPT-4o",
-    "gpt-4o-mini": "GPT-4o Mini",
-    "claude-3-7-sonnet-20250219": "Claude 3.7 Sonnet",
-    "qwen-max": "Qwen Max",
-  };
+  // Auto-fill profile data
+  const { data: profile } = trpc.profile.get.useQuery(undefined, { enabled: isAuthenticated });
 
-  const generateMutation = trpc.proposals.generate.useMutation({
+  useEffect(() => {
+    if (profile && !form.clientEmail) {
+      // Pre-fill nothing from profile into client fields — those are for the client, not the contractor
+      // But we can use profile data in the summary generation
+    }
+  }, [profile]);
+
+  const compileMutation = trpc.proposals.compileSummary.useMutation({
     onSuccess: (data) => {
-      if (data) {
-        if (data.modelDowngraded) {
-          const usedLabel = MODEL_LABELS[data.modelUsed] || data.modelUsed;
-          toast.warning(
-            `Your selected model requires a higher plan. Used ${usedLabel} instead. Upgrade to unlock premium models.`,
-            { duration: 6000 }
-          );
-        } else {
-          toast.success("Proposal generated successfully!");
-        }
-        navigate(`/proposals/${data.id}`);
-      }
+      setSummaryText(data.summaryContent);
+      setProposalId(data.proposalId);
+      setStep(3);
     },
     onError: (e) => toast.error(e.message),
   });
 
+  const generateMutation = trpc.proposals.generateFromSummary.useMutation({
+    onSuccess: (data) => {
+      setIsGenerating(false);
+      toast.success("Proposal generated successfully!");
+      navigate(`/proposals/${data.proposalId}`);
+    },
+    onError: (e) => {
+      setIsGenerating(false);
+      toast.error(e.message);
+    },
+  });
+
   if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
   if (!isAuthenticated) {
     window.location.href = getLoginUrl();
     return null;
   }
 
-  const update = (field: keyof FormData, value: string | number) => setForm(f => ({ ...f, [field]: value }));
+  // Show waiting screen during generation
+  if (isGenerating) {
+    return <WaitingScreen />;
+  }
 
-  const handleGenerate = () => {
-    if (!form.title || !form.tradeType || !form.jobScope) {
-      toast.error("Please fill in all required fields");
+  const update = (field: keyof FormData, value: string | number) =>
+    setForm(f => ({ ...f, [field]: value }));
+
+  const handleCompileSummary = () => {
+    if (!form.title || !form.tradeType) {
+      toast.error("Please fill in the project title and trade type");
       return;
     }
-    generateMutation.mutate({
+    if (!form.jobScope || form.jobScope.length < 10) {
+      toast.error("Please describe the job scope (at least 10 characters)");
+      return;
+    }
+    compileMutation.mutate({
       title: form.title,
       tradeType: form.tradeType as any,
       clientName: form.clientName || undefined,
@@ -119,16 +319,34 @@ export default function NewProposal() {
       laborCost: form.laborCost || undefined,
       materialsCost: form.materialsCost || undefined,
       totalCost: form.totalCost || undefined,
-      language: form.language || undefined,
+      estimatedDays: form.estimatedDays || undefined,
+      startDate: form.startDate || undefined,
+      paymentTerms: form.paymentTerms || undefined,
+      specialNotes: form.specialNotes || undefined,
       expiryDays: form.expiryDays,
+      colorScheme: form.colorScheme || undefined,
+      tone: form.tone || undefined,
+      documentStyle: form.documentStyle || undefined,
+    });
+  };
+
+  const handleGenerate = () => {
+    if (!proposalId || !summaryText) {
+      toast.error("Please review the summary first");
+      return;
+    }
+    setIsGenerating(true);
+    generateMutation.mutate({
+      proposalId,
+      approvedSummary: summaryText,
     });
   };
 
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar */}
-      <div className="border-b border-border bg-white px-6 py-4 flex items-center gap-4">
-        <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors">
+      <div className="border-b border-border bg-white px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
+        <button onClick={() => step > 1 ? setStep(s => s - 1) : navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
@@ -137,53 +355,36 @@ export default function NewProposal() {
           </div>
           <span className="font-semibold text-foreground">New Proposal</span>
         </div>
-        {/* Step indicator */}
-        <div className="ml-auto flex items-center gap-2">
-          {[1, 2, 3].map(s => (
-            <div key={s} className={`flex items-center gap-1.5 text-xs font-medium ${s === step ? "text-primary" : s < step ? "text-muted-foreground" : "text-muted-foreground/40"}`}>
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${s === step ? "bg-primary text-white" : s < step ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
-                {s}
-              </div>
-              <span className="hidden sm:inline">{s === 1 ? "Trade & Client" : s === 2 ? "Job Details" : "Pricing"}</span>
-            </div>
-          ))}
+        <div className="ml-auto">
+          <StepIndicator step={step} />
         </div>
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-10">
-        {/* Step 1: Trade & Client */}
+
+        {/* ── Step 1: Project Info + Style Preferences ── */}
         {step === 1 && (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div>
-              <h2 className="text-xl font-bold text-foreground mb-1">Select Trade & Client Info</h2>
-              <p className="text-muted-foreground text-sm">Choose your trade type and enter client details.</p>
+              <h2 className="text-xl font-bold text-foreground mb-1">Project Information</h2>
+              <p className="text-muted-foreground text-sm">Tell us about the project and your client.</p>
             </div>
 
-            <TemplateQuickCreate form={form} setForm={setForm} />
-
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Proposal Title <span className="text-destructive">*</span></Label>
-              <Input
-                placeholder="e.g., HVAC System Replacement - 123 Main St"
-                value={form.title}
-                onChange={e => update("title", e.target.value)}
-              />
-            </div>
-
+            {/* Trade type */}
             <div>
               <Label className="text-sm font-medium mb-3 block">Trade Type <span className="text-destructive">*</span></Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {TRADE_OPTIONS.map(({ value, label, icon: Icon, desc }) => (
                   <button
                     key={value}
                     onClick={() => update("tradeType", value)}
-                    className={`flex items-start gap-3 p-4 rounded-xl border-2 text-left transition-all ${
+                    className={`flex items-start gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${
                       form.tradeType === value
                         ? "border-primary bg-primary/5"
                         : "border-border hover:border-primary/40 bg-card"
                     }`}
                   >
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${form.tradeType === value ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${form.tradeType === value ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>
                       <Icon className="w-4 h-4" />
                     </div>
                     <div>
@@ -195,25 +396,107 @@ export default function NewProposal() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Client Name</Label>
-                <Input placeholder="John Smith" value={form.clientName} onChange={e => update("clientName", e.target.value)} />
+            {/* Project title */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Proposal Title <span className="text-destructive">*</span></Label>
+              <Input
+                placeholder="e.g., HVAC System Replacement – 123 Main St"
+                value={form.title}
+                onChange={e => update("title", e.target.value)}
+              />
+            </div>
+
+            {/* Client info */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">Client Information</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Client Name</Label>
+                  <Input placeholder="John Smith" value={form.clientName} onChange={e => update("clientName", e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Client Email</Label>
+                  <Input type="email" placeholder="john@example.com" value={form.clientEmail} onChange={e => update("clientEmail", e.target.value)} />
+                </div>
               </div>
               <div>
-                <Label className="text-sm font-medium mb-2 block">Client Email</Label>
-                <Input type="email" placeholder="john@example.com" value={form.clientEmail} onChange={e => update("clientEmail", e.target.value)} />
+                <Label className="text-sm font-medium mb-2 block">Property / Job Address</Label>
+                <Input placeholder="123 Main St, City, State 90210" value={form.clientAddress} onChange={e => update("clientAddress", e.target.value)} />
               </div>
             </div>
 
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Property Address</Label>
-              <Input placeholder="123 Main St, City, State" value={form.clientAddress} onChange={e => update("clientAddress", e.target.value)} />
+            {/* Style preferences */}
+            <div className="space-y-5 pt-2 border-t border-border">
+              <div className="flex items-center gap-2">
+                <Palette className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-semibold text-foreground">Document Style Preferences</h3>
+                <Badge variant="secondary" className="text-xs">Optional</Badge>
+              </div>
+
+              {/* Color scheme */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Color Scheme</Label>
+                <div className="flex flex-wrap gap-2">
+                  {COLOR_OPTIONS.map(({ value, label, color }) => (
+                    <button
+                      key={value}
+                      onClick={() => update("colorScheme", value)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 text-sm transition-all ${
+                        form.colorScheme === value ? "border-primary bg-primary/5 font-medium" : "border-border hover:border-primary/40"
+                      }`}
+                    >
+                      <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tone */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Writing Tone</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {TONE_OPTIONS.map(({ value, label, desc }) => (
+                    <button
+                      key={value}
+                      onClick={() => update("tone", value)}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        form.tone === value ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                      }`}
+                    >
+                      <p className="text-sm font-medium text-foreground">{label}</p>
+                      <p className="text-xs text-muted-foreground">{desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Document style */}
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Document Style</Label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {STYLE_OPTIONS.map(({ value, label, desc }) => (
+                    <button
+                      key={value}
+                      onClick={() => update("documentStyle", value)}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        form.documentStyle === value ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
+                      }`}
+                    >
+                      <p className="text-sm font-medium text-foreground">{label}</p>
+                      <p className="text-xs text-muted-foreground">{desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <Button
               onClick={() => {
-                if (!form.title || !form.tradeType) { toast.error("Please fill in the required fields"); return; }
+                if (!form.title || !form.tradeType) {
+                  toast.error("Please fill in the project title and trade type");
+                  return;
+                }
                 setStep(2);
               }}
               className="w-full"
@@ -223,11 +506,11 @@ export default function NewProposal() {
           </div>
         )}
 
-        {/* Step 2: Job Details */}
+        {/* ── Step 2: Job Details + Pricing ── */}
         {step === 2 && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-foreground mb-1">Describe the Job</h2>
+              <h2 className="text-xl font-bold text-foreground mb-1">Job Details & Pricing</h2>
               <p className="text-muted-foreground text-sm">The more detail you provide, the better the AI proposal will be.</p>
             </div>
 
@@ -240,7 +523,7 @@ export default function NewProposal() {
                 rows={5}
                 className="resize-none"
               />
-              <p className="text-xs text-muted-foreground mt-1">Be specific - mention equipment models, square footage, or any special conditions.</p>
+              <p className="text-xs text-muted-foreground mt-1">Be specific — mention equipment models, square footage, or any special conditions.</p>
             </div>
 
             <div>
@@ -254,26 +537,62 @@ export default function NewProposal() {
               />
             </div>
 
-            <div>
-              <Label className="text-sm font-medium mb-2 block flex items-center gap-1.5">
-                <Globe className="w-3.5 h-3.5" /> Proposal Language
-              </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {LANGUAGE_OPTIONS.map(({ value, label, flag }) => (
-                  <button
-                    key={value}
-                    onClick={() => update("language", value)}
-                    className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 text-sm transition-all ${
-                      form.language === value
-                        ? "border-primary bg-primary/5 text-foreground font-medium"
-                        : "border-border hover:border-primary/40 text-muted-foreground"
-                    }`}
-                  >
-                    <span>{flag}</span>
-                    <span className="truncate">{label}</span>
-                  </button>
-                ))}
+            {/* Pricing */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground">Pricing</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Labor Cost ($)</Label>
+                  <Input type="number" placeholder="1500" value={form.laborCost} onChange={e => update("laborCost", e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Materials Cost ($)</Label>
+                  <Input type="number" placeholder="2500" value={form.materialsCost} onChange={e => update("materialsCost", e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Total Cost ($) <span className="text-destructive">*</span></Label>
+                  <Input type="number" placeholder="4000" value={form.totalCost} onChange={e => update("totalCost", e.target.value)} />
+                </div>
               </div>
+            </div>
+
+            {/* Timeline */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Estimated Duration (days) <span className="text-destructive">*</span></Label>
+                <Input type="number" placeholder="5" value={form.estimatedDays} onChange={e => update("estimatedDays", e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Proposed Start Date</Label>
+                <Input type="date" value={form.startDate} onChange={e => update("startDate", e.target.value)} />
+              </div>
+            </div>
+
+            {/* Payment terms */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Payment Terms</Label>
+              <Select value={form.paymentTerms} onValueChange={val => update("paymentTerms", val)}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAYMENT_TERMS.map(t => (
+                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Special notes */}
+            <div>
+              <Label className="text-sm font-medium mb-2 block">Special Notes / Additional Requirements</Label>
+              <Textarea
+                placeholder="Permit requirements, access restrictions, client preferences, warranty terms..."
+                value={form.specialNotes}
+                onChange={e => update("specialNotes", e.target.value)}
+                rows={3}
+                className="resize-none"
+              />
             </div>
 
             <div className="flex gap-3">
@@ -281,67 +600,62 @@ export default function NewProposal() {
                 <ArrowLeft className="w-4 h-4 mr-1" /> Back
               </Button>
               <Button
-                onClick={() => {
-                  if (!form.jobScope || form.jobScope.length < 10) { toast.error("Please describe the job scope"); return; }
-                  setStep(3);
-                }}
-                className="flex-1"
+                onClick={handleCompileSummary}
+                disabled={compileMutation.isPending}
+                className="flex-1 gap-2"
               >
-                Continue <ArrowRight className="w-4 h-4 ml-1" />
+                {compileMutation.isPending ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Compiling Summary...</>
+                ) : (
+                  <><Sparkles className="w-4 h-4" /> Compile Summary</>
+                )}
               </Button>
             </div>
+            {compileMutation.isPending && (
+              <p className="text-center text-sm text-muted-foreground animate-pulse">
+                AI is organizing your project details into a structured summary...
+              </p>
+            )}
           </div>
         )}
 
-        {/* Step 3: Pricing */}
+        {/* ── Step 3: Review & Edit Summary ── */}
         {step === 3 && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-foreground mb-1">Pricing (Optional)</h2>
-              <p className="text-muted-foreground text-sm">Add pricing details to include in the proposal. You can skip this and add it later.</p>
+              <h2 className="text-xl font-bold text-foreground mb-1">Review Your Project Summary</h2>
+              <p className="text-muted-foreground text-sm">
+                The AI has compiled your project details into a structured summary. Review it carefully and make any edits before generating the full proposal.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Summary info banner */}
+            <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <Edit3 className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
               <div>
-                <Label className="text-sm font-medium mb-2 block">Labor Cost ($)</Label>
-                <Input type="number" placeholder="1500" value={form.laborCost} onChange={e => update("laborCost", e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Materials Cost ($)</Label>
-                <Input type="number" placeholder="2500" value={form.materialsCost} onChange={e => update("materialsCost", e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Total Investment ($)</Label>
-                <Input type="number" placeholder="4000" value={form.totalCost} onChange={e => update("totalCost", e.target.value)} />
+                <p className="text-sm font-medium text-blue-800">Edit before generating</p>
+                <p className="text-xs text-blue-600 mt-0.5">This summary will be sent to Claude to write your full proposal. Make sure all details are accurate — especially costs, dates, and client information.</p>
               </div>
             </div>
 
+            {/* Editable summary */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Proposal Expiry</Label>
-              <Select value={form.expiryDays.toString()} onValueChange={(val) => update("expiryDays", parseInt(val))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">7 days</SelectItem>
-                  <SelectItem value="14">14 days</SelectItem>
-                  <SelectItem value="30">30 days (recommended)</SelectItem>
-                  <SelectItem value="60">60 days</SelectItem>
-                  <SelectItem value="90">90 days</SelectItem>
-                  <SelectItem value="999">Never expires</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground mt-1">Clients can accept or decline the proposal until this date. After expiry, the proposal becomes inactive.</p>
+              <Label className="text-sm font-medium mb-2 block">Project Summary</Label>
+              <Textarea
+                value={summaryText}
+                onChange={e => setSummaryText(e.target.value)}
+                rows={18}
+                className="font-mono text-sm resize-none"
+              />
             </div>
 
-            {/* Summary */}
-            <div className="bg-muted/30 rounded-xl p-5 border border-border">
-              <h3 className="font-semibold text-sm text-foreground mb-3">Proposal Summary</h3>
-              <div className="space-y-1.5 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Title:</span><span className="text-foreground font-medium">{form.title}</span></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Trade:</span><span className="text-foreground">{TRADE_OPTIONS.find(t => t.value === form.tradeType)?.label}</span></div>
-                {form.clientName && <div className="flex justify-between"><span className="text-muted-foreground">Client:</span><span className="text-foreground">{form.clientName}</span></div>}
-                {form.totalCost && <div className="flex justify-between"><span className="text-muted-foreground">Total:</span><span className="text-foreground font-semibold">${form.totalCost}</span></div>}
+            {/* Style preferences reminder */}
+            <div className="bg-muted/30 rounded-xl p-4 border border-border">
+              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Style Preferences</h3>
+              <div className="flex flex-wrap gap-2">
+                {form.colorScheme && <Badge variant="outline" className="text-xs capitalize">{form.colorScheme}</Badge>}
+                {form.tone && <Badge variant="outline" className="text-xs capitalize">{form.tone} tone</Badge>}
+                {form.documentStyle && <Badge variant="outline" className="text-xs capitalize">{form.documentStyle} style</Badge>}
               </div>
             </div>
 
@@ -351,26 +665,18 @@ export default function NewProposal() {
               </Button>
               <Button
                 onClick={handleGenerate}
-                disabled={generateMutation.isPending}
-                className="flex-1 gap-2"
+                disabled={generateMutation.isPending || !summaryText}
+                className="flex-1 gap-2 bg-gradient-to-r from-primary to-primary/80"
               >
-                {generateMutation.isPending ? (
-                  <>
-                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Zap className="w-4 h-4" /> Generate Proposal
-                  </>
-                )}
+                <Sparkles className="w-4 h-4" /> Generate Full Proposal
               </Button>
             </div>
-            {generateMutation.isPending && (
-              <p className="text-center text-sm text-muted-foreground animate-pulse">
-                AI is writing your professional proposal...
+
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground">
+                Generation typically takes 30–90 seconds. Claude AI will write a complete, professional proposal with analytic charts.
               </p>
-            )}
+            </div>
           </div>
         )}
       </div>

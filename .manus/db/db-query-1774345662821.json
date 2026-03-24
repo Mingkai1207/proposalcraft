@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `proposals` ADD `summaryContent` text;\nALTER TABLE `proposals` ADD `stylePreferences` text;\nALTER TABLE `proposals` ADD `wordUrl` text;\nALTER TABLE `proposals` ADD `googleDocUrl` text;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user FeC7Hhjo94vzeQP.root --database TxoyTEEFMfksnn9C3wscL4 --execute ALTER TABLE `proposals` ADD `summaryContent` text;\nALTER TABLE `proposals` ADD `stylePreferences` text;\nALTER TABLE `proposals` ADD `wordUrl` text;\nALTER TABLE `proposals` ADD `googleDocUrl` text;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 3892
+}

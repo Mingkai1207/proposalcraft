@@ -17,6 +17,9 @@ import {
 } from "../db";
 import { storagePut } from "../storage";
 import { nanoid } from "nanoid";
+import { eq, and } from "drizzle-orm";
+import { proposalTemplates } from "../../drizzle/schema";
+import { getDb } from "../db";
 import { ENV } from "../_core/env";
 import { generateProposalPdf, type ProposalPdfData } from "../utils/proposalPdfExport";
 
@@ -474,8 +477,13 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       return { success: true };
     }),
 
-  // Generate a proposal from a template — AI fills each section individually
-  generateFromTemplate: protectedProcedure
+  // Old generateFromTemplate removed — see new generateFromTemplate below (Function 2)
+  _placeholder_removed: protectedProcedure
+    .input(z.object({ _: z.string().optional() }))
+    .mutation(async () => { throw new TRPCError({ code: "NOT_FOUND", message: "Removed" }); }),
+
+  // Placeholder to keep router valid until old code is fully removed
+  _old_generateFromTemplate_removed: protectedProcedure
     .input(
       z.object({
         templateId: z.string().min(1),
@@ -860,6 +868,631 @@ ${fieldContext}`;
         console.error(`[Google Docs Export] Failed:`, error);
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to generate Google Docs export." });
       }
+    }),
+
+  /**
+   * Step 1 — Compile a structured summary from form inputs.
+   * Uses the built-in LLM to produce a clean, bulleted summary for user review.
+   * Saves the summary to the proposal record and returns it.
+   */
+  compileSummary: protectedProcedure
+    .input(
+      z.object({
+        // Proposal identity
+        title: z.string().min(1),
+        tradeType: z.enum(ALL_TRADE_TYPES),
+        // Client info
+        clientName: z.string().optional(),
+        clientEmail: z.string().email().optional().or(z.literal("")),
+        clientAddress: z.string().optional(),
+        // Project details
+        jobScope: z.string().min(10),
+        materials: z.string().optional(),
+        laborCost: z.string().optional(),
+        materialsCost: z.string().optional(),
+        totalCost: z.string().optional(),
+        estimatedDays: z.string().optional(),
+        startDate: z.string().optional(),
+        paymentTerms: z.string().optional(),
+        specialNotes: z.string().optional(),
+        language: z.string().optional(),
+        expiryDays: z.number().min(1).default(30),
+        // Style preferences
+        colorScheme: z.string().optional(),
+        tone: z.string().optional(),
+        documentStyle: z.string().optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Check subscription limits
+      const isAdmin = ctx.user.role === "admin";
+      const sub = await ensureSubscription(ctx.user.id);
+      if (!sub) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Subscription error" });
+      if (!isAdmin) {
+        const limit = getPlanLimit(sub.plan);
+        if (sub.proposalsUsedThisMonth >= limit) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `You've reached your ${sub.plan} plan limit of ${limit} proposals/month. Please upgrade to continue.`,
+          });
+        }
+      }
+
+      const profile = await getContractorProfile(ctx.user.id);
+      const businessName = profile?.businessName || ctx.user.name || "Your Business";
+      const tradeName = TRADE_TEMPLATES[input.tradeType] || "General Contracting";
+
+      const summaryPrompt = `You are a professional proposal assistant. Compile the following job information into a clean, structured summary that will be reviewed by the contractor before generating a full proposal.
+
+Format the summary as a well-organized set of labeled sections with bullet points. Be concise and accurate — do not add information that was not provided. If a field is missing, omit it.
+
+Business: ${businessName}
+Trade: ${tradeName}
+Client: ${input.clientName || "(not specified)"}
+Client Email: ${input.clientEmail || "(not specified)"}
+Property Address: ${input.clientAddress || "(not specified)"}
+Project Title: ${input.title}
+Job Description: ${input.jobScope}
+${input.materials ? `Materials/Equipment: ${input.materials}` : ""}
+${input.laborCost ? `Labor Cost: $${input.laborCost}` : ""}
+${input.materialsCost ? `Materials Cost: $${input.materialsCost}` : ""}
+${input.totalCost ? `Total Cost: $${input.totalCost}` : ""}
+${input.estimatedDays ? `Estimated Duration: ${input.estimatedDays} days` : ""}
+${input.startDate ? `Proposed Start Date: ${input.startDate}` : ""}
+${input.paymentTerms ? `Payment Terms: ${input.paymentTerms}` : ""}
+${input.specialNotes ? `Special Notes: ${input.specialNotes}` : ""}
+${input.colorScheme ? `Preferred Color Scheme: ${input.colorScheme}` : ""}
+${input.tone ? `Preferred Tone: ${input.tone}` : ""}
+${input.documentStyle ? `Document Style: ${input.documentStyle}` : ""}
+
+Return ONLY the structured summary. No preamble, no explanation.`;
+
+      const response = await invokeLLM({
+        messages: [{ role: "user", content: summaryPrompt }],
+      });
+
+      const rawContent = response.choices[0]?.message?.content;
+      const summaryContent = typeof rawContent === "string" ? rawContent.trim() : "";
+
+      // Save a draft proposal record with the summary
+      const trackingToken = nanoid(32);
+      const stylePreferences = JSON.stringify({
+        colorScheme: input.colorScheme || "",
+        tone: input.tone || "",
+        documentStyle: input.documentStyle || "",
+      });
+
+      const proposal = await createProposal({
+        userId: ctx.user.id,
+        title: input.title,
+        tradeType: input.tradeType,
+        clientName: input.clientName || null,
+        clientEmail: input.clientEmail || null,
+        clientAddress: input.clientAddress || null,
+        jobScope: input.jobScope,
+        materials: input.materials || null,
+        laborCost: input.laborCost || null,
+        materialsCost: input.materialsCost || null,
+        totalCost: input.totalCost || null,
+        summaryContent,
+        stylePreferences,
+        trackingToken,
+        status: "draft",
+        expiryDays: input.expiryDays,
+      });
+
+      if (!proposal) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to save proposal" });
+
+      return { proposalId: proposal.id, summaryContent };
+    }),
+
+  /**
+   * Step 3 — Generate a full proposal from the user-approved summary.
+   * Uses Claude (via Anthropic API if key available, else built-in LLM fallback).
+   * Automatically exports PDF + Word (Starter/Pro) + Google Doc (Starter/Pro).
+   */
+  generateFromSummary: protectedProcedure
+    .input(
+      z.object({
+        proposalId: z.number(),
+        /** The user-edited summary from Step 2 */
+        approvedSummary: z.string().min(10),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await getProposalById(input.proposalId);
+      if (!proposal || proposal.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
+      }
+
+      const isAdmin = ctx.user.role === "admin";
+      const sub = await ensureSubscription(ctx.user.id);
+      if (!sub) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Subscription error" });
+
+      const profile = await getContractorProfile(ctx.user.id);
+      const businessName = profile?.businessName || ctx.user.name || "Your Business";
+      const tradeName = TRADE_TEMPLATES[proposal.tradeType] || "General Contracting";
+
+      const stylePrefs = proposal.stylePreferences ? JSON.parse(proposal.stylePreferences) : {};
+      const colorScheme = stylePrefs.colorScheme || "professional blue and white";
+      const tone = stylePrefs.tone || "professional and confident";
+      const documentStyle = stylePrefs.documentStyle || "modern";
+
+      const TRADE_CONTEXT: Record<string, string> = {
+        hvac: "Use HVAC-specific terminology: SEER2 ratings, BTU, tonnage, refrigerant types (R-410A, R-32), AFUE%, variable-speed blowers, heat exchangers, ductwork CFM, static pressure, load calculations. Mention permits, EPA 608 certification, and manufacturer warranties.",
+        plumbing: "Use plumbing-specific terminology: pipe materials (PEX, copper, CPVC, ABS), fixture units, GPM/GPH flow rates, water pressure (PSI), drain slopes, venting requirements, shut-off valves, P-traps, cleanouts. Mention permits and code compliance.",
+        electrical: "Use electrical-specific terminology: amperage, voltage, circuit breakers, AFCI/GFCI protection, conduit types (EMT, PVC), wire gauges (AWG), panel upgrades, load calculations, NEC code compliance. Mention permits and inspections.",
+        roofing: "Use roofing-specific terminology: shingle types (architectural, 3-tab, metal, TPO, EPDM), underlayment, ice & water shield, drip edge, flashing, ridge cap, decking, R-value, pitch/slope. Mention manufacturer warranties and wind ratings.",
+        painting: "Use painting-specific terminology: surface prep (sanding, priming, caulking), paint types (latex, oil-based, epoxy), sheen levels (flat, eggshell, satin, semi-gloss), mil thickness, VOC content, number of coats. Mention surface area in sq ft.",
+        flooring: "Use flooring-specific terminology: subfloor prep, moisture barrier, underlayment, expansion gaps, transitions, species/grade (for hardwood), wear layer (for LVP), AC rating (for laminate), installation method (nail-down, glue-down, floating). Mention sq ft.",
+        landscaping: "Use landscaping-specific terminology: grading, drainage, soil amendments, mulch depth, plant spacing, irrigation GPH/GPM, hardscape materials (pavers, flagstone), retaining wall height, sod vs. seed. Mention square footage and linear footage.",
+        carpentry: "Use carpentry-specific terminology: wood species, joinery methods (mortise & tenon, pocket screws, dovetail), finish options (stain, paint, clear coat), hardware specs, load-bearing vs. decorative. Mention linear footage and board feet.",
+        concrete: "Use concrete-specific terminology: PSI strength (3000, 4000 PSI), rebar size (#3, #4, #5), wire mesh, control joints, curing time, finish type (broom, exposed aggregate, stamped), thickness in inches. Mention sq ft and cubic yards.",
+        masonry: "Use masonry-specific terminology: brick/block types, mortar mix (Type S, Type N), bond patterns (running, stack, herringbone), grout, flashing, weep holes, lintel sizes. Mention sq ft and linear footage.",
+        insulation: "Use insulation-specific terminology: R-value, insulation types (spray foam open/closed cell, fiberglass batt, blown cellulose), vapor barrier, air sealing, thermal bridging. Mention sq ft and linear footage.",
+        drywall: "Use drywall-specific terminology: board thickness (1/2\", 5/8\"), fire-rated (Type X), moisture-resistant (green board), joint compound coats, tape types, texture (knockdown, orange peel, smooth), corner bead. Mention sq ft.",
+        windows: "Use windows/doors-specific terminology: U-factor, SHGC, Low-E coating, argon fill, frame materials (vinyl, fiberglass, aluminum, wood), rough opening dimensions, flashing, weatherstripping, hardware finish.",
+        solar: "Use solar-specific terminology: panel wattage (W), system size (kW), inverter types (string, micro, power optimizer), battery storage (kWh), net metering, production estimate (kWh/year), payback period, federal ITC (30%), interconnection.",
+        general: "Use general contracting terminology appropriate to the specific work described. Be precise about materials, dimensions, and methods.",
+      };
+      const tradeContext = TRADE_CONTEXT[proposal.tradeType] || TRADE_CONTEXT.general;
+
+      const systemPrompt = `You are an expert proposal writer for ${tradeName} contractors.
+Write a complete, professional, visually appealing proposal based on the provided project summary.
+
+Style requirements:
+- Color scheme preference: ${colorScheme}
+- Tone: ${tone}
+- Document style: ${documentStyle}
+
+Trade-specific guidance: ${tradeContext}
+
+Structure the proposal with these sections, each starting with ## followed by the section title:
+1. ## Executive Summary
+2. ## Scope of Work
+3. ## Materials & Equipment
+4. ## Project Timeline
+5. ## Investment Summary
+6. ## Why Choose Us
+7. ## Terms & Conditions
+
+IMPORTANT RULES:
+- Visually appealing analytic graphs are required in this proposal. Describe data for charts where relevant (cost breakdown, timeline, payment schedule).
+- Use the actual business name and client name. Never use placeholders like [Your Name].
+- Do NOT include a Contact Information section — it is in the header.
+- Do NOT include signature blocks or Accepted By sections.
+- Be specific, detailed, and persuasive. Vague proposals lose to specific ones.
+- Write in a ${tone} tone throughout.`;
+
+      const { invokeAnthropic } = await import("../utils/anthropicLLM");
+      const result = await invokeAnthropic({
+        model: "claude-sonnet-4-5",
+        systemPrompt,
+        messages: [{
+          role: "user",
+          content: `Business: ${businessName}\n\nProject Summary (approved by contractor):\n\n${input.approvedSummary}\n\nWrite the complete proposal now.`,
+        }],
+        maxTokens: 8192,
+      });
+
+      let generatedContent = result.content
+        .replace(/#{1,6}\s*Contact\s*Information[\s\S]*?(?=#{1,6}\s|$)/gi, "")
+        .replace(/#{1,6}\s*(Accepted By|Acceptance|Signature)[\s\S]*?(?=#{1,6}\s|$)/gi, "")
+        .replace(/\[Your[^\]]+\]/g, "")
+        .replace(/^_{5,}\s*$/gm, "")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+
+      const isFree = sub.plan === "free" && !isAdmin;
+      if (isFree) {
+        generatedContent += "\n\n---\n*This proposal was generated with ProposAI Free. Upgrade to remove this watermark and unlock Word & Google Docs export.*";
+      }
+
+      // Parse sections for export
+      const TITLE_TO_ID: Record<string, string> = {
+        "Executive Summary": "executive_summary",
+        "Scope of Work": "scope_of_work",
+        "Materials & Equipment": "materials_equipment",
+        "Project Timeline": "timeline",
+        "Investment Summary": "investment",
+        "Why Choose Us": "why_choose_us",
+        "Terms & Conditions": "terms",
+      };
+      const sectionContents: Record<string, string> = {};
+      const sectionMatches = Array.from(generatedContent.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
+      for (const match of sectionMatches) {
+        const sectionTitle = match[1].trim();
+        if (!sectionTitle) continue;
+        sectionContents[sectionTitle] = match[2].trim();
+        const id = TITLE_TO_ID[sectionTitle];
+        if (id) sectionContents[id] = match[2].trim();
+      }
+      if (Object.keys(sectionContents).length === 0) sectionContents["content"] = generatedContent;
+
+      // Determine visual style (use templateId if set, else default to modern-wave)
+      const { getTemplateStyle } = await import("../../shared/templateDefs");
+      const style = getTemplateStyle(proposal.templateId || "modern-wave");
+
+      const preparedDate = new Date(proposal.createdAt).toLocaleDateString();
+      const validUntil = new Date(new Date(proposal.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
+      const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
+
+      const exportInput = {
+        style,
+        tradeType: proposal.tradeType || "General Contracting",
+        title: proposal.title,
+        businessName,
+        businessPhone: profile?.phone || "",
+        businessEmail: profile?.email || ctx.user.email || "",
+        businessAddress: profile?.address || "",
+        licenseNumber: profile?.licenseNumber || "",
+        clientName: proposal.clientName || "Valued Client",
+        clientAddress: proposal.clientAddress || "",
+        clientEmail: proposal.clientEmail || "",
+        preparedDate,
+        validUntil,
+        sectionContents,
+        fields,
+      };
+
+      // Generate PDF (all plans)
+      const { renderTemplatePdf } = await import("../utils/templatePdfRenderer");
+      const pdfBuffer = await renderTemplatePdf(exportInput);
+      const pdfFileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
+      const { url: pdfUrl } = await storagePut(pdfFileName, pdfBuffer, "application/pdf");
+
+      // Generate Word + Google Doc (Starter/Pro only)
+      let wordUrl: string | null = null;
+      let googleDocUrl: string | null = null;
+
+      const canExportAdvanced = isAdmin || sub.plan === "starter" || sub.plan === "pro";
+      if (canExportAdvanced) {
+        const { htmlToDocx } = await import("../utils/htmlToDocx");
+        const { buildHtml } = await import("../utils/templatePdfRenderer");
+        const html = await buildHtml(exportInput);
+        const docxBuffer = await htmlToDocx(html);
+        const wordFileName = `proposal-${proposal.id}-${Date.now()}.docx`;
+        const { url: wUrl } = await storagePut(
+          wordFileName,
+          docxBuffer,
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        );
+        wordUrl = wUrl;
+        const googleDocsViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(wUrl)}&embedded=false`;
+        googleDocUrl = googleDocsViewerUrl;
+      }
+
+      // Save everything to the proposal record
+      await updateProposal(proposal.id, ctx.user.id, {
+        generatedContent,
+        summaryContent: input.approvedSummary,
+        pdfUrl,
+        wordUrl: wordUrl || undefined,
+        googleDocUrl: googleDocUrl || undefined,
+      });
+
+      await incrementProposalUsage(ctx.user.id);
+      await notifyOwner({
+        title: "New Proposal Generated (from Summary)",
+        content: `${ctx.user.name || ctx.user.email} generated a ${tradeName} proposal: "${proposal.title}"`,
+      }).catch(() => {});
+
+      return {
+        proposalId: proposal.id,
+        pdfUrl,
+        wordUrl,
+        googleDocUrl,
+        usedAnthropicApi: result.usedAnthropicApi,
+      };
+    }),
+
+  /**
+   * Revise proposal with AI — regenerates all documents after applying user's requested changes.
+   * Available to Starter and Pro users only.
+   */
+  reviseWithAI: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      message: z.string().min(1).max(2000),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await getProposalById(input.id);
+      if (!proposal || proposal.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
+      }
+
+      const isAdmin = ctx.user.role === "admin";
+      const sub = await ensureSubscription(ctx.user.id);
+      if (!sub) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Subscription error" });
+
+      const canRevise = isAdmin || sub.plan === "starter" || sub.plan === "pro";
+      if (!canRevise) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "AI revision is available on Starter and Pro plans." });
+      }
+
+      const currentContent = proposal.generatedContent || "";
+      const profile = await getContractorProfile(ctx.user.id);
+      const businessName = profile?.businessName || ctx.user.name || "Your Business";
+
+      const { invokeAnthropic } = await import("../utils/anthropicLLM");
+      const result = await invokeAnthropic({
+        model: "claude-sonnet-4-5",
+        systemPrompt: `You are a professional proposal editor. The user has a contractor proposal and wants to make specific changes.\n\nYour job:\n1. Understand exactly what the user wants to change\n2. Rewrite ONLY the affected section(s)\n3. Return the COMPLETE updated proposal in markdown format\n4. Maintain the same professional tone, formatting, and structure\n5. Do NOT add placeholder text like [Your Phone Number]\n6. Do NOT add signature blocks or contact information sections`,
+        messages: [{
+          role: "user",
+          content: `Here is the current proposal:\n\n${currentContent}\n\n---\n\nRevision request: ${input.message}`,
+        }],
+        maxTokens: 8192,
+      });
+
+      let updatedContent = result.content
+        .replace(/#{1,6}\s*Contact\s*Information[\s\S]*?(?=#{1,6}\s|$)/gi, "")
+        .replace(/#{1,6}\s*(Accepted By|Acceptance|Signature)[\s\S]*?(?=#{1,6}\s|$)/gi, "")
+        .replace(/\[Your[^\]]+\]/g, "")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+
+      // Re-export all documents
+      const TITLE_TO_ID: Record<string, string> = {
+        "Executive Summary": "executive_summary",
+        "Scope of Work": "scope_of_work",
+        "Materials & Equipment": "materials_equipment",
+        "Project Timeline": "timeline",
+        "Investment Summary": "investment",
+        "Why Choose Us": "why_choose_us",
+        "Terms & Conditions": "terms",
+      };
+      const sectionContents: Record<string, string> = {};
+      const sectionMatches = Array.from(updatedContent.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
+      for (const match of sectionMatches) {
+        const sectionTitle = match[1].trim();
+        if (!sectionTitle) continue;
+        sectionContents[sectionTitle] = match[2].trim();
+        const id = TITLE_TO_ID[sectionTitle];
+        if (id) sectionContents[id] = match[2].trim();
+      }
+      if (Object.keys(sectionContents).length === 0) sectionContents["content"] = updatedContent;
+
+      const { getTemplateStyle } = await import("../../shared/templateDefs");
+      const style = getTemplateStyle(proposal.templateId || "modern-wave");
+      const preparedDate = new Date(proposal.createdAt).toLocaleDateString();
+      const validUntil = new Date(new Date(proposal.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
+      const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
+
+      const exportInput = {
+        style,
+        tradeType: proposal.tradeType || "General Contracting",
+        title: proposal.title,
+        businessName,
+        businessPhone: profile?.phone || "",
+        businessEmail: profile?.email || ctx.user.email || "",
+        businessAddress: profile?.address || "",
+        licenseNumber: profile?.licenseNumber || "",
+        clientName: proposal.clientName || "Valued Client",
+        clientAddress: proposal.clientAddress || "",
+        clientEmail: proposal.clientEmail || "",
+        preparedDate,
+        validUntil,
+        sectionContents,
+        fields,
+      };
+
+      const { renderTemplatePdf } = await import("../utils/templatePdfRenderer");
+      const pdfBuffer = await renderTemplatePdf(exportInput);
+      const pdfFileName = `proposal-${proposal.id}-revised-${Date.now()}.pdf`;
+      const { url: pdfUrl } = await storagePut(pdfFileName, pdfBuffer, "application/pdf");
+
+      let wordUrl: string | null = null;
+      let googleDocUrl: string | null = null;
+
+      if (isAdmin || sub.plan === "starter" || sub.plan === "pro") {
+        const { htmlToDocx } = await import("../utils/htmlToDocx");
+        const { buildHtml } = await import("../utils/templatePdfRenderer");
+        const html = await buildHtml(exportInput);
+        const docxBuffer = await htmlToDocx(html);
+        const wordFileName = `proposal-${proposal.id}-revised-${Date.now()}.docx`;
+        const { url: wUrl } = await storagePut(
+          wordFileName,
+          docxBuffer,
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        );
+        wordUrl = wUrl;
+        googleDocUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(wUrl)}&embedded=false`;
+      }
+
+      await updateProposal(input.id, ctx.user.id, {
+        generatedContent: updatedContent,
+        pdfUrl,
+        wordUrl: wordUrl || undefined,
+        googleDocUrl: googleDocUrl || undefined,
+      });
+
+      return { content: updatedContent, pdfUrl, wordUrl, googleDocUrl };
+    }),
+
+  /**
+   * Function 2 — Generate a proposal from a saved template.
+   * Sends the template content + new project summary to Claude, which writes
+   * a new proposal following the template's structure.
+   */
+  generateFromTemplate: protectedProcedure
+    .input(
+      z.object({
+        templateId: z.number(),
+        approvedSummary: z.string().min(10),
+        // Basic proposal fields for the new proposal record
+        title: z.string().min(1),
+        tradeType: z.enum(ALL_TRADE_TYPES),
+        clientName: z.string().optional(),
+        clientEmail: z.string().email().optional().or(z.literal("")),
+        clientAddress: z.string().optional(),
+        jobScope: z.string().min(1),
+        totalCost: z.string().optional(),
+        estimatedDays: z.string().optional(),
+        expiryDays: z.number().default(30),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const isAdmin = ctx.user.role === "admin";
+      const sub = await ensureSubscription(ctx.user.id);
+      if (!sub) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Subscription error" });
+      if (!isAdmin) {
+        const limit = getPlanLimit(sub.plan);
+        if (sub.proposalsUsedThisMonth >= limit) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `You've reached your ${sub.plan} plan limit of ${limit} proposals/month. Please upgrade to continue.`,
+          });
+        }
+      }
+
+      // Fetch the template
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+      const template = await db
+        .select()
+        .from(proposalTemplates)
+        .where(and(eq(proposalTemplates.id, input.templateId), eq(proposalTemplates.userId, ctx.user.id)))
+        .then((r: any[]) => r[0]);
+      if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Template not found" });
+
+      const profile = await getContractorProfile(ctx.user.id);
+      const businessName = profile?.businessName || ctx.user.name || "Your Business";
+      const tradeName = TRADE_TEMPLATES[input.tradeType] || "General Contracting";
+
+      const systemPrompt = `You are an expert proposal writer for ${tradeName} contractors.
+You are given a template proposal and new project information. Write a NEW proposal that:
+1. Follows the EXACT same structure and format as the template
+2. Incorporates ALL the new project information provided
+3. Maintains the professional tone and style of the template
+4. Uses the actual business name, client name, and project details — never placeholders
+5. Includes visually appealing analytic graphs where relevant (cost breakdown, timeline, payment schedule)
+6. Does NOT include signature blocks, contact information sections, or placeholder text
+
+Business: ${businessName}`;
+
+      const { invokeAnthropic } = await import("../utils/anthropicLLM");
+      const result = await invokeAnthropic({
+        model: "claude-sonnet-4-5",
+        systemPrompt,
+        messages: [{
+          role: "user",
+          content: `TEMPLATE PROPOSAL (follow this structure):\n\n${template.content}\n\n---\n\nNEW PROJECT INFORMATION:\n\n${input.approvedSummary}\n\nWrite the complete new proposal now, following the template's structure.`,
+        }],
+        maxTokens: 8192,
+      });
+
+      let generatedContent = result.content
+        .replace(/#{1,6}\s*Contact\s*Information[\s\S]*?(?=#{1,6}\s|$)/gi, "")
+        .replace(/#{1,6}\s*(Accepted By|Acceptance|Signature)[\s\S]*?(?=#{1,6}\s|$)/gi, "")
+        .replace(/\[Your[^\]]+\]/g, "")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+
+      if (sub.plan === "free" && !isAdmin) {
+        generatedContent += "\n\n---\n*This proposal was generated with ProposAI Free. Upgrade to remove this watermark and unlock Word & Google Docs export.*";
+      }
+
+      // Parse sections
+      const TITLE_TO_ID: Record<string, string> = {
+        "Executive Summary": "executive_summary",
+        "Scope of Work": "scope_of_work",
+        "Materials & Equipment": "materials_equipment",
+        "Project Timeline": "timeline",
+        "Investment Summary": "investment",
+        "Why Choose Us": "why_choose_us",
+        "Terms & Conditions": "terms",
+      };
+      const sectionContents: Record<string, string> = {};
+      const sectionMatches = Array.from(generatedContent.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
+      for (const match of sectionMatches) {
+        const sectionTitle = match[1].trim();
+        if (!sectionTitle) continue;
+        sectionContents[sectionTitle] = match[2].trim();
+        const id = TITLE_TO_ID[sectionTitle];
+        if (id) sectionContents[id] = match[2].trim();
+      }
+      if (Object.keys(sectionContents).length === 0) sectionContents["content"] = generatedContent;
+
+      const { getTemplateStyle } = await import("../../shared/templateDefs");
+      const style = getTemplateStyle("modern-wave");
+      const trackingToken = nanoid(32);
+
+      // Create proposal record
+      const proposal = await createProposal({
+        userId: ctx.user.id,
+        title: input.title,
+        tradeType: input.tradeType,
+        clientName: input.clientName || null,
+        clientEmail: input.clientEmail || null,
+        clientAddress: input.clientAddress || null,
+        jobScope: input.jobScope,
+        totalCost: input.totalCost || null,
+        generatedContent,
+        summaryContent: input.approvedSummary,
+        trackingToken,
+        status: "draft",
+        expiryDays: input.expiryDays,
+      });
+      if (!proposal) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to save proposal" });
+
+      const preparedDate = new Date().toLocaleDateString();
+      const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
+
+      const exportInput = {
+        style,
+        tradeType: input.tradeType,
+        title: input.title,
+        businessName,
+        businessPhone: profile?.phone || "",
+        businessEmail: profile?.email || ctx.user.email || "",
+        businessAddress: profile?.address || "",
+        licenseNumber: profile?.licenseNumber || "",
+        clientName: input.clientName || "Valued Client",
+        clientAddress: input.clientAddress || "",
+        clientEmail: input.clientEmail || "",
+        preparedDate,
+        validUntil,
+        sectionContents,
+        fields: {},
+      };
+
+      const { renderTemplatePdf } = await import("../utils/templatePdfRenderer");
+      const pdfBuffer = await renderTemplatePdf(exportInput);
+      const pdfFileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
+      const { url: pdfUrl } = await storagePut(pdfFileName, pdfBuffer, "application/pdf");
+
+      let wordUrl: string | null = null;
+      let googleDocUrl: string | null = null;
+      const canExportAdvanced = isAdmin || sub.plan === "starter" || sub.plan === "pro";
+      if (canExportAdvanced) {
+        const { htmlToDocx } = await import("../utils/htmlToDocx");
+        const { buildHtml } = await import("../utils/templatePdfRenderer");
+        const html = await buildHtml(exportInput);
+        const docxBuffer = await htmlToDocx(html);
+        const wordFileName = `proposal-${proposal.id}-${Date.now()}.docx`;
+        const { url: wUrl } = await storagePut(
+          wordFileName,
+          docxBuffer,
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        );
+        wordUrl = wUrl;
+        googleDocUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(wUrl)}&embedded=false`;
+      }
+
+      await updateProposal(proposal.id, ctx.user.id, {
+        pdfUrl,
+        wordUrl: wordUrl || undefined,
+        googleDocUrl: googleDocUrl || undefined,
+      });
+
+      await incrementProposalUsage(ctx.user.id);
+      await notifyOwner({
+        title: "New Proposal Generated (from Template)",
+        content: `${ctx.user.name || ctx.user.email} generated a ${tradeName} proposal from template: "${input.title}"`,
+      }).catch(() => {});
+
+      return { proposalId: proposal.id, pdfUrl, wordUrl, googleDocUrl };
     }),
 
   /**

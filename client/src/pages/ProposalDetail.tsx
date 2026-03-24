@@ -13,7 +13,8 @@ import { Streamdown } from "streamdown";
 import { VersionHistory } from "@/components/VersionHistory";
 import {
   ArrowLeft, Send, Download, Eye, Clock, CheckCircle,
-  Mail, AlertCircle, Edit2, Save, X, Zap, Share2, Loader2, FileText
+  Mail, AlertCircle, Edit2, Save, X, Zap, Share2, Loader2,
+  FileText, Lock, MessageSquare, FileDown, Globe,
 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
@@ -44,13 +45,14 @@ export default function ProposalDetail() {
   const [sendMessage, setSendMessage] = useState("");
   const [editing, setEditing] = useState(false);
   const [editContent, setEditContent] = useState("");
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
-  // AI refinement chat state
-  const [refineOpen, setRefineOpen] = useState(false);
-  const [refineMessages, setRefineMessages] = useState<Message[]>([
+  // AI revision chat state
+  const [reviseOpen, setReviseOpen] = useState(false);
+  const [reviseMessages, setReviseMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I can help you refine this proposal. Tell me what you'd like to change — for example:\n\n- \"Make the scope of work more detailed\"\n- \"Change payment terms to net-30\"\n- \"Add a section about safety precautions\"\n- \"Make the tone more formal\""
+      content: "Hi! I can revise this proposal for you. Describe what you'd like to change — for example:\n\n- \"Make the scope of work more detailed\"\n- \"Change payment terms to net-30\"\n- \"Add a safety precautions section\"\n- \"Make the tone more formal and authoritative\""
     }
   ]);
 
@@ -63,117 +65,141 @@ export default function ProposalDetail() {
     undefined,
     { enabled: isAuthenticated }
   );
-  const isFreePlan = !subscription || subscription.plan === "free";
-  const [bannerDismissed, setBannerDismissed] = useState(false);
+
+  const plan = subscription?.plan ?? "free";
+  const isFreePlan = plan === "free";
+  const isPaidPlan = plan === "starter" || plan === "pro";
   const showUpgradeBanner = isFreePlan && !bannerDismissed && !!proposal;
 
+  // ── Mutations ──────────────────────────────────────────────────────────────
+
   const sendMutation = trpc.proposals.send.useMutation({
-    onSuccess: () => {
-      toast.success("Proposal sent successfully!");
-      setSendOpen(false);
-      refetch();
-    },
+    onSuccess: () => { toast.success("Proposal sent!"); setSendOpen(false); refetch(); },
     onError: (e) => toast.error(e.message),
   });
 
   const updateMutation = trpc.proposals.update.useMutation({
-    onSuccess: () => {
-      toast.success("Proposal saved");
-      setEditing(false);
-      refetch();
-    },
+    onSuccess: () => { toast.success("Proposal saved"); setEditing(false); refetch(); },
     onError: (e) => toast.error(e.message),
   });
 
   const shareLinkMutation = trpc.proposals.createShareLink.useMutation({
-    onSuccess: (data) => {
-      navigator.clipboard.writeText(data.shareUrl);
-      toast.success("Share link copied to clipboard!");
-    },
+    onSuccess: (data) => { navigator.clipboard.writeText(data.shareUrl); toast.success("Share link copied!"); },
     onError: (e) => toast.error(e.message),
   });
 
   const followUpMutation = trpc.proposals.sendFollowUp.useMutation({
-    onSuccess: () => {
-      toast.success("Follow-up email sent!");
-      refetch();
-    },
+    onSuccess: () => { toast.success("Follow-up sent!"); refetch(); },
     onError: (e) => toast.error(e.message),
   });
 
-  const saveTemplateMutation = trpc.templates.create.useMutation({
-    onSuccess: () => {
-      toast.success("Proposal saved as template!");
-    },
+  const saveTemplateMutation = trpc.templates.saveAsTemplate.useMutation({
+    onSuccess: () => toast.success("Saved as template! View it in My Templates."),
     onError: (e) => toast.error(e.message),
   });
 
-  // PDF export mutation - calls the professional PDF generation endpoint
+  // On-demand PDF export (fallback if no pre-generated URL)
   const exportPdfMutation = trpc.proposals.exportPdf.useMutation({
     onSuccess: (data) => {
       const link = document.createElement("a");
-      link.href = data.url;
-      link.download = data.fileName;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("PDF downloaded successfully!");
+      link.href = data.url; link.download = data.fileName;
+      link.target = "_blank"; link.rel = "noopener noreferrer";
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      toast.success("PDF downloaded!");
     },
-    onError: (e) => toast.error(e.message || "Failed to generate PDF. Please try again."),
+    onError: (e) => toast.error(e.message || "Failed to generate PDF."),
   });
 
-  // Word export mutation
+  // On-demand Word export (fallback)
   const exportWordMutation = trpc.proposals.exportWord.useMutation({
     onSuccess: (data) => {
       const link = document.createElement("a");
-      link.href = data.url;
-      link.download = data.fileName;
-      link.target = "_blank";
-      link.rel = "noopener noreferrer";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      link.href = data.url; link.download = data.fileName;
+      link.target = "_blank"; link.rel = "noopener noreferrer";
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
       toast.success("Word document downloaded!");
     },
     onError: (e) => toast.error(e.message || "Failed to generate Word document."),
   });
 
-  // AI refinement mutation
-  const refineMutation = trpc.proposals.refineProposal.useMutation({
-    onSuccess: () => {
-      setRefineMessages(prev => [
-        ...prev,
-        { role: "assistant", content: "Done! I've updated the proposal. You can see the changes in the content panel on the left. Export when you're ready." }
-      ]);
-      refetch();
-    },
-    onError: (e) => {
-      setRefineMessages(prev => [
-        ...prev,
-        { role: "assistant", content: `Sorry, I couldn't apply that change: ${e.message}` }
-      ]);
-    },
-  });
-
-  const handleRefineMessage = (message: string) => {
-    if (!proposal) return;
-    setRefineMessages(prev => [...prev, { role: "user", content: message }]);
-    refineMutation.mutate({ id: proposal.id, message });
-  };
-
-  // Google Docs export mutation
+  // On-demand Google Docs export (fallback)
   const exportGoogleDocsMutation = trpc.proposals.exportGoogleDocs.useMutation({
     onSuccess: (data) => {
       window.open(data.googleDocsViewerUrl, "_blank");
-      toast.success("Opening in Google Docs viewer. Click 'Open with Google Docs' to edit.");
+      toast.success("Opening in Google Docs viewer.");
     },
     onError: (e) => toast.error(e.message || "Failed to export to Google Docs."),
   });
 
+  // AI revision mutation
+  const refineMutation = trpc.proposals.refineProposal.useMutation({
+    onSuccess: () => {
+      setReviseMessages(prev => [...prev, {
+        role: "assistant",
+        content: "Done! I've updated the proposal. You can see the changes in the content panel. Export the updated documents when you're ready."
+      }]);
+      refetch();
+    },
+    onError: (e) => {
+      setReviseMessages(prev => [...prev, {
+        role: "assistant",
+        content: `Sorry, I couldn't apply that change: ${e.message}`
+      }]);
+    },
+  });
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
+
+  const handleReviseMessage = (message: string) => {
+    if (!proposal) return;
+    setReviseMessages(prev => [...prev, { role: "user", content: message }]);
+    refineMutation.mutate({ id: proposal.id, message });
+  };
+
+  const handleDownloadPDF = () => {
+    if (!proposal) return;
+    // Use pre-generated URL if available
+    if (proposal.pdfUrl) {
+      const link = document.createElement("a");
+      link.href = proposal.pdfUrl;
+      link.download = `proposal-${proposal.id}.pdf`;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      toast.success("PDF downloaded!");
+    } else {
+      exportPdfMutation.mutate({ id: proposal.id });
+    }
+  };
+
+  const handleDownloadWord = () => {
+    if (!proposal) return;
+    if (proposal.wordUrl) {
+      const link = document.createElement("a");
+      link.href = proposal.wordUrl;
+      link.download = `proposal-${proposal.id}.docx`;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      toast.success("Word document downloaded!");
+    } else {
+      exportWordMutation.mutate({ id: proposal.id });
+    }
+  };
+
+  const handleOpenGoogleDocs = () => {
+    if (!proposal) return;
+    if (proposal.googleDocUrl) {
+      window.open(proposal.googleDocUrl, "_blank");
+    } else {
+      exportGoogleDocsMutation.mutate({ id: proposal.id });
+    }
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
+
   if (authLoading || isLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
   if (!isAuthenticated) { window.location.href = getLoginUrl(); return null; }
   if (!proposal) {
@@ -190,38 +216,16 @@ export default function ProposalDetail() {
   const statusCfg = STATUS_CONFIG[proposal.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.draft;
   const StatusIcon = statusCfg.icon;
 
-  const handleSend = () => {
-    if (!sendEmail) { toast.error("Please enter client email"); return; }
-    sendMutation.mutate({
-      id: proposal.id,
-      clientEmail: sendEmail,
-      clientName: sendName || undefined,
-      message: sendMessage || undefined,
-    });
-  };
-
-  const handleSaveEdit = () => {
-    updateMutation.mutate({ id: proposal.id, generatedContent: editContent });
-  };
-
-  const handleDownloadPDF = () => {
-    if (!proposal) return;
-    exportPdfMutation.mutate({ id: proposal.id });
-  };
-
   return (
     <div className="min-h-screen bg-background">
-      {/* Upgrade banner for free users */}
+      {/* Free plan upgrade banner */}
       {showUpgradeBanner && (
         <div className="bg-orange-50 border-b border-orange-200 px-4 py-2.5 flex items-center gap-3">
           <Zap className="w-4 h-4 text-orange-500 flex-shrink-0" />
           <p className="text-sm text-orange-800 flex-1">
-            <strong>Free plan:</strong> This proposal has a ProposAI watermark on the PDF. Upgrade to remove it and unlock email delivery, read tracking, and custom branding.
+            <strong>Free plan:</strong> Upgrade to Starter or Pro to unlock Word export, Google Docs, and the AI revision chatbot.
           </p>
-          <button
-            onClick={() => navigate("/pricing")}
-            className="text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded-full transition-colors flex-shrink-0"
-          >
+          <button onClick={() => navigate("/pricing")} className="text-xs font-semibold text-white bg-orange-500 hover:bg-orange-600 px-3 py-1 rounded-full transition-colors flex-shrink-0">
             Upgrade
           </button>
           <button onClick={() => setBannerDismissed(true)} className="text-orange-400 hover:text-orange-600 flex-shrink-0">
@@ -231,119 +235,124 @@ export default function ProposalDetail() {
       )}
 
       {/* Top bar */}
-      <div className="border-b border-border bg-white px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
+      <div className="border-b border-border bg-white px-4 py-3 flex items-center gap-3 sticky top-0 z-10 flex-wrap">
         <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="font-semibold text-foreground truncate">{proposal.title}</h1>
+          <h1 className="font-semibold text-foreground truncate text-sm">{proposal.title}</h1>
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${statusCfg.color}`}>
               <StatusIcon className="w-3 h-3" />
               {statusCfg.label}
             </span>
             {proposal.viewedAt && (
-              <span className="text-xs text-muted-foreground">
-                Viewed {new Date(proposal.viewedAt).toLocaleDateString()}
-              </span>
+              <span className="text-xs text-muted-foreground">Viewed {new Date(proposal.viewedAt).toLocaleDateString()}</span>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Action buttons */}
+        <div className="flex items-center gap-1.5 flex-wrap">
           {!editing ? (
             <>
-              <Button variant="outline" size="sm"
-                onClick={() => navigate(`/proposals/${proposal.id}/edit`)}
-              >
-                <Edit2 className="w-4 h-4 mr-1" /> Edit
+              {/* Edit */}
+              <Button variant="outline" size="sm" onClick={() => { setEditContent(proposal.generatedContent || ""); setEditing(true); }}>
+                <Edit2 className="w-3.5 h-3.5 mr-1" /> Edit
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
-                onClick={() => setRefineOpen(true)}
-              >
-                <Zap className="w-4 h-4 mr-1" /> Refine with AI
-              </Button>             {/* Export buttons — three separate clickable buttons */}
+
+              {/* Revise with AI — Starter/Pro only */}
+              {isPaidPlan ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
+                  onClick={() => setReviseOpen(true)}
+                >
+                  <MessageSquare className="w-3.5 h-3.5 mr-1" /> Revise with AI
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-muted-foreground border-dashed"
+                  onClick={() => navigate("/pricing")}
+                  title="Upgrade to Starter or Pro to use AI revision"
+                >
+                  <Lock className="w-3.5 h-3.5 mr-1" /> Revise with AI
+                </Button>
+              )}
+
+              {/* PDF — available to all */}
               <Button
                 variant="default"
                 size="sm"
                 className="bg-red-600 hover:bg-red-700 text-white"
                 disabled={exportPdfMutation.isPending}
-                onClick={() => exportPdfMutation.mutate({ id: proposal.id })}
+                onClick={handleDownloadPDF}
               >
                 {exportPdfMutation.isPending ? (
-                  <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> PDF...</>
+                  <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> PDF...</>
                 ) : (
-                  <><Download className="w-4 h-4 mr-1" /> PDF</>
+                  <><FileDown className="w-3.5 h-3.5 mr-1" /> PDF</>
                 )}
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={exportWordMutation.isPending}
-                onClick={() => exportWordMutation.mutate({ id: proposal.id })}
-              >
-                {exportWordMutation.isPending ? (
-                  <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Word...</>
-                ) : (
-                  <><Download className="w-4 h-4 mr-1" /> Word</>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={exportGoogleDocsMutation.isPending}
-                onClick={() => exportGoogleDocsMutation.mutate({ id: proposal.id })}
-              >
-                {exportGoogleDocsMutation.isPending ? (
-                  <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Docs...</>
-                ) : (
-                  <><FileText className="w-4 h-4 mr-1" /> Google Docs</>
-                )}
-              </Button>
-              <Button size="sm" onClick={() => {
-                setSendEmail(proposal.clientEmail || "");
-                setSendName(proposal.clientName || "");
-                setSendOpen(true);
-              }}>
-                <Send className="w-4 h-4 mr-1" /> Send to Client
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => shareLinkMutation.mutate({ id: proposal.id })} disabled={shareLinkMutation.isPending}>
-                <Share2 className="w-4 h-4 mr-1" /> Share Link
-              </Button>
-              {proposal.sentAt && !proposal.viewedAt && !proposal.followUpSentAt && (
-                <Button variant="outline" size="sm" onClick={() => followUpMutation.mutate({ id: proposal.id })} disabled={followUpMutation.isPending}>
-                  <Mail className="w-4 h-4 mr-1" /> {followUpMutation.isPending ? "Sending..." : "Send Follow-up"}
+
+              {/* Word — Starter/Pro only */}
+              {isPaidPlan ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={exportWordMutation.isPending}
+                  onClick={handleDownloadWord}
+                >
+                  {exportWordMutation.isPending ? (
+                    <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Word...</>
+                  ) : (
+                    <><FileText className="w-3.5 h-3.5 mr-1" /> Word</>
+                  )}
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" className="text-muted-foreground border-dashed" onClick={() => navigate("/pricing")}>
+                  <Lock className="w-3.5 h-3.5 mr-1" /> Word
                 </Button>
               )}
-              <Button variant="outline" size="sm" onClick={() => {
-                saveTemplateMutation.mutate({
-                  name: proposal.title,
-                  tradeType: proposal.tradeType,
-                  description: `Template from ${proposal.clientName || "proposal"}`,
-                  content: proposal.generatedContent || "",
-                  clientName: proposal.clientName,
-                  clientAddress: proposal.clientAddress,
-                  jobScope: proposal.jobScope,
-                  materials: proposal.materials,
-                  laborCost: proposal.laborCost,
-                  materialsCost: proposal.materialsCost,
-                  totalCost: proposal.totalCost,
-                  language: "english",
-                  expiryDays: proposal.expiryDays || 30,
-                });
-              }} disabled={saveTemplateMutation.isPending}>
-                <Zap className="w-4 h-4 mr-1" /> {saveTemplateMutation.isPending ? "Saving..." : "Save as Template"}
+
+              {/* Google Docs — Starter/Pro only */}
+              {isPaidPlan ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={exportGoogleDocsMutation.isPending}
+                  onClick={handleOpenGoogleDocs}
+                >
+                  {exportGoogleDocsMutation.isPending ? (
+                    <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Docs...</>
+                  ) : (
+                    <><Globe className="w-3.5 h-3.5 mr-1" /> Google Docs</>
+                  )}
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" className="text-muted-foreground border-dashed" onClick={() => navigate("/pricing")}>
+                  <Lock className="w-3.5 h-3.5 mr-1" /> Google Docs
+                </Button>
+              )}
+
+              {/* Send to client */}
+              <Button size="sm" onClick={() => { setSendEmail(proposal.clientEmail || ""); setSendName(proposal.clientName || ""); setSendOpen(true); }}>
+                <Send className="w-3.5 h-3.5 mr-1" /> Send
+              </Button>
+
+              {/* Share link */}
+              <Button variant="outline" size="sm" onClick={() => shareLinkMutation.mutate({ id: proposal.id })} disabled={shareLinkMutation.isPending}>
+                <Share2 className="w-3.5 h-3.5 mr-1" /> Share
               </Button>
             </>
           ) : (
             <>
-              <Button variant="outline" size="sm" onClick={() => setEditing(false)}>
-                <X className="w-4 h-4 mr-1" /> Cancel
-              </Button>
-              <Button size="sm" onClick={handleSaveEdit} disabled={updateMutation.isPending}>
-                <Save className="w-4 h-4 mr-1" /> Save Changes
+              <Button variant="outline" size="sm" onClick={() => setEditing(false)}><X className="w-3.5 h-3.5 mr-1" /> Cancel</Button>
+              <Button size="sm" onClick={() => updateMutation.mutate({ id: proposal.id, generatedContent: editContent })} disabled={updateMutation.isPending}>
+                <Save className="w-3.5 h-3.5 mr-1" /> Save
               </Button>
             </>
           )}
@@ -351,13 +360,13 @@ export default function ProposalDetail() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* PDF Generation Loading Banner */}
+        {/* PDF generating banner */}
         {exportPdfMutation.isPending && (
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center gap-3">
             <Loader2 className="w-5 h-5 text-blue-600 animate-spin flex-shrink-0" />
             <div>
               <p className="text-sm font-medium text-blue-900">Generating your professional PDF...</p>
-              <p className="text-xs text-blue-700 mt-0.5">This may take a few seconds. Your proposal is being formatted with charts, tables, and professional styling.</p>
+              <p className="text-xs text-blue-700 mt-0.5">This may take a few seconds.</p>
             </div>
           </div>
         )}
@@ -384,35 +393,66 @@ export default function ProposalDetail() {
                   </div>
                 )}
               </div>
-              {/* Download PDF CTA at bottom of content */}
+
+              {/* Download section at bottom of content */}
               {!editing && (
                 <div className="px-6 pb-6">
                   <div className="border-t border-border pt-4">
-                    <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <FileText className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-slate-900">Ready to share?</p>
-                          <p className="text-xs text-slate-600">Download a professionally formatted PDF with charts and visual elements</p>
-                        </div>
-                      </div>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">Download Documents</p>
+                    <div className="flex flex-wrap gap-2">
+                      {/* PDF — all users */}
                       <Button
-                        onClick={handleDownloadPDF}
+                        size="sm"
+                        className="bg-red-600 hover:bg-red-700 text-white"
                         disabled={exportPdfMutation.isPending}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        onClick={handleDownloadPDF}
                       >
-                        {exportPdfMutation.isPending ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generating...
-                          </>
-                        ) : (
-                          <>
-                            <Download className="w-4 h-4 mr-1" /> Download PDF
-                          </>
-                        )}
+                        <FileDown className="w-3.5 h-3.5 mr-1.5" />
+                        {exportPdfMutation.isPending ? "Generating..." : proposal.pdfUrl ? "Download PDF" : "Generate PDF"}
                       </Button>
+
+                      {/* Word — Starter/Pro */}
+                      {isPaidPlan ? (
+                        <Button size="sm" variant="outline" disabled={exportWordMutation.isPending} onClick={handleDownloadWord}>
+                          <FileText className="w-3.5 h-3.5 mr-1.5" />
+                          {exportWordMutation.isPending ? "Generating..." : proposal.wordUrl ? "Download Word" : "Generate Word"}
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" className="text-muted-foreground border-dashed" onClick={() => navigate("/pricing")}>
+                          <Lock className="w-3.5 h-3.5 mr-1.5" /> Word
+                          <Badge variant="secondary" className="ml-1.5 text-xs">Starter+</Badge>
+                        </Button>
+                      )}
+
+                      {/* Google Docs — Starter/Pro */}
+                      {isPaidPlan ? (
+                        <Button size="sm" variant="outline" disabled={exportGoogleDocsMutation.isPending} onClick={handleOpenGoogleDocs}>
+                          <Globe className="w-3.5 h-3.5 mr-1.5" />
+                          {exportGoogleDocsMutation.isPending ? "Opening..." : "Open in Google Docs"}
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" className="text-muted-foreground border-dashed" onClick={() => navigate("/pricing")}>
+                          <Lock className="w-3.5 h-3.5 mr-1.5" /> Google Docs
+                          <Badge variant="secondary" className="ml-1.5 text-xs">Starter+</Badge>
+                        </Button>
+                      )}
+
+                      {/* Revise with AI — Starter/Pro */}
+                      {isPaidPlan ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
+                          onClick={() => setReviseOpen(true)}
+                        >
+                          <MessageSquare className="w-3.5 h-3.5 mr-1.5" /> Revise with AI
+                        </Button>
+                      ) : (
+                        <Button size="sm" variant="outline" className="text-muted-foreground border-dashed" onClick={() => navigate("/pricing")}>
+                          <Lock className="w-3.5 h-3.5 mr-1.5" /> Revise with AI
+                          <Badge variant="secondary" className="ml-1.5 text-xs">Starter+</Badge>
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -420,32 +460,20 @@ export default function ProposalDetail() {
             </div>
           </div>
 
-          {/* Sidebar info */}
+          {/* Sidebar */}
           <div className="space-y-4">
             {/* Job details */}
             <div className="bg-card border border-border rounded-xl p-5">
               <h3 className="font-semibold text-sm text-foreground mb-3">Job Details</h3>
               <div className="space-y-2 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Trade:</span>
-                  <span className="ml-2 text-foreground capitalize">{proposal.tradeType}</span>
-                </div>
+                <div><span className="text-muted-foreground">Trade:</span><span className="ml-2 text-foreground capitalize">{proposal.tradeType}</span></div>
                 {proposal.clientAddress && (
-                  <div>
-                    <span className="text-muted-foreground">Address:</span>
-                    <p className="text-foreground mt-0.5">{proposal.clientAddress}</p>
-                  </div>
+                  <div><span className="text-muted-foreground">Address:</span><p className="text-foreground mt-0.5">{proposal.clientAddress}</p></div>
                 )}
                 {proposal.totalCost && (
-                  <div>
-                    <span className="text-muted-foreground">Total:</span>
-                    <span className="ml-2 text-foreground font-semibold">${proposal.totalCost}</span>
-                  </div>
+                  <div><span className="text-muted-foreground">Total:</span><span className="ml-2 text-foreground font-semibold">${proposal.totalCost}</span></div>
                 )}
-                <div>
-                  <span className="text-muted-foreground">Created:</span>
-                  <span className="ml-2 text-foreground">{new Date(proposal.createdAt).toLocaleDateString()}</span>
-                </div>
+                <div><span className="text-muted-foreground">Created:</span><span className="ml-2 text-foreground">{new Date(proposal.createdAt).toLocaleDateString()}</span></div>
               </div>
             </div>
 
@@ -474,14 +502,32 @@ export default function ProposalDetail() {
               </div>
             </div>
 
+            {/* Save as template */}
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => saveTemplateMutation.mutate({
+                proposalId: proposal.id,
+                name: proposal.title,
+                description: `Template from ${proposal.clientName || "proposal"} — ${proposal.tradeType}`,
+              })}
+              disabled={saveTemplateMutation.isPending}
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              {saveTemplateMutation.isPending ? "Saving..." : "Save as Template"}
+            </Button>
+
             {/* Quick send */}
             {proposal.status === "draft" && (
-              <Button className="w-full" onClick={() => {
-                setSendEmail(proposal.clientEmail || "");
-                setSendName(proposal.clientName || "");
-                setSendOpen(true);
-              }}>
+              <Button className="w-full" onClick={() => { setSendEmail(proposal.clientEmail || ""); setSendName(proposal.clientName || ""); setSendOpen(true); }}>
                 <Send className="w-4 h-4 mr-2" /> Send to Client
+              </Button>
+            )}
+
+            {/* Follow-up */}
+            {proposal.sentAt && !proposal.viewedAt && !proposal.followUpSentAt && (
+              <Button variant="outline" className="w-full" onClick={() => followUpMutation.mutate({ id: proposal.id })} disabled={followUpMutation.isPending}>
+                <Mail className="w-4 h-4 mr-2" /> {followUpMutation.isPending ? "Sending..." : "Send Follow-up"}
               </Button>
             )}
           </div>
@@ -491,66 +537,47 @@ export default function ProposalDetail() {
       {/* Send Dialog */}
       <Dialog open={sendOpen} onOpenChange={setSendOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Send Proposal to Client</DialogTitle>
-          </DialogHeader>
+          <DialogHeader><DialogTitle>Send Proposal to Client</DialogTitle></DialogHeader>
           <div className="space-y-4 py-2">
             <div>
               <Label className="text-sm font-medium mb-2 block">Client Email <span className="text-destructive">*</span></Label>
-              <Input
-                type="email"
-                placeholder="client@example.com"
-                value={sendEmail}
-                onChange={e => setSendEmail(e.target.value)}
-              />
+              <Input type="email" placeholder="client@example.com" value={sendEmail} onChange={e => setSendEmail(e.target.value)} />
             </div>
             <div>
               <Label className="text-sm font-medium mb-2 block">Client Name</Label>
-              <Input
-                placeholder="John Smith"
-                value={sendName}
-                onChange={e => setSendName(e.target.value)}
-              />
+              <Input placeholder="John Smith" value={sendName} onChange={e => setSendName(e.target.value)} />
             </div>
             <div>
               <Label className="text-sm font-medium mb-2 block">Personal Message (optional)</Label>
-              <Textarea
-                placeholder="Thank you for considering us for your project..."
-                value={sendMessage}
-                onChange={e => setSendMessage(e.target.value)}
-                rows={3}
-                className="resize-none"
-              />
+              <Textarea placeholder="Thank you for considering us..." value={sendMessage} onChange={e => setSendMessage(e.target.value)} rows={3} className="resize-none" />
             </div>
-            <p className="text-xs text-muted-foreground">
-              A read receipt will be added so you know when the client opens your proposal.
-            </p>
+            <p className="text-xs text-muted-foreground">A read receipt will be added so you know when the client opens your proposal.</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSendOpen(false)}>Cancel</Button>
-            <Button onClick={handleSend} disabled={sendMutation.isPending}>
+            <Button onClick={() => sendMutation.mutate({ id: proposal.id, clientEmail: sendEmail, clientName: sendName || undefined, message: sendMessage || undefined })} disabled={sendMutation.isPending}>
               {sendMutation.isPending ? "Sending..." : <><Send className="w-4 h-4 mr-1" /> Send Proposal</>}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* AI Refinement Chat Panel */}
-      <Sheet open={refineOpen} onOpenChange={setRefineOpen}>
+      {/* Revise with AI — Starter/Pro only */}
+      <Sheet open={reviseOpen} onOpenChange={setReviseOpen}>
         <SheetContent side="right" className="w-[420px] sm:max-w-[420px] flex flex-col p-0">
           <SheetHeader className="px-5 py-4 border-b border-border flex-shrink-0">
             <SheetTitle className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-purple-600" />
-              Refine with AI
+              <MessageSquare className="w-4 h-4 text-purple-600" />
+              Revise with AI
             </SheetTitle>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Ask the AI to update any part of your proposal. Changes are saved automatically.
+              Describe any changes you'd like. Claude will update the proposal and regenerate your documents.
             </p>
           </SheetHeader>
           <div className="flex-1 min-h-0">
             <AIChatBox
-              messages={refineMessages}
-              onSendMessage={handleRefineMessage}
+              messages={reviseMessages}
+              onSendMessage={handleReviseMessage}
               isLoading={refineMutation.isPending}
               placeholder="e.g. Make the payment terms net-30..."
               height="100%"
@@ -559,6 +586,7 @@ export default function ProposalDetail() {
                 "Change payment terms to net-30",
                 "Make the tone more formal",
                 "Add a warranty section",
+                "Include a materials breakdown table",
               ]}
             />
           </div>

@@ -499,3 +499,33 @@
 
 ## Bug Fix: Invalid Hook Call on Dashboard
 - [x] Fix "Invalid hook call" error — trpc.profile.update.useMutation() was called inside handleOnboardingClose async handler instead of at component top level
+
+## New Workflow Refactor (Function 1 & 2)
+
+### Phase A: Database & Backend
+- [x] Add summaryContent column to proposals table (stores Step 1 compiled summary)
+- [x] Add stylePreferences column to proposals table (JSON: color scheme, tone, document style)
+- [x] Add documentUrls column to proposals table (JSON: {pdfUrl, wordUrl, googleDocUrl})
+- [x] Add compileSummary tRPC mutation (Step 1: built-in LLM compiles form inputs into structured summary)
+- [x] Add generateFromSummary tRPC mutation (Step 3: Claude generates full proposal + exports all docs)
+- [x] Add Anthropic API integration (placeholder until key provided, falls back to invokeLLM)
+- [x] Auto-generate PDF + Word (Starter/Pro) + Google Doc (Starter/Pro) in one generation call
+- [x] Add reviseProposal tRPC mutation (Starter/Pro: Claude revises and regenerates all docs)
+
+### Phase B: Frontend — New Proposal Form (Function 1)
+- [x] Refactor NewProposal.tsx into 3-step flow: (1) Form, (2) Summary Review, (3) Waiting Screen
+- [x] Step 1 form: auto-fill personal/business info from contractor profile
+- [x] Step 1 form: add style preferences section (color scheme, tone, document style)
+- [x] Step 2: display compiled summary with inline editing before generation
+- [x] Step 3: animated waiting screen with progress stages and estimated time
+
+### Phase C: Frontend — Results & Revision
+- [x] Update ProposalDetail.tsx to show pre-generated document download buttons (PDF/Word/Google Doc)
+- [x] Add "Revise with AI" chatbot panel (Starter/Pro only, hidden for Free)
+- [x] Revise chatbot sends message to Claude, regenerates all docs, updates download links
+
+### Phase D: Function 2 — Template-Based Generation
+- [x] Add "Save as Template" button to ProposalDetail page
+- [x] Build My Templates page showing saved templates + uploaded documents
+- [x] Template-based form: same as Function 1 form but without style preferences
+- [x] Template generation: send summary + template to Claude, follow template structure

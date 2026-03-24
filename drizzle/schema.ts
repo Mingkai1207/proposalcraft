@@ -85,7 +85,11 @@ export const proposals = mysqlTable("proposals", {
   materialsCost: varchar("materialsCost", { length: 64 }),
   totalCost: varchar("totalCost", { length: 64 }),
   generatedContent: text("generatedContent"),
+  summaryContent: text("summaryContent"),       // Step 1: compiled summary shown to user for review
+  stylePreferences: text("stylePreferences"),   // JSON: {colorScheme, tone, documentStyle}
   pdfUrl: text("pdfUrl"),
+  wordUrl: text("wordUrl"),                      // Pre-generated Word doc URL (Starter/Pro)
+  googleDocUrl: text("googleDocUrl"),            // Pre-generated Google Doc URL (Starter/Pro)
   templateId: varchar("templateId", { length: 128 }), // Template used to generate this proposal
   templateFields: text("templateFields"), // JSON-encoded field values from the template form
   status: mysqlEnum("status", ["draft", "sent", "viewed", "accepted", "declined"]).default("draft").notNull(),
@@ -147,6 +151,8 @@ export const proposalTemplates = mysqlTable("proposal_templates", {
   totalCost: varchar("totalCost", { length: 64 }),
   language: varchar("language", { length: 64 }).default("english"),
   expiryDays: int("expiryDays").default(30),
+  sourceType: mysqlEnum("sourceType", ["saved_from_proposal", "uploaded"]).default("saved_from_proposal").notNull(),
+  originalFileUrl: text("originalFileUrl"),  // URL of the uploaded template document (if uploaded)
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

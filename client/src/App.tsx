@@ -14,7 +14,7 @@ import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Refund from "./pages/Refund";
 import ClientPortal from "./pages/ClientPortal";
-import { Templates } from "./pages/Templates";
+import Templates from "./pages/Templates";
 import ProposalImport from "./pages/ProposalImport";
 import ProposalEditor from "./pages/ProposalEditor";
 import TemplatePicker from "./pages/TemplatePicker";
