@@ -388,8 +388,29 @@ export default function ProposalDetail() {
                     rows={30}
                     className="font-mono text-sm resize-none"
                   />
+                ) : proposal.generatedContent?.trimStart().startsWith("\\documentclass") ? (
+                  // LaTeX-based proposals: show the compiled PDF in an embed
+                  proposal.pdfUrl ? (
+                    <div className="w-full" style={{ minHeight: "1100px" }}>
+                      <object
+                        data={proposal.pdfUrl + "#toolbar=1&navpanes=0"}
+                        type="application/pdf"
+                        className="w-full rounded"
+                        style={{ height: "1100px" }}
+                      >
+                        <div className="flex flex-col items-center justify-center h-64 text-muted-foreground gap-3">
+                          <p className="text-sm">PDF preview not available in this browser.</p>
+                          <a href={proposal.pdfUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">Open PDF directly</a>
+                        </div>
+                      </object>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-64 text-muted-foreground gap-3">
+                      <p className="text-sm">PDF not yet generated. Click \"Download PDF\" below to compile it.</p>
+                    </div>
+                  )
                 ) : proposal.generatedContent?.trimStart().toLowerCase().startsWith("<!doctype") ? (
-                  // New HTML-based proposals: render in sandboxed iframe
+                  // HTML-based proposals: render in sandboxed iframe
                   <iframe
                     srcDoc={proposal.generatedContent}
                     title="Proposal Preview"

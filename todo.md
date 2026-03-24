@@ -592,3 +592,10 @@
 ## Waiting Page Fix
 - [x] Update time estimate from "30-90 seconds" to "3-5 minutes"
 - [x] Replace fake step-by-step progress animation with an honest simple waiting UI (spinner + progress bar + rotating tip messages)
+
+## LaTeX PDF Pipeline
+- [x] Create latexToPdf.ts utility: write LaTeX to temp dir, run pdflatex twice, return PDF buffer, clean up
+- [x] Update generateFromSummary: ask Claude for LaTeX source instead of HTML
+- [x] Update exportPdf to detect LaTeX proposals (generatedContent starts with \documentclass) and recompile
+- [x] Update ProposalDetail preview: render LaTeX proposals as PDF embed (object tag pointing to pdfUrl)
+- [x] Update exportWord: for LaTeX proposals, Word export points to PDF (best fidelity, opens in Google Docs)
