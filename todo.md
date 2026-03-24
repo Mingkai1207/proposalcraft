@@ -310,3 +310,9 @@
 - [x] Expand Roofing sample proposal with comprehensive details
 - [x] Regenerate all 4 PDFs with enhanced content
 - [x] Upload to CDN and verify display
+
+
+## Phase 17: Add Price Breakdown Charts to Sample Proposals
+- [x] Add pie chart showing labor vs materials breakdown
+- [x] Regenerate all 4 sample proposals with charts
+- [x] Upload to CDN and verify
