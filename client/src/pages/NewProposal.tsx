@@ -12,7 +12,7 @@ import { useState, useEffect } from "react";
 import {
   ArrowLeft, ArrowRight, FileText, Wrench, Droplets, Bolt, Home as HomeIcon,
   HardHat, Paintbrush, Layers, Leaf, Hammer, Building2, Wind, Square, Sun,
-  Grid3x3, CheckCircle2, Loader2, Sparkles, Edit3, Clock, Palette,
+  Grid3x3, CheckCircle2, Loader2, Sparkles, Edit3, Clock,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -36,28 +36,7 @@ const TRADE_OPTIONS = [
   { value: "general", label: "General Contracting", icon: HardHat, desc: "General construction & renovation" },
 ];
 
-const TONE_OPTIONS = [
-  { value: "professional", label: "Professional", desc: "Formal and authoritative" },
-  { value: "friendly", label: "Friendly", desc: "Warm and approachable" },
-  { value: "confident", label: "Confident", desc: "Bold and assertive" },
-  { value: "technical", label: "Technical", desc: "Detailed and precise" },
-];
 
-const STYLE_OPTIONS = [
-  { value: "modern", label: "Modern", desc: "Clean lines, contemporary feel" },
-  { value: "classic", label: "Classic", desc: "Traditional, formal layout" },
-  { value: "minimal", label: "Minimal", desc: "Simple, distraction-free" },
-  { value: "executive", label: "Executive", desc: "Structured, high-authority" },
-];
-
-const COLOR_OPTIONS = [
-  { value: "professional blue and white", label: "Blue & White", color: "#2563eb" },
-  { value: "teal and white", label: "Teal & White", color: "#0d9488" },
-  { value: "navy and gold", label: "Navy & Gold", color: "#1e3a5f" },
-  { value: "dark slate and orange", label: "Dark & Orange", color: "#0f172a" },
-  { value: "forest green and white", label: "Green & White", color: "#14532d" },
-  { value: "slate gray and blue", label: "Gray & Blue", color: "#475569" },
-];
 
 const PAYMENT_TERMS = [
   "50% upfront, 50% on completion",
@@ -85,10 +64,6 @@ type FormData = {
   paymentTerms: string;
   specialNotes: string;
   expiryDays: number;
-  // Style preferences
-  colorScheme: string;
-  tone: string;
-  documentStyle: string;
 };
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
@@ -247,9 +222,7 @@ export default function NewProposal() {
     paymentTerms: "50% upfront, 50% on completion",
     specialNotes: "",
     expiryDays: 30,
-    colorScheme: "professional blue and white",
-    tone: "professional",
-    documentStyle: "modern",
+
   });
 
   // Auto-fill profile data
@@ -324,9 +297,7 @@ export default function NewProposal() {
       paymentTerms: form.paymentTerms || undefined,
       specialNotes: form.specialNotes || undefined,
       expiryDays: form.expiryDays,
-      colorScheme: form.colorScheme || undefined,
-      tone: form.tone || undefined,
-      documentStyle: form.documentStyle || undefined,
+
     });
   };
 
@@ -362,7 +333,7 @@ export default function NewProposal() {
 
       <div className="max-w-2xl mx-auto px-4 py-10">
 
-        {/* ── Step 1: Project Info + Style Preferences ── */}
+        {/* ── Step 1: Project Info ── */}
         {step === 1 && (
           <div className="space-y-8">
             <div>
@@ -425,71 +396,7 @@ export default function NewProposal() {
               </div>
             </div>
 
-            {/* Style preferences */}
-            <div className="space-y-5 pt-2 border-t border-border">
-              <div className="flex items-center gap-2">
-                <Palette className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-semibold text-foreground">Document Style Preferences</h3>
-                <Badge variant="secondary" className="text-xs">Optional</Badge>
-              </div>
 
-              {/* Color scheme */}
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Color Scheme</Label>
-                <div className="flex flex-wrap gap-2">
-                  {COLOR_OPTIONS.map(({ value, label, color }) => (
-                    <button
-                      key={value}
-                      onClick={() => update("colorScheme", value)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg border-2 text-sm transition-all ${
-                        form.colorScheme === value ? "border-primary bg-primary/5 font-medium" : "border-border hover:border-primary/40"
-                      }`}
-                    >
-                      <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tone */}
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Writing Tone</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {TONE_OPTIONS.map(({ value, label, desc }) => (
-                    <button
-                      key={value}
-                      onClick={() => update("tone", value)}
-                      className={`p-3 rounded-lg border-2 text-left transition-all ${
-                        form.tone === value ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                      }`}
-                    >
-                      <p className="text-sm font-medium text-foreground">{label}</p>
-                      <p className="text-xs text-muted-foreground">{desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Document style */}
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Document Style</Label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {STYLE_OPTIONS.map(({ value, label, desc }) => (
-                    <button
-                      key={value}
-                      onClick={() => update("documentStyle", value)}
-                      className={`p-3 rounded-lg border-2 text-left transition-all ${
-                        form.documentStyle === value ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-                      }`}
-                    >
-                      <p className="text-sm font-medium text-foreground">{label}</p>
-                      <p className="text-xs text-muted-foreground">{desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
 
             <Button
               onClick={() => {
@@ -649,15 +556,7 @@ export default function NewProposal() {
               />
             </div>
 
-            {/* Style preferences reminder */}
-            <div className="bg-muted/30 rounded-xl p-4 border border-border">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Style Preferences</h3>
-              <div className="flex flex-wrap gap-2">
-                {form.colorScheme && <Badge variant="outline" className="text-xs capitalize">{form.colorScheme}</Badge>}
-                {form.tone && <Badge variant="outline" className="text-xs capitalize">{form.tone} tone</Badge>}
-                {form.documentStyle && <Badge variant="outline" className="text-xs capitalize">{form.documentStyle} style</Badge>}
-              </div>
-            </div>
+
 
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep(2)} className="flex-1">

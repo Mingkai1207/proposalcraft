@@ -554,3 +554,7 @@
 ## Bug Fix: compileSummary LLM Error
 - [x] Fix compileSummary to use invokeAnthropic instead of invokeLLM
 - [x] Audit all mutations in proposals.ts that still call invokeLLM directly
+
+## Remove Style Preferences from Form
+- [x] Remove style preferences section (color scheme, tone, document style) from NewProposal.tsx
+- [x] Update compileSummary and generateFromSummary prompts to let Claude decide style
