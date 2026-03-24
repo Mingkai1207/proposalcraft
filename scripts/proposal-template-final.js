@@ -1,51 +1,20 @@
-import puppeteer from "puppeteer";
-
-export interface ProposalPdfData {
-  businessName: string;
-  businessPhone: string;
-  businessEmail: string;
-  businessAddress: string;
-  licenseNumber: string;
-  clientName: string;
-  clientAddress: string;
-  clientPhone: string;
-  clientEmail: string;
-  jobTitle: string;
-  preparedDate: string;
-  validUntil: string;
-  jobSite: string;
-  jobDetails: string;
-  projectDetails: string;
-  executiveSummary: string;
-  scopeOfWork: string[];
-  materials: string[];
-  timeline: string[];
-  whyChooseUs: string;
-  termsAndConditions: string;
-  laborCost: number;
-  materialsCost: number;
-  totalCost: number;
-}
-
-// Clean text by removing markdown artifacts
-function cleanText(text: string | undefined): string {
-  if (!text) return '';
-  return text
-    .replace(/^#+\s*/gm, '') // Remove markdown headers
-    .replace(/\*\*/g, '') // Remove bold markers
-    .replace(/###/g, '') // Remove ### markers
-    .replace(/\*\s*/g, '') // Remove bullet markers
-    .replace(/^\s*-\s*/gm, '') // Remove dash markers
-    .replace(/about:blank/g, '') // Remove placeholder text
-    .trim();
-}
-
-export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer> {
+export function generateProposalHTML(data) {
   const laborPercent = Math.round((data.laborCost / data.totalCost) * 100);
   const materialsPercent = 100 - laborPercent;
 
-  // Clean and prepare data
-  const scopeItems = Array.isArray(data.scopeOfWork)
+  // Clean content - remove markdown artifacts
+  const cleanText = (text) => {
+    if (!text) return '';
+    return text
+      .replace(/^#+\s*/gm, '') // Remove markdown headers
+      .replace(/\*\*/g, '') // Remove bold markers
+      .replace(/###/g, '') // Remove ### markers
+      .replace(/\*\s*/g, '') // Remove bullet markers
+      .replace(/^\s*-\s*/gm, '') // Remove dash markers
+      .trim();
+  };
+
+  const scopeItems = Array.isArray(data.scopeOfWork) 
     ? data.scopeOfWork.map(item => cleanText(item)).filter(item => item.length > 0)
     : ['Professional assessment', 'Installation', 'Quality assurance'];
 
@@ -57,7 +26,7 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
     ? data.timeline.map(item => cleanText(item)).filter(item => item.length > 0)
     : ['Day 1: Preparation', 'Day 2: Installation', 'Day 3: Final inspection'];
 
-  const html = `
+  return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -435,27 +404,4 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
 </body>
 </html>
   `;
-
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  });
-
-  try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
-    
-    // Wait for Chart.js to render
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const pdfBuffer = await page.pdf({
-      format: 'A4',
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
-      printBackground: true,
-    }) as Buffer;
-
-    return Buffer.from(pdfBuffer as Uint8Array);
-  } finally {
-    await browser.close();
-  }
 }
