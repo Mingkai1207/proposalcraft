@@ -621,20 +621,20 @@ ${fieldContext}`;
       try {
         const content = proposal.generatedContent || "";
 
-        // New LaTeX-based proposals: generatedContent starts with \documentclass
-        if (content.trimStart().startsWith("\\documentclass")) {
-          const { latexToPdf } = await import("../utils/latexToPdf");
-          const pdfBuffer = await latexToPdf(content);
+        // HTML-based proposals (WeasyPrint): generatedContent is a full HTML document
+        if (content.trimStart().toLowerCase().startsWith("<!doctype")) {
+          const { htmlToPdf } = await import("../utils/htmlToPdf");
+          const pdfBuffer = await htmlToPdf(content);
           const fileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
           const { url } = await storagePut(fileName, pdfBuffer, "application/pdf");
           await updateProposal(proposal.id, ctx.user.id, { pdfUrl: url });
           return { url, fileName };
         }
 
-        // HTML-based proposals: generatedContent is a full HTML document
-        if (content.trimStart().toLowerCase().startsWith("<!doctype")) {
-          const { generatePdfFromHtml } = await import("../utils/proposalPdfExport");
-          const pdfBuffer = await generatePdfFromHtml(content);
+        // Legacy LaTeX-based proposals: generatedContent starts with \documentclass
+        if (content.trimStart().startsWith("\\documentclass")) {
+          const { latexToPdf } = await import("../utils/latexToPdf");
+          const pdfBuffer = await latexToPdf(content);
           const fileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
           const { url } = await storagePut(fileName, pdfBuffer, "application/pdf");
           await updateProposal(proposal.id, ctx.user.id, { pdfUrl: url });
@@ -1089,57 +1089,46 @@ RULES:
       };
       const tradeContext = TRADE_CONTEXT[proposal.tradeType] || TRADE_CONTEXT.general;
 
-      const systemPrompt = `You are an expert ${tradeName} proposal writer. Generate a complete, professional contractor proposal as a single self-contained LaTeX document.
+      const systemPrompt = `You are an expert ${tradeName} proposal writer. Generate a complete, professional contractor proposal as a single self-contained HTML document.
 
 Trade expertise: ${tradeContext}
 
-LATEX DOCUMENT REQUIREMENTS:
-- Use \\documentclass[11pt,letterpaper]{article}
-- Use EXACTLY this package order at the top (critical for font rendering):
-  \\usepackage[T1]{fontenc}
-  \\usepackage[utf8]{inputenc}
-  \\usepackage{lmodern}
-  \\usepackage[expansion=false,protrusion=true]{microtype}
-  \\usepackage[margin=1in]{geometry}
-  \\usepackage{xcolor}
-  \\usepackage{tikz}
-  \\usepackage{pgfplots}
-  \\usepackage{booktabs}
-  \\usepackage{array}
-  \\usepackage{tabularx}
-  \\usepackage{float}
-  \\usepackage{parskip}
-  \\usepackage{titlesec}
-  \\usepackage{enumitem}
-  \\pgfplotsset{compat=1.18}
-- IMPORTANT: microtype MUST use expansion=false to avoid font errors. lmodern MUST come before microtype.
-- Design a professional header with the contractor business name prominently displayed
-- Include client info, proposal date, and project title in the header area
-- Include these sections: Executive Summary, Scope of Work, Materials \\& Equipment, Project Timeline, Investment Summary, Why Choose Us, Terms \\& Conditions
+HTML DOCUMENT REQUIREMENTS:
+- Return a complete <!DOCTYPE html>...</html> document with all CSS embedded in a <style> block in <head>
+- Use @page CSS rules for print layout: size: letter; margin: 1in 0.8in;
+- Add running headers/footers using @page named pages or CSS counters
+- Design a visually impressive header section with the contractor business name, client info, proposal date, and project title
+- Use a professional color scheme with 2-3 accent colors (not just black and white)
+- Include these sections: Executive Summary, Scope of Work, Materials & Equipment, Project Timeline, Investment Summary, Why Choose Us, Terms & Conditions
 - Use real data throughout — never use placeholders like [Your Name] or [Client Name]
 - Do NOT include signature blocks, Accepted By sections, or Contact Information sections
-- Use \\newpage between major sections to ensure clean page breaks
-- Use \\nopagebreak[4] after section headings to keep headings with their content
-- Use \\samepage or minipage environments for tables and charts to prevent mid-element page breaks
-- Use \\raggedbottom to prevent awkward vertical stretching
 
-ANALYTIC CHARTS (REQUIRED — use TikZ/pgfplots):
-1. Cost Breakdown Chart: A bar chart (ybar) showing labor cost vs. materials cost with dollar amounts labeled
-2. Payment Schedule Chart: A bar chart showing payment milestones (deposit, progress, final) with dollar amounts
-3. Project Timeline Chart: A horizontal bar chart (xbar) showing each project phase with duration in days
-- All charts must use hardcoded data values from the proposal
-- Use \\definecolor to define 2-3 accent colors for the charts and section headers
-- Place charts inside \\begin{figure}[H]...\\end{figure} with \\centering and a \\caption
-- Use the float package with [H] placement to prevent charts from floating away from their sections
+PAGE BREAK RULES (critical for clean PDF output):
+- Every section div must have: break-inside: avoid-page;
+- Every h2/h3 must have: break-after: avoid;
+- Every paragraph must have: orphans: 3; widows: 3;
+- Tables must have: break-inside: avoid;
+- Add page-break-before: always; before major sections (Scope of Work, Investment Summary)
 
-LATEX SAFETY RULES:
-- Escape ALL special characters in user data: & → \\&, % → \\%, $ → \\$, # → \\#, _ → \\_, { → \\{, } → \\}, ~ → \\textasciitilde{}, ^ → \\textasciicircum{}
-- Use \\textbf{} for bold, \\textit{} for italic — never use markdown
-- Use \\begin{itemize}...\\end{itemize} for bullet lists
-- Use \\begin{tabular}...\\end{tabular} for tables with \\toprule, \\midrule, \\bottomrule from booktabs
-- Use \\$ for dollar signs in text
+ANALYTIC CHARTS (REQUIRED — use inline SVG):
+1. Cost Breakdown: An SVG bar chart or pie chart showing labor cost vs. materials cost with dollar labels
+2. Payment Schedule: An SVG bar chart showing payment milestones (deposit, progress payment, final) with amounts
+3. Project Timeline: An SVG Gantt-style horizontal bar chart showing each project phase with duration
+- All SVG charts must use hardcoded data values from the proposal
+- Size each SVG to fit within the page: width="100%" viewBox="0 0 700 250" (adjust height as needed)
+- Include a title and axis labels on each chart
+- Use the same accent colors as the rest of the document
 
-STRICT OUTPUT RULE: Return ONLY the raw LaTeX source. No markdown, no code fences, no explanation. Start with \\documentclass and end with \\end{document}.`;
+TYPOGRAPHY & LAYOUT:
+- Use Google Fonts via @import: choose a professional font pair (e.g., Playfair Display + Source Sans Pro, or Merriweather + Open Sans)
+- Font size: body 11pt, h1 22pt, h2 14pt
+- Line height: 1.6 for body text
+- Use colored section headers with a left border accent or bottom border
+- Use alternating row colors in tables
+- Use a highlighted total row in cost tables
+- Wrap each section in a <div class="section"> for consistent spacing
+
+STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no explanation. Start with <!DOCTYPE html> and end with </html>.`;
 
       const { invokeAnthropic } = await import("../utils/anthropicLLM");
       const result = await invokeAnthropic({
@@ -1147,36 +1136,35 @@ STRICT OUTPUT RULE: Return ONLY the raw LaTeX source. No markdown, no code fence
         systemPrompt,
         messages: [{
           role: "user",
-          content: `Use this proposal draft to generate the complete LaTeX proposal document:\n\n${input.approvedSummary}`,
+          content: `Use this proposal draft to generate the complete HTML proposal document:\n\n${input.approvedSummary}`,
         }],
         maxTokens: 20000,
       });
 
-      // Extract raw LaTeX — strip any accidental markdown code fences
-      let generatedLatex = result.content
-        .replace(/^```latex\s*/i, "")
-        .replace(/^```tex\s*/i, "")
+      // Extract raw HTML — strip any accidental markdown code fences
+      let generatedHtml = result.content
+        .replace(/^```html\s*/i, "")
         .replace(/^```\s*/i, "")
         .replace(/\s*```\s*$/i, "")
         .trim();
 
-      // Ensure it starts with \documentclass
-      if (!generatedLatex.startsWith("\\documentclass")) {
-        const idx = generatedLatex.indexOf("\\documentclass");
-        if (idx > 0) generatedLatex = generatedLatex.slice(idx);
+      // Ensure it starts with <!DOCTYPE html>
+      if (!generatedHtml.toLowerCase().startsWith("<!doctype")) {
+        const idx = generatedHtml.toLowerCase().indexOf("<!doctype");
+        if (idx > 0) generatedHtml = generatedHtml.slice(idx);
       }
 
-      const generatedContent = generatedLatex;
+      const generatedContent = generatedHtml;
 
-      // Save LaTeX to DB BEFORE compilation so it can be debugged if compilation fails
+      // Save HTML to DB BEFORE compilation so it can be debugged if conversion fails
       await updateProposal(proposal.id, ctx.user.id, {
         generatedContent,
         summaryContent: input.approvedSummary,
       });
 
-      // Compile LaTeX to PDF
-      const { latexToPdf } = await import("../utils/latexToPdf");
-      const pdfBuffer = await latexToPdf(generatedLatex);
+      // Convert HTML to PDF using WeasyPrint
+      const { htmlToPdf } = await import("../utils/htmlToPdf");
+      const pdfBuffer = await htmlToPdf(generatedHtml);
       const pdfFileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
       const { url: pdfUrl } = await storagePut(pdfFileName, pdfBuffer, "application/pdf");
 

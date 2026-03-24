@@ -611,3 +611,11 @@
 - [x] Harden prompt: restrict Claude to only safe/available packages, add pre-compilation validation
 - [x] Add fallback: save LaTeX to DB BEFORE compilation so it can be debugged/retried
 - [x] Add sanitizeLatex() function that strips 10+ known problematic packages/commands Claude tends to use
+
+## WeasyPrint PDF Pipeline (Replace LaTeX)
+- [x] Install WeasyPrint and verify with test HTML (66.0 installed, 11KB test PDF generated)
+- [x] Write htmlToPdf.ts utility (calls Python WeasyPrint via child_process)
+- [x] Update generateFromSummary prompt: Claude generates print-optimized HTML with @page CSS rules, inline SVG charts
+- [x] Update exportPdf to use WeasyPrint for HTML proposals (LaTeX kept as legacy fallback)
+- [x] ProposalDetail already renders HTML proposals in sandboxed iframe (no change needed)
+- [x] LaTeX pipeline kept as legacy fallback for old proposals
