@@ -564,3 +564,8 @@
 - [x] Apply to all fields in NewProposal.tsx with meaningful placeholders
 - [x] Apply to send-to-client fields in ProposalDetail.tsx
 - [x] Apply to other forms with placeholder suggestions (Settings, etc.)
+
+## Summary Review Page Fix
+- [x] Render markdown in the summary review step — Preview/Edit toggle using Streamdown
+- [x] Remove outdated style preference fields (colorScheme, tone, documentStyle) from compileSummary and generateFromSummary prompts
+- [x] Keep the textarea editable but show a rendered preview alongside it (Preview/Edit toggle)

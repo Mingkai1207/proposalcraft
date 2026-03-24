@@ -897,10 +897,7 @@ ${fieldContext}`;
         specialNotes: z.string().optional(),
         language: z.string().optional(),
         expiryDays: z.number().min(1).default(30),
-        // Style preferences
-        colorScheme: z.string().optional(),
-        tone: z.string().optional(),
-        documentStyle: z.string().optional(),
+
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -941,9 +938,6 @@ ${input.estimatedDays ? `Estimated Duration: ${input.estimatedDays} days` : ""}
 ${input.startDate ? `Proposed Start Date: ${input.startDate}` : ""}
 ${input.paymentTerms ? `Payment Terms: ${input.paymentTerms}` : ""}
 ${input.specialNotes ? `Special Notes: ${input.specialNotes}` : ""}
-${input.colorScheme ? `Preferred Color Scheme: ${input.colorScheme}` : ""}
-${input.tone ? `Preferred Tone: ${input.tone}` : ""}
-${input.documentStyle ? `Document Style: ${input.documentStyle}` : ""}
 
 Return ONLY the structured summary. No preamble, no explanation.`;
 
@@ -957,11 +951,7 @@ Return ONLY the structured summary. No preamble, no explanation.`;
 
       // Save a draft proposal record with the summary
       const trackingToken = nanoid(32);
-      const stylePreferences = JSON.stringify({
-        colorScheme: input.colorScheme || "",
-        tone: input.tone || "",
-        documentStyle: input.documentStyle || "",
-      });
+      const stylePreferences = JSON.stringify({});
 
       const proposal = await createProposal({
         userId: ctx.user.id,
@@ -1014,11 +1004,6 @@ Return ONLY the structured summary. No preamble, no explanation.`;
       const businessName = profile?.businessName || ctx.user.name || "Your Business";
       const tradeName = TRADE_TEMPLATES[proposal.tradeType] || "General Contracting";
 
-      const stylePrefs = proposal.stylePreferences ? JSON.parse(proposal.stylePreferences) : {};
-      const colorScheme = stylePrefs.colorScheme || "professional blue and white";
-      const tone = stylePrefs.tone || "professional and confident";
-      const documentStyle = stylePrefs.documentStyle || "modern";
-
       const TRADE_CONTEXT: Record<string, string> = {
         hvac: "Use HVAC-specific terminology: SEER2 ratings, BTU, tonnage, refrigerant types (R-410A, R-32), AFUE%, variable-speed blowers, heat exchangers, ductwork CFM, static pressure, load calculations. Mention permits, EPA 608 certification, and manufacturer warranties.",
         plumbing: "Use plumbing-specific terminology: pipe materials (PEX, copper, CPVC, ABS), fixture units, GPM/GPH flow rates, water pressure (PSI), drain slopes, venting requirements, shut-off valves, P-traps, cleanouts. Mention permits and code compliance.",
@@ -1041,11 +1026,6 @@ Return ONLY the structured summary. No preamble, no explanation.`;
       const systemPrompt = `You are an expert proposal writer for ${tradeName} contractors.
 Write a complete, professional, visually appealing proposal based on the provided project summary.
 
-Style requirements:
-- Color scheme preference: ${colorScheme}
-- Tone: ${tone}
-- Document style: ${documentStyle}
-
 Trade-specific guidance: ${tradeContext}
 
 Structure the proposal with these sections, each starting with ## followed by the section title:
@@ -1063,7 +1043,7 @@ IMPORTANT RULES:
 - Do NOT include a Contact Information section — it is in the header.
 - Do NOT include signature blocks or Accepted By sections.
 - Be specific, detailed, and persuasive. Vague proposals lose to specific ones.
-- Write in a ${tone} tone throughout.`;
+- Write in a professional, confident, and persuasive tone throughout.`;
 
       const { invokeAnthropic } = await import("../utils/anthropicLLM");
       const result = await invokeAnthropic({

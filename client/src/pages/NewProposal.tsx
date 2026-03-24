@@ -13,9 +13,10 @@ import { useState, useEffect } from "react";
 import {
   ArrowLeft, ArrowRight, FileText, Wrench, Droplets, Bolt, Home as HomeIcon,
   HardHat, Paintbrush, Layers, Leaf, Hammer, Building2, Wind, Square, Sun,
-  Grid3x3, CheckCircle2, Loader2, Sparkles, Edit3, Clock,
+  Grid3x3, CheckCircle2, Loader2, Sparkles, Edit3, Clock, Eye,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Streamdown } from "streamdown";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -205,6 +206,7 @@ export default function NewProposal() {
   const [step, setStep] = useState(1);
   const [isGenerating, setIsGenerating] = useState(false);
   const [summaryText, setSummaryText] = useState("");
+  const [summaryMode, setSummaryMode] = useState<"preview" | "edit">("preview");
   const [proposalId, setProposalId] = useState<number | null>(null);
 
   const [form, setForm] = useState<FormData>({
@@ -533,7 +535,7 @@ export default function NewProposal() {
             <div>
               <h2 className="text-xl font-bold text-foreground mb-1">Review Your Project Summary</h2>
               <p className="text-muted-foreground text-sm">
-                The AI has compiled your project details into a structured summary. Review it carefully and make any edits before generating the full proposal.
+                ProposAI has compiled your project details into a structured summary. Review it carefully and make any edits before generating the full proposal.
               </p>
             </div>
 
@@ -546,15 +548,49 @@ export default function NewProposal() {
               </div>
             </div>
 
-            {/* Editable summary */}
+            {/* Preview / Edit toggle */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Project Summary</Label>
-              <Textarea
-                value={summaryText}
-                onChange={e => setSummaryText(e.target.value)}
-                rows={18}
-                className="font-mono text-sm resize-none"
-              />
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm font-medium">Project Summary</Label>
+                <div className="flex rounded-lg border border-border overflow-hidden text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setSummaryMode("preview")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors ${
+                      summaryMode === "preview"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <Eye className="w-3 h-3" /> Preview
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSummaryMode("edit")}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 transition-colors ${
+                      summaryMode === "edit"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-background text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    <Edit3 className="w-3 h-3" /> Edit
+                  </button>
+                </div>
+              </div>
+
+              {summaryMode === "preview" ? (
+                <div className="min-h-[20rem] rounded-xl border border-border bg-card p-5 prose prose-sm max-w-none text-foreground">
+                  <Streamdown>{summaryText}</Streamdown>
+                </div>
+              ) : (
+                <Textarea
+                  value={summaryText}
+                  onChange={e => setSummaryText(e.target.value)}
+                  rows={20}
+                  className="font-mono text-sm resize-none"
+                  placeholder="Your project summary will appear here..."
+                />
+              )}
             </div>
 
 
