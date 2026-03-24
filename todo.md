@@ -622,3 +622,9 @@
 
 ## WeasyPrint Python Path Fix
 - [x] Fix SRE module mismatch: use absolute /usr/bin/python3.11 path and clean env (PYTHONNOUSERSITE=1) to prevent Manus 3.13 venv injection
+
+## Browser Print-to-PDF (Replace WeasyPrint)
+- [x] Update ProposalDetail: "Download PDF" opens HTML in new tab and triggers window.print() (browser handles PDF conversion)
+- [x] Update generateFromSummary: removed WeasyPrint call, just stores HTML and returns proposal ID
+- [x] No /proposals/:id/print route needed — window.open + document.write approach works cleanly
+- [x] exportPdf mutation kept for legacy LaTeX/markdown proposals only

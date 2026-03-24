@@ -1162,33 +1162,11 @@ STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no ex
         summaryContent: input.approvedSummary,
       });
 
-      // Convert HTML to PDF using WeasyPrint
-      const { htmlToPdf } = await import("../utils/htmlToPdf");
-      const pdfBuffer = await htmlToPdf(generatedHtml);
-      const pdfFileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
-      const { url: pdfUrl } = await storagePut(pdfFileName, pdfBuffer, "application/pdf");
-
-      // Generate Word + Google Doc (Starter/Pro only)
-      // For LaTeX proposals, Word export uses the PDF as the source via Google Docs viewer
-      let wordUrl: string | null = null;
-      let googleDocUrl: string | null = null;
-
-      const canExportAdvanced = isAdmin || sub.plan === "starter" || sub.plan === "pro";
-      if (canExportAdvanced) {
-        // For LaTeX proposals, Word = PDF download (best fidelity)
-        // Google Docs viewer can open the PDF directly
-        wordUrl = pdfUrl; // Use PDF as the Word export (opens in Google Docs)
-        const googleDocsViewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(pdfUrl)}&embedded=false`;
-        googleDocUrl = googleDocsViewerUrl;
-      }
-
-      // Save everything to the proposal record
+      // HTML is stored in DB — PDF is generated client-side via browser print (no server-side conversion needed)
+      // Save final proposal record
       await updateProposal(proposal.id, ctx.user.id, {
         generatedContent,
         summaryContent: input.approvedSummary,
-        pdfUrl,
-        wordUrl: wordUrl || undefined,
-        googleDocUrl: googleDocUrl || undefined,
       });
 
       await incrementProposalUsage(ctx.user.id);
@@ -1199,9 +1177,9 @@ STRICT OUTPUT RULE: Return ONLY the raw HTML. No markdown, no code fences, no ex
 
       return {
         proposalId: proposal.id,
-        pdfUrl,
-        wordUrl,
-        googleDocUrl,
+        pdfUrl: null,
+        wordUrl: null,
+        googleDocUrl: null,
         usedAnthropicApi: result.usedAnthropicApi,
       };
     }),

@@ -159,8 +159,26 @@ export default function ProposalDetail() {
 
   const handleDownloadPDF = () => {
     if (!proposal) return;
-    // Use pre-generated URL if available
-    if (proposal.pdfUrl) {
+    const content = proposal.generatedContent || "";
+    // HTML-based proposals: open in a new tab and trigger browser print
+    if (content.trimStart().toLowerCase().startsWith("<!doctype")) {
+      const printWindow = window.open("", "_blank");
+      if (!printWindow) { toast.error("Please allow popups to print the PDF."); return; }
+      printWindow.document.write(content);
+      printWindow.document.close();
+      // Wait for fonts/images to load then print
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
+      };
+      // Fallback if onload already fired
+      setTimeout(() => {
+        try { printWindow.print(); } catch {}
+      }, 1500);
+      toast.success("Print dialog opened — save as PDF.");
+    } else if (proposal.pdfUrl) {
+      // Legacy: use pre-generated URL
       const link = document.createElement("a");
       link.href = proposal.pdfUrl;
       link.download = `proposal-${proposal.id}.pdf`;
