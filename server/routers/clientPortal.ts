@@ -57,7 +57,7 @@ export const clientPortalRouter = router({
         })
         .where(eq(proposals.id, proposal.id));
 
-      // Notify contractor
+      // Notify contractor via in-app notification
       await notifyOwner({
         title: "Proposal Accepted! 🎉",
         content: `Your proposal "${proposal.title}" for ${proposal.clientName || proposal.clientEmail} has been accepted!`,
@@ -95,7 +95,7 @@ export const clientPortalRouter = router({
         })
         .where(eq(proposals.id, proposal.id));
 
-      // Notify contractor
+      // Notify contractor via in-app notification
       await notifyOwner({
         title: "Proposal Declined",
         content: `Your proposal "${proposal.title}" for ${proposal.clientName || proposal.clientEmail} has been declined.`,

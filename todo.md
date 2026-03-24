@@ -250,3 +250,12 @@
 - [ ] Create templates management page
 - [ ] Allow quick-create from template with pre-filled fields
 - [ ] Test all features end-to-end
+
+
+## Phase 10: Advanced Features - Notifications, History & Feedback
+- [ ] Add email notifications when clients accept proposals
+- [ ] Add email notifications when clients decline proposals
+- [ ] Implement proposal version history tracking (save versions, compare, revert)
+- [ ] Build client feedback collection form after proposal decline
+- [ ] Test all three features end-to-end
+- [ ] Push to GitHub

@@ -150,3 +150,36 @@ export const proposalTemplates = mysqlTable("proposal_templates", {
 
 export type ProposalTemplate = typeof proposalTemplates.$inferSelect;
 export type InsertProposalTemplate = typeof proposalTemplates.$inferInsert;
+
+// Proposal version history
+export const proposalVersions = mysqlTable("proposal_versions", {
+  id: int("id").autoincrement().primaryKey(),
+  proposalId: int("proposalId").notNull().references(() => proposals.id, { onDelete: "cascade" }),
+  versionNumber: int("versionNumber").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  content: text("content").notNull(),
+  clientName: varchar("clientName", { length: 255 }),
+  clientEmail: varchar("clientEmail", { length: 255 }),
+  jobScope: text("jobScope"),
+  materials: text("materials"),
+  laborCost: varchar("laborCost", { length: 64 }),
+  materialsCost: varchar("materialsCost", { length: 64 }),
+  totalCost: varchar("totalCost", { length: 64 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ProposalVersion = typeof proposalVersions.$inferSelect;
+export type InsertProposalVersion = typeof proposalVersions.$inferInsert;
+
+// Client feedback on declined proposals
+export const clientFeedback = mysqlTable("client_feedback", {
+  id: int("id").autoincrement().primaryKey(),
+  proposalId: int("proposalId").notNull().references(() => proposals.id, { onDelete: "cascade" }),
+  reason: varchar("reason", { length: 255 }), // price, scope, timeline, other
+  comments: text("comments"),
+  rating: int("rating"), // 1-5 star rating
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ClientFeedback = typeof clientFeedback.$inferSelect;
+export type InsertClientFeedback = typeof clientFeedback.$inferInsert;

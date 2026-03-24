@@ -10,6 +10,8 @@ import { billingRouter } from "./routers/billing";
 import { clientPortalRouter } from "./routers/clientPortal";
 import { exportRouter } from "./routers/export";
 import { templatesRouter } from "./routers/templates";
+import { versionsRouter } from "./routers/versions";
+import { feedbackRouter } from "./routers/feedback";
 
 export const appRouter = router({
   system: systemRouter,
@@ -29,6 +31,8 @@ export const appRouter = router({
   clientPortal: clientPortalRouter,
   export: exportRouter,
   templates: templatesRouter,
+  versions: versionsRouter,
+  feedback: feedbackRouter,
 });
 
 export type AppRouter = typeof appRouter;
