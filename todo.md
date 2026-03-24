@@ -450,3 +450,8 @@
 - [x] Fix /proposals/new Quick Start dropdown to show all 8 built-in templates from templateDefs.ts
 - [x] Add "Browse Full Template Library" link in the dropdown that navigates to /templates/pick
 - [x] Always show the template picker card (removed the early return when no user templates exist)
+
+## Bug Fix: Export Issues
+- [x] Fix blank Word (.docx) export — added fallback to render full raw content when section IDs don't match
+- [x] Fix blank Google Docs export — reuses wordExporter so fix applies automatically
+- [x] Replace finicky hover-based export dropdown with three separate clickable buttons (PDF / Word / Google Docs)

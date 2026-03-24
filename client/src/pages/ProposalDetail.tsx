@@ -221,41 +221,44 @@ export default function ProposalDetail() {
               >
                 <Edit2 className="w-4 h-4 mr-1" /> Edit
               </Button>
-              {/* Export dropdown */}
-              <div className="relative group">
-                <Button
-                  variant="default"
-                  size="sm"
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                  disabled={exportPdfMutation.isPending || exportWordMutation.isPending || exportGoogleDocsMutation.isPending}
-                >
-                  {(exportPdfMutation.isPending || exportWordMutation.isPending || exportGoogleDocsMutation.isPending) ? (
-                    <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Generating...</>
-                  ) : (
-                    <><Download className="w-4 h-4 mr-1" /> Export ▾</>
-                  )}
-                </Button>
-                <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-border rounded-lg shadow-lg py-1 z-50 hidden group-hover:block">
-                  <button
-                    onClick={() => exportPdfMutation.mutate({ id: proposal.id })}
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <FileText className="w-4 h-4 text-red-500" /> Download PDF
-                  </button>
-                  <button
-                    onClick={() => exportWordMutation.mutate({ id: proposal.id })}
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <FileText className="w-4 h-4 text-blue-500" /> Download Word (.docx)
-                  </button>
-                  <button
-                    onClick={() => exportGoogleDocsMutation.mutate({ id: proposal.id })}
-                    className="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 flex items-center gap-2"
-                  >
-                    <FileText className="w-4 h-4 text-green-500" /> Open in Google Docs
-                  </button>
-                </div>
-              </div>
+              {/* Export buttons — three separate clickable buttons */}
+              <Button
+                variant="default"
+                size="sm"
+                className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={exportPdfMutation.isPending}
+                onClick={() => exportPdfMutation.mutate({ id: proposal.id })}
+              >
+                {exportPdfMutation.isPending ? (
+                  <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> PDF...</>
+                ) : (
+                  <><Download className="w-4 h-4 mr-1" /> PDF</>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={exportWordMutation.isPending}
+                onClick={() => exportWordMutation.mutate({ id: proposal.id })}
+              >
+                {exportWordMutation.isPending ? (
+                  <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Word...</>
+                ) : (
+                  <><Download className="w-4 h-4 mr-1" /> Word</>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={exportGoogleDocsMutation.isPending}
+                onClick={() => exportGoogleDocsMutation.mutate({ id: proposal.id })}
+              >
+                {exportGoogleDocsMutation.isPending ? (
+                  <><Loader2 className="w-4 h-4 mr-1 animate-spin" /> Docs...</>
+                ) : (
+                  <><FileText className="w-4 h-4 mr-1" /> Google Docs</>
+                )}
+              </Button>
               <Button size="sm" onClick={() => {
                 setSendEmail(proposal.clientEmail || "");
                 setSendName(proposal.clientName || "");

@@ -361,13 +361,27 @@ export async function exportToWord(input: WordExportInput): Promise<Buffer> {
   allParagraphs.push(...buildCoverPage(input));
 
   // Content sections
-  for (const section of input.template.sections) {
-    if (section.type === "visualization") continue; // Skip charts in Word (no easy way to embed)
-    const content = input.sectionContents[section.id] || "";
-    if (!content.trim()) continue;
+  const hasMatchedSections = input.template.sections.some(
+    s => s.type !== "visualization" && (input.sectionContents[s.id] || "").trim().length > 0
+  );
 
-    allParagraphs.push(sectionHeader(section.title, input.template.accentColor));
-    allParagraphs.push(...markdownToParagraphs(content, input.template.accentColor));
+  if (hasMatchedSections) {
+    // Render each template section with its matched content
+    for (const section of input.template.sections) {
+      if (section.type === "visualization") continue;
+      const content = input.sectionContents[section.id] || "";
+      if (!content.trim()) continue;
+      allParagraphs.push(sectionHeader(section.title, input.template.accentColor));
+      allParagraphs.push(...markdownToParagraphs(content, input.template.accentColor));
+    }
+  } else {
+    // Fallback: render the full raw content as one body (handles AI-generated proposals
+    // that don't use template section headings)
+    const rawContent = input.sectionContents["content"] || Object.values(input.sectionContents).join("\n\n");
+    if (rawContent.trim()) {
+      allParagraphs.push(sectionHeader("Proposal Details", input.template.accentColor));
+      allParagraphs.push(...markdownToParagraphs(rawContent, input.template.accentColor));
+    }
   }
 
   // Signature page
