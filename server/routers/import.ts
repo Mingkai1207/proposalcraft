@@ -1,9 +1,11 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
-import { proposals, proposalTemplates } from "../../drizzle/schema";
+import { proposals, proposalTemplates, contractorProfiles } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "../_core/llm";
+import { eq } from "drizzle-orm";
+import { parseFileContent, decodeBase64File } from "../utils/fileParser";
 
 export const importRouter = router({
   importProposals: protectedProcedure
@@ -24,19 +26,22 @@ export const importRouter = router({
 
       let templatesCreated = 0;
       const extractedData: any = {};
+      const allExtractedInfo: any = {};
 
       // Process each file
       for (const file of input.files) {
         try {
-          // Decode base64 content
-          const binaryString = atob(file.content.split(",")[1]);
-          const bytes = new Uint8Array(binaryString.length);
-          for (let i = 0; i < binaryString.length; i++) {
-            bytes[i] = binaryString.charCodeAt(i);
-          }
+          // Decode base64 content to buffer
+          const fileBuffer = decodeBase64File(file.content);
 
-          // For now, treat as text (in production, use pdf-parse for PDFs, mammoth for docx)
-          let text = new TextDecoder().decode(bytes);
+          // Parse file content based on type (PDF, DOCX, or text)
+          const text = await parseFileContent(fileBuffer, file.type, file.name);
+
+          // Skip if text is empty
+          if (!text || text.trim().length === 0) {
+            console.warn(`File ${file.name} produced no extractable text`);
+            continue;
+          }
 
           // Use LLM to extract structured data from proposal
           const extractionPrompt = `Extract key information from this proposal document. Return a JSON object with:
@@ -51,6 +56,9 @@ export const importRouter = router({
 - totalCost: number (total project cost)
 - timeline: string (project timeline/duration)
 - proposalTitle: string (title or description of proposal)
+- businessName: string (contractor/business name if present)
+- businessPhone: string (contractor phone number if present)
+- businessAddress: string (contractor address if present)
 
 Proposal text:
 ${text.substring(0, 5000)}
@@ -72,7 +80,20 @@ Return ONLY valid JSON, no markdown or extra text.`;
 
           const content = response.choices[0].message.content;
           const contentStr = typeof content === "string" ? content : "{}";
-          const extracted = JSON.parse(contentStr);
+          
+          // Extract JSON from markdown code blocks if present
+          let jsonStr = contentStr;
+          const jsonMatch = contentStr.match(/```json\s*([\s\S]*?)```/);
+          if (jsonMatch) {
+            jsonStr = jsonMatch[1].trim();
+          }
+          
+          const extracted = JSON.parse(jsonStr);
+
+          // Aggregate business info from all proposals
+          if (extracted.businessName) allExtractedInfo.businessName = extracted.businessName;
+          if (extracted.businessPhone) allExtractedInfo.businessPhone = extracted.businessPhone;
+          if (extracted.businessAddress) allExtractedInfo.businessAddress = extracted.businessAddress;
 
           // Create template from extracted data
           if (extracted.proposalTitle) {
@@ -108,10 +129,46 @@ Return ONLY valid JSON, no markdown or extra text.`;
         }
       }
 
+      // Auto-populate contractor profile if data was extracted
+      if (Object.keys(allExtractedInfo).length > 0) {
+        try {
+          // Check if profile exists
+          const existingProfile = await db
+            .select()
+            .from(contractorProfiles)
+            .where(eq(contractorProfiles.userId, ctx.user.id))
+            .limit(1);
+
+          if (existingProfile.length === 0) {
+            // Create new profile with extracted data
+            await db.insert(contractorProfiles).values({
+              userId: ctx.user.id,
+              businessName: allExtractedInfo.businessName,
+              phone: allExtractedInfo.businessPhone,
+              address: allExtractedInfo.businessAddress,
+            });
+          } else {
+            // Update existing profile with extracted data
+            await db
+              .update(contractorProfiles)
+              .set({
+                businessName: allExtractedInfo.businessName || existingProfile[0].businessName,
+                phone: allExtractedInfo.businessPhone || existingProfile[0].phone,
+                address: allExtractedInfo.businessAddress || existingProfile[0].address,
+              })
+              .where(eq(contractorProfiles.userId, ctx.user.id));
+          }
+        } catch (err) {
+          console.error("Failed to auto-populate profile:", err);
+          // Continue - profile population is optional
+        }
+      }
+
       return {
         success: true,
         templatesCreated,
         extractedData,
+        profileUpdated: Object.keys(allExtractedInfo).length > 0,
       };
     }),
 });

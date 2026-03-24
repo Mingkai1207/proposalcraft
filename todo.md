@@ -276,3 +276,11 @@
 - [ ] Auto-populate user profile from extracted data
 - [x] Create proposal templates from extracted proposals
 - [ ] Test end-to-end import workflow
+
+
+## Phase 13: Profile Auto-Population & Onboarding
+- [x] Auto-populate contractor_profiles from extracted proposal data (business name, address, phone, email)
+- [x] Create onboarding flow that shows import feature to new users on first login
+- [x] Add "Skip" option to onboarding to allow users to proceed without importing
+- [x] Implement PDF/DOCX parsing for better extraction accuracy
+- [x] Test end-to-end import workflow with profile auto-population

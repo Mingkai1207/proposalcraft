@@ -78,6 +78,13 @@
       "when": 1774313545480,
       "tag": "0010_robust_doctor_faustus",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1774314916859,
+      "tag": "0011_chemical_magdalene",
+      "breakpoints": true
     }
   ]
 }

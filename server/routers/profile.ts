@@ -29,6 +29,7 @@ export const profileRouter = router({
         smtpFromEmail: z.string().optional(),
         smtpFromName: z.string().optional(),
         followUpTemplate: z.string().optional(),
+        onboardingCompleted: z.boolean().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

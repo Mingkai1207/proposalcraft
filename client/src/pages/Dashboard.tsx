@@ -14,7 +14,8 @@ import {
   Settings, LogOut, Home, Zap, Download
 } from "lucide-react";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { OnboardingModal } from "@/components/OnboardingModal";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -38,6 +39,7 @@ export default function Dashboard() {
   const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
   const [, navigate] = useLocation();
   const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const { data: proposals, isLoading, refetch } = trpc.proposals.list.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -48,11 +50,30 @@ export default function Dashboard() {
   const { data: profile } = trpc.profile.get.useQuery(undefined, {
     enabled: isAuthenticated,
   });
+
+  // Show onboarding modal if user hasn't completed it
+  useEffect(() => {
+    if (profile && !profile.onboardingCompleted) {
+      setShowOnboarding(true);
+    }
+  }, [profile]);
   const deleteMutation = trpc.proposals.delete.useMutation({
     onSuccess: () => { toast.success("Proposal deleted"); refetch(); setDeleteId(null); },
     onError: (e) => toast.error(e.message),
   });
   const exportQuery = trpc.export.bulkExportProposals.useQuery(undefined, { enabled: false });
+
+  const handleOnboardingClose = async () => {
+    setShowOnboarding(false);
+    // Mark onboarding as completed
+    try {
+      await trpc.profile.update.useMutation().mutateAsync({
+        onboardingCompleted: true,
+      });
+    } catch (err) {
+      console.error("Failed to mark onboarding as completed", err);
+    }
+  };
 
   const handleBulkExport = async () => {
     try {
@@ -388,6 +409,8 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <OnboardingModal isOpen={showOnboarding} onClose={handleOnboardingClose} />
     </div>
   );
 }

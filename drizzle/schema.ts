@@ -45,6 +45,7 @@ export const contractorProfiles = mysqlTable("contractor_profiles", {
   smtpFromEmail: varchar("smtpFromEmail", { length: 320 }),
   smtpFromName: varchar("smtpFromName", { length: 255 }),
   followUpTemplate: text("followUpTemplate"),
+  onboardingCompleted: boolean("onboardingCompleted").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

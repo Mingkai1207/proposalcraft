@@ -1,0 +1,1 @@
+ALTER TABLE `contractor_profiles` ADD `onboardingCompleted` boolean DEFAULT false NOT NULL;
