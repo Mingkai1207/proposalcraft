@@ -1,0 +1,20 @@
+CREATE TABLE `proposal_templates` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`userId` int NOT NULL,
+	`name` varchar(255) NOT NULL,
+	`tradeType` varchar(64) NOT NULL,
+	`description` text,
+	`content` text NOT NULL,
+	`clientName` varchar(255),
+	`clientAddress` varchar(512),
+	`jobScope` text,
+	`materials` text,
+	`laborCost` varchar(64),
+	`materialsCost` varchar(64),
+	`totalCost` varchar(64),
+	`language` varchar(64) DEFAULT 'english',
+	`expiryDays` int DEFAULT 30,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `proposal_templates_id` PRIMARY KEY(`id`)
+);

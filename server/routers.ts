@@ -9,6 +9,7 @@ import { trackingRouter } from "./routers/tracking";
 import { billingRouter } from "./routers/billing";
 import { clientPortalRouter } from "./routers/clientPortal";
 import { exportRouter } from "./routers/export";
+import { templatesRouter } from "./routers/templates";
 
 export const appRouter = router({
   system: systemRouter,
@@ -27,6 +28,7 @@ export const appRouter = router({
   billing: billingRouter,
   clientPortal: clientPortalRouter,
   export: exportRouter,
+  templates: templatesRouter,
 });
 
 export type AppRouter = typeof appRouter;

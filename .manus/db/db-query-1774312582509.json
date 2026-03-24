@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE `proposal_templates` (\n\t`id` int AUTO_INCREMENT PRIMARY KEY NOT NULL,\n\t`userId` int NOT NULL,\n\t`name` varchar(255) NOT NULL,\n\t`tradeType` varchar(64) NOT NULL,\n\t`description` text,\n\t`content` text NOT NULL,\n\t`clientName` varchar(255),\n\t`clientAddress` varchar(512),\n\t`jobScope` text,\n\t`materials` text,\n\t`laborCost` varchar(64),\n\t`materialsCost` varchar(64),\n\t`totalCost` varchar(64),\n\t`language` varchar(64) DEFAULT 'english',\n\t`expiryDays` int DEFAULT 30,\n\t`createdAt` timestamp DEFAULT (now()) NOT NULL,\n\t`updatedAt` timestamp DEFAULT (now()) on update CURRENT_TIMESTAMP NOT NULL\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user FeC7Hhjo94vzeQP.root --database TxoyTEEFMfksnn9C3wscL4 --execute CREATE TABLE `proposal_templates` (\n\t`id` int AUTO_INCREMENT PRIMARY KEY NOT NULL,\n\t`userId` int NOT NULL,\n\t`name` varchar(255) NOT NULL,\n\t`tradeType` varchar(64) NOT NULL,\n\t`description` text,\n\t`content` text NOT NULL,\n\t`clientName` varchar(255),\n\t`clientAddress` varchar(512),\n\t`jobScope` text,\n\t`materials` text,\n\t`laborCost` varchar(64),\n\t`materialsCost` varchar(64),\n\t`totalCost` varchar(64),\n\t`language` varchar(64) DEFAULT 'english',\n\t`expiryDays` int DEFAULT 30,\n\t`createdAt` timestamp DEFAULT (now()) NOT NULL,\n\t`updatedAt` timestamp DEFAULT (now()) on update CURRENT_TIMESTAMP NOT NULL\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 679
+}

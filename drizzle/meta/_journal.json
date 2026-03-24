@@ -64,6 +64,13 @@
       "when": 1774311646437,
       "tag": "0008_modern_callisto",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1774312576915,
+      "tag": "0009_lumpy_celestials",
+      "breakpoints": true
     }
   ]
 }

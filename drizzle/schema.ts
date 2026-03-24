@@ -126,3 +126,27 @@ export const emailEvents = mysqlTable("email_events", {
 
 export type EmailEvent = typeof emailEvents.$inferSelect;
 export type InsertEmailEvent = typeof emailEvents.$inferInsert;
+
+// Proposal templates for quick reuse
+export const proposalTemplates = mysqlTable("proposal_templates", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  tradeType: varchar("tradeType", { length: 64 }).notNull(),
+  description: text("description"),
+  content: text("content").notNull(),
+  clientName: varchar("clientName", { length: 255 }),
+  clientAddress: varchar("clientAddress", { length: 512 }),
+  jobScope: text("jobScope"),
+  materials: text("materials"),
+  laborCost: varchar("laborCost", { length: 64 }),
+  materialsCost: varchar("materialsCost", { length: 64 }),
+  totalCost: varchar("totalCost", { length: 64 }),
+  language: varchar("language", { length: 64 }).default("english"),
+  expiryDays: int("expiryDays").default(30),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ProposalTemplate = typeof proposalTemplates.$inferSelect;
+export type InsertProposalTemplate = typeof proposalTemplates.$inferInsert;

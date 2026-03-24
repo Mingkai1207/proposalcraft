@@ -237,3 +237,16 @@
 - [x] Generate client portal link when proposal is sent
 - [x] Include client portal link in proposal delivery email
 - [x] Test expiry selector and email delivery with portal link
+
+
+## Phase 9: Client Response Notifications & Dashboard Enhancements
+- [ ] Add email notification when client accepts proposal
+- [ ] Add email notification when client declines proposal
+- [ ] Create "Pending Responses" dashboard widget
+- [ ] Show expiry countdown in pending proposals widget
+- [ ] Sort pending proposals by urgency (expiring soon first)
+- [ ] Build proposal templates library system
+- [ ] Add save-as-template option to proposal detail page
+- [ ] Create templates management page
+- [ ] Allow quick-create from template with pre-filled fields
+- [ ] Test all features end-to-end
