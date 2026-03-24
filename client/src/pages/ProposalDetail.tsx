@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SuggestInput, SuggestTextarea } from "@/components/ui/suggest-input";
 import { Badge } from "@/components/ui/badge";
 import { useLocation, useParams } from "wouter";
 import { getLoginUrl } from "@/const";
@@ -541,15 +542,15 @@ export default function ProposalDetail() {
           <div className="space-y-4 py-2">
             <div>
               <Label className="text-sm font-medium mb-2 block">Client Email <span className="text-destructive">*</span></Label>
-              <Input type="email" placeholder="client@example.com" value={sendEmail} onChange={e => setSendEmail(e.target.value)} />
+              <SuggestInput type="email" placeholder="client@example.com" value={sendEmail} onChange={e => setSendEmail(e.target.value)} />
             </div>
             <div>
               <Label className="text-sm font-medium mb-2 block">Client Name</Label>
-              <Input placeholder="John Smith" value={sendName} onChange={e => setSendName(e.target.value)} />
+              <SuggestInput placeholder="John Smith" value={sendName} onChange={e => setSendName(e.target.value)} />
             </div>
             <div>
               <Label className="text-sm font-medium mb-2 block">Personal Message (optional)</Label>
-              <Textarea placeholder="Thank you for considering us..." value={sendMessage} onChange={e => setSendMessage(e.target.value)} rows={3} className="resize-none" />
+              <SuggestTextarea placeholder="Thank you for considering us..." value={sendMessage} onChange={e => setSendMessage(e.target.value)} rows={3} className="resize-none" />
             </div>
             <p className="text-xs text-muted-foreground">A read receipt will be added so you know when the client opens your proposal.</p>
           </div>

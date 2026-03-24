@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SuggestInput, SuggestTextarea } from "@/components/ui/suggest-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
@@ -370,7 +371,7 @@ export default function NewProposal() {
             {/* Project title */}
             <div>
               <Label className="text-sm font-medium mb-2 block">Proposal Title <span className="text-destructive">*</span></Label>
-              <Input
+              <SuggestInput
                 placeholder="e.g., HVAC System Replacement – 123 Main St"
                 value={form.title}
                 onChange={e => update("title", e.target.value)}
@@ -383,16 +384,16 @@ export default function NewProposal() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Client Name</Label>
-                  <Input placeholder="John Smith" value={form.clientName} onChange={e => update("clientName", e.target.value)} />
+                  <SuggestInput placeholder="John Smith" value={form.clientName} onChange={e => update("clientName", e.target.value)} />
                 </div>
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Client Email</Label>
-                  <Input type="email" placeholder="john@example.com" value={form.clientEmail} onChange={e => update("clientEmail", e.target.value)} />
+                  <SuggestInput type="email" placeholder="john@example.com" value={form.clientEmail} onChange={e => update("clientEmail", e.target.value)} />
                 </div>
               </div>
               <div>
                 <Label className="text-sm font-medium mb-2 block">Property / Job Address</Label>
-                <Input placeholder="123 Main St, City, State 90210" value={form.clientAddress} onChange={e => update("clientAddress", e.target.value)} />
+                <SuggestInput placeholder="123 Main St, City, State 90210" value={form.clientAddress} onChange={e => update("clientAddress", e.target.value)} />
               </div>
             </div>
 
@@ -423,7 +424,7 @@ export default function NewProposal() {
 
             <div>
               <Label className="text-sm font-medium mb-2 block">Scope of Work <span className="text-destructive">*</span></Label>
-              <Textarea
+              <SuggestTextarea
                 placeholder="Describe the work to be done in detail. e.g., Replace existing 3-ton HVAC unit with new Carrier 16 SEER system. Install new refrigerant lines, disconnect old unit, and test new system. Include thermostat upgrade."
                 value={form.jobScope}
                 onChange={e => update("jobScope", e.target.value)}
@@ -435,7 +436,7 @@ export default function NewProposal() {
 
             <div>
               <Label className="text-sm font-medium mb-2 block">Materials & Equipment</Label>
-              <Textarea
+              <SuggestTextarea
                 placeholder="List key materials and equipment. e.g., Carrier 24ACC336A003 3-ton AC unit, 50ft copper refrigerant lines, Honeywell T6 Pro thermostat"
                 value={form.materials}
                 onChange={e => update("materials", e.target.value)}
@@ -450,15 +451,15 @@ export default function NewProposal() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Labor Cost ($)</Label>
-                  <Input type="number" placeholder="1500" value={form.laborCost} onChange={e => update("laborCost", e.target.value)} />
+                  <SuggestInput type="number" placeholder="1500" value={form.laborCost} onChange={e => update("laborCost", e.target.value)} />
                 </div>
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Materials Cost ($)</Label>
-                  <Input type="number" placeholder="2500" value={form.materialsCost} onChange={e => update("materialsCost", e.target.value)} />
+                  <SuggestInput type="number" placeholder="2500" value={form.materialsCost} onChange={e => update("materialsCost", e.target.value)} />
                 </div>
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Total Cost ($) <span className="text-destructive">*</span></Label>
-                  <Input type="number" placeholder="4000" value={form.totalCost} onChange={e => update("totalCost", e.target.value)} />
+                  <SuggestInput type="number" placeholder="4000" value={form.totalCost} onChange={e => update("totalCost", e.target.value)} />
                 </div>
               </div>
             </div>
@@ -467,7 +468,7 @@ export default function NewProposal() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium mb-2 block">Estimated Duration (days) <span className="text-destructive">*</span></Label>
-                <Input type="number" placeholder="5" value={form.estimatedDays} onChange={e => update("estimatedDays", e.target.value)} />
+                <SuggestInput type="number" placeholder="5" value={form.estimatedDays} onChange={e => update("estimatedDays", e.target.value)} />
               </div>
               <div>
                 <Label className="text-sm font-medium mb-2 block">Proposed Start Date</Label>
@@ -493,7 +494,7 @@ export default function NewProposal() {
             {/* Special notes */}
             <div>
               <Label className="text-sm font-medium mb-2 block">Special Notes / Additional Requirements</Label>
-              <Textarea
+              <SuggestTextarea
                 placeholder="Permit requirements, access restrictions, client preferences, warranty terms..."
                 value={form.specialNotes}
                 onChange={e => update("specialNotes", e.target.value)}

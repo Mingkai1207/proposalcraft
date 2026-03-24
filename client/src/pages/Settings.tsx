@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SuggestInput, SuggestTextarea } from "@/components/ui/suggest-input";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
@@ -152,31 +153,31 @@ export default function Settings() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <Label className="text-sm font-medium mb-2 block">Business Name</Label>
-              <Input placeholder="Smith HVAC Services" value={form.businessName} onChange={e => update("businessName", e.target.value)} />
+              <SuggestInput placeholder="Smith HVAC Services" value={form.businessName} onChange={e => update("businessName", e.target.value)} />
             </div>
             <div>
               <Label className="text-sm font-medium mb-2 block">Owner / Contact Name</Label>
-              <Input placeholder="John Smith" value={form.ownerName} onChange={e => update("ownerName", e.target.value)} />
+              <SuggestInput placeholder="John Smith" value={form.ownerName} onChange={e => update("ownerName", e.target.value)} />
             </div>
             <div>
               <Label className="text-sm font-medium mb-2 block">Phone</Label>
-              <Input placeholder="(555) 123-4567" value={form.phone} onChange={e => update("phone", e.target.value)} />
+              <SuggestInput placeholder="(555) 123-4567" value={form.phone} onChange={e => update("phone", e.target.value)} />
             </div>
             <div>
               <Label className="text-sm font-medium mb-2 block">Business Email</Label>
-              <Input type="email" placeholder="info@smithhvac.com" value={form.email} onChange={e => update("email", e.target.value)} />
+              <SuggestInput type="email" placeholder="info@smithhvac.com" value={form.email} onChange={e => update("email", e.target.value)} />
             </div>
             <div>
               <Label className="text-sm font-medium mb-2 block">License Number</Label>
-              <Input placeholder="LIC-123456" value={form.licenseNumber} onChange={e => update("licenseNumber", e.target.value)} />
+              <SuggestInput placeholder="LIC-123456" value={form.licenseNumber} onChange={e => update("licenseNumber", e.target.value)} />
             </div>
             <div>
               <Label className="text-sm font-medium mb-2 block">Website</Label>
-              <Input placeholder="https://smithhvac.com" value={form.website} onChange={e => update("website", e.target.value)} />
+              <SuggestInput placeholder="https://smithhvac.com" value={form.website} onChange={e => update("website", e.target.value)} />
             </div>
             <div className="sm:col-span-2">
               <Label className="text-sm font-medium mb-2 block">Business Address</Label>
-              <Input placeholder="456 Business Ave, City, State 12345" value={form.address} onChange={e => update("address", e.target.value)} />
+              <SuggestInput placeholder="456 Business Ave, City, State 12345" value={form.address} onChange={e => update("address", e.target.value)} />
             </div>
           </div>
         </div>
@@ -231,7 +232,7 @@ export default function Settings() {
             <h2 className="font-semibold text-foreground">Default Terms & Conditions</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-3">These terms will be included in every proposal you generate.</p>
-          <Textarea
+          <SuggestTextarea
             placeholder="e.g., Payment terms: 50% deposit required before work begins, balance due upon completion. All work is guaranteed for 1 year. Change orders must be approved in writing..."
             value={form.defaultTerms}
             onChange={e => update("defaultTerms", e.target.value)}
@@ -251,7 +252,7 @@ export default function Settings() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium mb-2 block">SMTP Host</Label>
-                <Input placeholder="smtp.gmail.com" value={smtpForm.smtpHost} onChange={e => setSmtpForm({...smtpForm, smtpHost: e.target.value})} />
+                <SuggestInput placeholder="smtp.gmail.com" value={smtpForm.smtpHost} onChange={e => setSmtpForm({...smtpForm, smtpHost: e.target.value})} />
               </div>
               <div>
                 <Label className="text-sm font-medium mb-2 block">SMTP Port</Label>
@@ -259,7 +260,7 @@ export default function Settings() {
               </div>
               <div>
                 <Label className="text-sm font-medium mb-2 block">Username</Label>
-                <Input placeholder="your-email@gmail.com" value={smtpForm.smtpUsername} onChange={e => setSmtpForm({...smtpForm, smtpUsername: e.target.value})} />
+                <SuggestInput placeholder="your-email@gmail.com" value={smtpForm.smtpUsername} onChange={e => setSmtpForm({...smtpForm, smtpUsername: e.target.value})} />
               </div>
               <div>
                 <Label className="text-sm font-medium mb-2 block">Password</Label>
@@ -267,11 +268,11 @@ export default function Settings() {
               </div>
               <div>
                 <Label className="text-sm font-medium mb-2 block">From Email Address</Label>
-                <Input type="email" placeholder="proposals@yourcompany.com" value={smtpForm.smtpFromEmail} onChange={e => setSmtpForm({...smtpForm, smtpFromEmail: e.target.value})} />
+                <SuggestInput type="email" placeholder="proposals@yourcompany.com" value={smtpForm.smtpFromEmail} onChange={e => setSmtpForm({...smtpForm, smtpFromEmail: e.target.value})} />
               </div>
               <div>
                 <Label className="text-sm font-medium mb-2 block">From Name</Label>
-                <Input placeholder="Your Company Name" value={smtpForm.smtpFromName} onChange={e => setSmtpForm({...smtpForm, smtpFromName: e.target.value})} />
+                <SuggestInput placeholder="Your Company Name" value={smtpForm.smtpFromName} onChange={e => setSmtpForm({...smtpForm, smtpFromName: e.target.value})} />
               </div>
             </div>
             <p className="text-xs text-muted-foreground">💡 Tip: For Gmail, use App Passwords instead of your regular password. Enable 2FA and generate an app-specific password.</p>

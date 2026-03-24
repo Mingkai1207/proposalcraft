@@ -558,3 +558,9 @@
 ## Remove Style Preferences from Form
 - [x] Remove style preferences section (color scheme, tone, document style) from NewProposal.tsx
 - [x] Update compileSummary and generateFromSummary prompts to let Claude decide style
+
+## Placeholder Tab/Enter Autocomplete
+- [x] Create SuggestInput and SuggestTextarea components (Tab/Enter fills placeholder)
+- [x] Apply to all fields in NewProposal.tsx with meaningful placeholders
+- [x] Apply to send-to-client fields in ProposalDetail.tsx
+- [x] Apply to other forms with placeholder suggestions (Settings, etc.)

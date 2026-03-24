@@ -947,12 +947,13 @@ ${input.documentStyle ? `Document Style: ${input.documentStyle}` : ""}
 
 Return ONLY the structured summary. No preamble, no explanation.`;
 
-      const response = await invokeLLM({
+      const { invokeAnthropic } = await import("../utils/anthropicLLM");
+      const summaryResult = await invokeAnthropic({
+        model: "claude-sonnet-4-6-thinking",
         messages: [{ role: "user", content: summaryPrompt }],
       });
 
-      const rawContent = response.choices[0]?.message?.content;
-      const summaryContent = typeof rawContent === "string" ? rawContent.trim() : "";
+      const summaryContent = summaryResult.content.trim();
 
       // Save a draft proposal record with the summary
       const trackingToken = nanoid(32);
