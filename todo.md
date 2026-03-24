@@ -619,3 +619,6 @@
 - [x] Update exportPdf to use WeasyPrint for HTML proposals (LaTeX kept as legacy fallback)
 - [x] ProposalDetail already renders HTML proposals in sandboxed iframe (no change needed)
 - [x] LaTeX pipeline kept as legacy fallback for old proposals
+
+## WeasyPrint Python Path Fix
+- [x] Fix SRE module mismatch: use absolute /usr/bin/python3.11 path and clean env (PYTHONNOUSERSITE=1) to prevent Manus 3.13 venv injection
