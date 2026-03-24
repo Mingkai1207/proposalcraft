@@ -569,3 +569,6 @@
 - [x] Render markdown in the summary review step — Preview/Edit toggle using Streamdown
 - [x] Remove outdated style preference fields (colorScheme, tone, documentStyle) from compileSummary and generateFromSummary prompts
 - [x] Keep the textarea editable but show a rendered preview alongside it (Preview/Edit toggle)
+
+## LLM Cost Optimization
+- [x] Switch compileSummary (Step 1 summary) to use built-in free Manus LLM (Claude 3.7) — only generateFromSummary and reviseWithAI use paid VectorEngine API
