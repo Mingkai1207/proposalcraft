@@ -637,3 +637,10 @@
 - [x] Fix refineProposal: HTML proposals use Anthropic API and return updated HTML
 - [x] Fix exportGoogleDocs: HTML proposals use htmlToDocx directly instead of template-based renderer
 - [x] Fix NewProposalFromTemplate waiting screen: replaced fake 34-second stage animation with honest 3-5 minute progress bar
+
+## PDF Single-Page Bug Fix
+- [x] Diagnose why browser print only captures 1 page of the HTML proposal
+- [x] Fix Claude HTML prompt: removed break-inside:avoid-page from sections, removed unsupported CSS Paged Media (position:running, @top-right), added explicit NEVER rules
+- [x] Add sanitizeProposalHtml() client-side to fix existing proposals in DB (strips bad CSS before iframe render and before print)
+- [x] Fix handleDownloadPDF: use Blob URL instead of document.write for reliable multi-page print
+- [x] Fix iframe height: re-measure at 500ms, 1500ms, 3000ms after load to account for Google Fonts loading

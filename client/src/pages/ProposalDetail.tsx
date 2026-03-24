@@ -26,6 +26,26 @@ import {
 import { AIChatBox } from "@/components/AIChatBox";
 import type { Message } from "@/components/AIChatBox";
 
+/**
+ * Sanitize HTML proposal CSS to fix common print issues from older generations.
+ * Removes CSS rules that prevent multi-page printing in Chrome/Safari.
+ */
+function sanitizeProposalHtml(html: string): string {
+  return html
+    // Remove break-inside: avoid-page on section-level elements (the main culprit)
+    .replace(/break-inside\s*:\s*avoid-page\s*;/gi, "/* break-inside: avoid-page removed */")
+    .replace(/page-break-inside\s*:\s*avoid\s*;/gi, "/* page-break-inside: avoid removed */")
+    // Remove unsupported CSS Paged Media running elements
+    .replace(/position\s*:\s*running\([^)]*\)\s*;/gi, "")
+    .replace(/@top-right\s*\{[^}]*\}/gi, "")
+    .replace(/@bottom-left\s*\{[^}]*\}/gi, "")
+    // Remove height/overflow constraints on body/html that truncate content
+    .replace(/(body|html)\s*\{([^}]*)(height\s*:\s*100vh\s*;)([^}]*)\}/gi,
+      (_m, tag, before, _h, after) => `${tag} {${before}${after}}`)
+    .replace(/(body|html)\s*\{([^}]*)(overflow\s*:\s*hidden\s*;)([^}]*)\}/gi,
+      (_m, tag, before, _o, after) => `${tag} {${before}${after}}`);
+}
+
 const STATUS_CONFIG = {
   draft: { label: "Draft", color: "bg-gray-100 text-gray-700", icon: Clock },
   sent: { label: "Sent", color: "bg-blue-100 text-blue-700", icon: Mail },
@@ -160,23 +180,20 @@ export default function ProposalDetail() {
   const handleDownloadPDF = () => {
     if (!proposal) return;
     const content = proposal.generatedContent || "";
-    // HTML-based proposals: open in a new tab and trigger browser print
+    // HTML-based proposals: open in a new tab via Blob URL and trigger browser print
     if (content.trimStart().toLowerCase().startsWith("<!doctype")) {
-      const printWindow = window.open("", "_blank");
-      if (!printWindow) { toast.error("Please allow popups to print the PDF."); return; }
-      printWindow.document.write(content);
-      printWindow.document.close();
-      // Wait for fonts/images to load then print
-      printWindow.onload = () => {
-        setTimeout(() => {
-          printWindow.print();
-        }, 500);
-      };
-      // Fallback if onload already fired
-      setTimeout(() => {
-        try { printWindow.print(); } catch {}
-      }, 1500);
-      toast.success("Print dialog opened — save as PDF.");
+      // Sanitize CSS to fix multi-page print issues from older generations
+      const sanitized = sanitizeProposalHtml(content);
+      // Inject a print-on-load script into the HTML before opening
+      const printScript = `<script>window.addEventListener('load', function() { setTimeout(function() { window.print(); }, 800); });<\/script>`;
+      const htmlWithPrint = sanitized.replace(/<\/body>/i, printScript + "</body>");
+      const blob = new Blob([htmlWithPrint], { type: "text/html" });
+      const blobUrl = URL.createObjectURL(blob);
+      const printWindow = window.open(blobUrl, "_blank");
+      if (!printWindow) { toast.error("Please allow popups to print the PDF."); URL.revokeObjectURL(blobUrl); return; }
+      // Revoke the blob URL after a delay to allow the window to load
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+      toast.success("Print dialog will open — choose \"Save as PDF\" in the dialog.");
     } else if (proposal.pdfUrl) {
       // Legacy: use pre-generated URL
       const link = document.createElement("a");
@@ -430,20 +447,27 @@ export default function ProposalDetail() {
                 ) : proposal.generatedContent?.trimStart().toLowerCase().startsWith("<!doctype") ? (
                   // HTML-based proposals: render in sandboxed iframe
                   <iframe
-                    srcDoc={proposal.generatedContent}
+                    srcDoc={sanitizeProposalHtml(proposal.generatedContent || "")}
                     title="Proposal Preview"
                     className="w-full border-0 rounded"
                     style={{ minHeight: "1100px", height: "auto" }}
                     sandbox="allow-same-origin"
                     onLoad={(e) => {
                       const iframe = e.currentTarget;
-                      try {
-                        const doc = iframe.contentDocument || iframe.contentWindow?.document;
-                        if (doc) {
-                          const h = doc.documentElement.scrollHeight;
-                          if (h > 100) iframe.style.height = h + "px";
-                        }
-                      } catch {}
+                      const resizeIframe = () => {
+                        try {
+                          const doc = iframe.contentDocument || iframe.contentWindow?.document;
+                          if (doc) {
+                            const h = doc.documentElement.scrollHeight;
+                            if (h > 100) iframe.style.height = h + "px";
+                          }
+                        } catch {}
+                      };
+                      resizeIframe();
+                      // Re-measure after fonts/images finish loading
+                      setTimeout(resizeIframe, 500);
+                      setTimeout(resizeIframe, 1500);
+                      setTimeout(resizeIframe, 3000);
                     }}
                   />
                 ) : (

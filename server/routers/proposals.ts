@@ -1115,19 +1115,22 @@ Trade expertise: ${tradeContext}
 HTML DOCUMENT REQUIREMENTS:
 - Return a complete <!DOCTYPE html>...</html> document with all CSS embedded in a <style> block in <head>
 - Use @page CSS rules for print layout: size: letter; margin: 1in 0.8in;
-- Add running headers/footers using @page named pages or CSS counters
 - Design a visually impressive header section with the contractor business name, client info, proposal date, and project title
 - Use a professional color scheme with 2-3 accent colors (not just black and white)
 - Include these sections: Executive Summary, Scope of Work, Materials & Equipment, Project Timeline, Investment Summary, Why Choose Us, Terms & Conditions
 - Use real data throughout — never use placeholders like [Your Name] or [Client Name]
 - Do NOT include signature blocks, Accepted By sections, or Contact Information sections
 
-PAGE BREAK RULES (critical for clean PDF output):
-- Every section div must have: break-inside: avoid-page;
-- Every h2/h3 must have: break-after: avoid;
-- Every paragraph must have: orphans: 3; widows: 3;
-- Tables must have: break-inside: avoid;
-- Add page-break-before: always; before major sections (Scope of Work, Investment Summary)
+PAGE BREAK RULES (CRITICAL — browser print must produce multiple pages):
+- NEVER use break-inside: avoid-page or page-break-inside: avoid on section-level divs — this causes all content after the first overflow to be cut off
+- NEVER use position: running() or @page @top-right/@bottom-center content: element() — these are not supported by Chrome/Safari print
+- NEVER set body { height: 100vh } or overflow: hidden on body/html — content must flow freely
+- DO use break-inside: avoid only on small atomic elements: table rows (tr), individual callout boxes, chart containers (max 300px tall)
+- DO use break-after: avoid on h2/h3 headings to keep them with their first paragraph
+- DO use orphans: 3; widows: 3; on paragraphs
+- DO use page-break-before: always on the very first section after the cover header only
+- Sections MUST be allowed to break across pages — they contain too much content to fit on one page
+- Add a simple page counter footer using CSS: @page { @bottom-center { content: "Page " counter(page); } } — this IS supported by Chrome
 
 ANALYTIC CHARTS (REQUIRED — use inline SVG):
 1. Cost Breakdown: An SVG bar chart or pie chart showing labor cost vs. materials cost with dollar labels
