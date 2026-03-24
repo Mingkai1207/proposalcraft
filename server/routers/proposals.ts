@@ -18,6 +18,8 @@ import {
 import { storagePut } from "../storage";
 import { nanoid } from "nanoid";
 import { ENV } from "../_core/env";
+import { generateProposalPdf, type ProposalPdfData } from "../utils/proposalPdfExport";
+import { parseProposalContent } from "../utils/proposalContentParser";
 
 const TRADE_TEMPLATES: Record<string, string> = {
   hvac: "HVAC (Heating, Ventilation & Air Conditioning)",
@@ -408,5 +410,76 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       });
 
       return { success: true };
+    }),
+
+  exportPdf: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const proposal = await getProposalById(input.id);
+      if (!proposal || proposal.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
+      }
+
+      const profile = await getContractorProfile(ctx.user.id);
+      if (!profile) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Contractor profile not found",
+        });
+      }
+
+      // Parse proposal content to extract structured sections
+      const parsedContent = proposal.generatedContent 
+        ? parseProposalContent(proposal.generatedContent)
+        : {
+            executiveSummary: "Professional proposal for your project.",
+            scopeOfWork: ["Complete project assessment", "Professional installation", "Quality assurance"],
+            materials: ["Premium materials", "Professional equipment"],
+            timeline: ["Day 1: Site preparation", "Day 2: Installation"],
+            whyChooseUs: "Professional service backed by experience.",
+            termsAndConditions: "50% deposit required. Balance on completion.",
+          };
+
+      const pdfData: ProposalPdfData = {
+        businessName: profile.businessName || ctx.user.name || "Your Business",
+        businessPhone: profile.phone || "(555) 000-0000",
+        businessEmail: profile.email || ctx.user.email || "info@business.com",
+        businessAddress: profile.address || "123 Main St, City, ST 12345",
+        licenseNumber: profile.licenseNumber || "License #",
+        clientName: proposal.clientName || "Valued Client",
+        clientAddress: proposal.clientAddress || "Client Address",
+        clientPhone: "(555) 000-0000",
+        clientEmail: proposal.clientEmail || "client@email.com",
+        jobTitle: proposal.title,
+        preparedDate: new Date(proposal.createdAt).toLocaleDateString(),
+        validUntil: new Date(new Date(proposal.createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+        jobSite: proposal.clientAddress || "Job Site Address",
+        jobDetails: proposal.jobScope?.substring(0, 100) || "Project details",
+        projectDetails: `Start: ${new Date(proposal.createdAt).toLocaleDateString()}\nDuration: TBD\nPermit: Included`,
+        executiveSummary: parsedContent.executiveSummary,
+        scopeOfWork: parsedContent.scopeOfWork,
+        materials: parsedContent.materials,
+        timeline: parsedContent.timeline,
+        whyChooseUs: parsedContent.whyChooseUs,
+        termsAndConditions: profile.defaultTerms || parsedContent.termsAndConditions,
+        laborCost: parseInt(proposal.laborCost || "2000") || 2000,
+        materialsCost: parseInt(proposal.materialsCost || "3000") || 3000,
+        totalCost: parseInt(proposal.totalCost || "5000") || 5000,
+      };
+
+      try {
+        const pdfBuffer = await generateProposalPdf(pdfData);
+        const fileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
+        const { url } = await storagePut(fileName, pdfBuffer, "application/pdf");
+
+        console.log(`[PDF Export] Successfully generated PDF for proposal ${proposal.id}`);
+        return { url, fileName };
+      } catch (error) {
+        console.error(`[PDF Export] Failed to generate PDF for proposal ${proposal.id}:`, error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to generate PDF. Please try again.",
+        });
+      }
     }),
 });
