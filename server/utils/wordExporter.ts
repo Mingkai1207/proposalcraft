@@ -20,16 +20,15 @@ import {
   WidthType,
   ShadingType,
   PageBreak,
-  HorizontalPositionAlign,
-  VerticalPositionAlign,
   Header,
   Footer,
-  PageNumber,
 } from "docx";
-import type { ProposalTemplateDef } from "../../shared/templateDefs";
+import type { TemplateStyle } from "../../shared/templateDefs";
+import { PROPOSAL_SECTIONS } from "../../shared/templateDefs";
 
 export interface WordExportInput {
-  template: ProposalTemplateDef;
+  style: TemplateStyle;
+  tradeType: string;
   title: string;
   businessName: string;
   businessPhone: string;
@@ -151,7 +150,7 @@ function sectionHeader(title: string, accentColor: string): Paragraph {
  * Create the cover page paragraphs
  */
 function buildCoverPage(input: WordExportInput): Paragraph[] {
-  const accent = input.template.accentColor.replace("#", "");
+  const accent = input.style.accentColor.replace("#", "");
   const paragraphs: Paragraph[] = [];
 
   // Business name
@@ -199,9 +198,9 @@ function buildCoverPage(input: WordExportInput): Paragraph[] {
   }));
 
   // Investment summary if costs provided
-  const totalCost = parseFloat(input.fields.totalCost || "0") || 0;
-  const laborCost = parseFloat(input.fields.laborCost || "0") || 0;
-  const materialsCost = parseFloat(input.fields.materialsCost || "0") || 0;
+  const totalCost = parseFloat(input.fields.total_cost || input.fields.totalCost || "0") || 0;
+  const laborCost = parseFloat(input.fields.labor_cost || input.fields.laborCost || "0") || 0;
+  const materialsCost = parseFloat(input.fields.materials_cost || input.fields.materialsCost || "0") || 0;
 
   if (totalCost > 0) {
     paragraphs.push(new Paragraph({
@@ -255,7 +254,7 @@ function buildCoverPage(input: WordExportInput): Paragraph[] {
  * Build the signature page
  */
 function buildSignaturePage(input: WordExportInput): Paragraph[] {
-  const accent = input.template.accentColor.replace("#", "");
+  const accent = input.style.accentColor.replace("#", "");
   const paragraphs: Paragraph[] = [];
 
   paragraphs.push(new Paragraph({ children: [new PageBreak()] }));
@@ -271,9 +270,9 @@ function buildSignaturePage(input: WordExportInput): Paragraph[] {
   }));
 
   // Investment table
-  const totalCost = parseFloat(input.fields.totalCost || "0") || 0;
-  const laborCost = parseFloat(input.fields.laborCost || "0") || 0;
-  const materialsCost = parseFloat(input.fields.materialsCost || "0") || 0;
+  const totalCost = parseFloat(input.fields.total_cost || input.fields.totalCost || "0") || 0;
+  const laborCost = parseFloat(input.fields.labor_cost || input.fields.laborCost || "0") || 0;
+  const materialsCost = parseFloat(input.fields.materials_cost || input.fields.materialsCost || "0") || 0;
 
   if (totalCost > 0) {
     const rows: TableRow[] = [];
@@ -354,33 +353,33 @@ function buildSignaturePage(input: WordExportInput): Paragraph[] {
  * Main export function — returns a Buffer containing the .docx file
  */
 export async function exportToWord(input: WordExportInput): Promise<Buffer> {
-  const accent = input.template.accentColor.replace("#", "");
+  const accent = input.style.accentColor.replace("#", "");
   const allParagraphs: (Paragraph | Table)[] = [];
 
   // Cover page
   allParagraphs.push(...buildCoverPage(input));
 
-  // Content sections
-  const hasMatchedSections = input.template.sections.some(
-    s => s.type !== "visualization" && (input.sectionContents[s.id] || "").trim().length > 0
+  // Content sections — try to match by PROPOSAL_SECTIONS order first
+  // then fall back to rendering all sectionContents
+  const orderedSections = PROPOSAL_SECTIONS.filter(
+    (s) => (input.sectionContents[s.id] || "").trim().length > 0
   );
 
-  if (hasMatchedSections) {
-    // Render each template section with its matched content
-    for (const section of input.template.sections) {
-      if (section.type === "visualization") continue;
+  if (orderedSections.length > 0) {
+    // Render each section in standard order
+    for (const section of orderedSections) {
       const content = input.sectionContents[section.id] || "";
       if (!content.trim()) continue;
-      allParagraphs.push(sectionHeader(section.title, input.template.accentColor));
-      allParagraphs.push(...markdownToParagraphs(content, input.template.accentColor));
+      allParagraphs.push(sectionHeader(section.title, input.style.accentColor));
+      allParagraphs.push(...markdownToParagraphs(content, input.style.accentColor));
     }
   } else {
     // Fallback: render the full raw content as one body (handles AI-generated proposals
     // that don't use template section headings)
     const rawContent = input.sectionContents["content"] || Object.values(input.sectionContents).join("\n\n");
     if (rawContent.trim()) {
-      allParagraphs.push(sectionHeader("Proposal Details", input.template.accentColor));
-      allParagraphs.push(...markdownToParagraphs(rawContent, input.template.accentColor));
+      allParagraphs.push(sectionHeader("Proposal Details", input.style.accentColor));
+      allParagraphs.push(...markdownToParagraphs(rawContent, input.style.accentColor));
     }
   }
 

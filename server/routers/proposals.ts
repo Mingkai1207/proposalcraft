@@ -485,11 +485,8 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       })
     )
     .mutation(async ({ ctx, input }) => {
-      const { getTemplateById } = await import("../../shared/templateDefs");
-      const template = getTemplateById(input.templateId);
-      if (!template) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Template not found" });
-      }
+      const { getTemplateStyle, PROPOSAL_SECTIONS, PROPOSAL_INPUT_FIELDS } = await import("../../shared/templateDefs");
+      const style = getTemplateStyle(input.templateId);
 
       // Check subscription limits (admin bypasses)
       const isAdmin = ctx.user.role === "admin";
@@ -514,40 +511,32 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       };
       const outputLang = langMap[input.language] || "English";
 
-      // Build field context string for the AI
-      const fieldContext = template.inputFields
-        .filter(f => input.fields[f.id])
-        .map(f => `${f.label}: ${input.fields[f.id]}`)
+      // Build field context string for the AI using the standard input fields
+      const fieldContext = PROPOSAL_INPUT_FIELDS
+        .filter((f) => input.fields[f.id])
+        .map((f) => `${f.label}: ${input.fields[f.id]}`)
         .join("\n");
 
-      // Fill each AI section individually with section-specific prompts
+      const tradeType = (input.fields["trade_type"] || "general").toLowerCase().replace(/[^a-z]/g, "") as typeof ALL_TRADE_TYPES[number];
+      const tradeName = input.fields["trade_type"] || "General Contracting";
+
+      // Fill each standard section individually with section-specific prompts
       const sectionContents: Record<string, string> = {};
 
-      for (const section of template.sections) {
-        if (section.type !== "ai_filled" || !section.aiPrompt) continue;
-
-        // Gather only the relevant fields for this section
-        const relevantFields = (section.inputFields || [])
-          .filter(fId => input.fields[fId])
-          .map(fId => {
-            const fieldDef = template.inputFields.find(f => f.id === fId);
-            return fieldDef ? `${fieldDef.label}: ${input.fields[fId]}` : `${fId}: ${input.fields[fId]}`;
-          })
-          .join("\n");
-
-        const sectionPrompt = `You are an expert proposal writer for ${template.trade} contractors.
+      for (const section of PROPOSAL_SECTIONS) {
+        const sectionPrompt = `You are an expert proposal writer for ${tradeName} contractors.
 Write ONLY the content for the "${section.title}" section. Do NOT include the section header.
 Write in ${outputLang}.
 Do NOT include placeholder text like [Your X]. Do NOT include signature blocks or contact info.
 
-Section instructions: ${section.aiPrompt}
+Section instructions: ${section.aiPromptHint}
 
 Business name: ${businessName}
-Client: ${input.fields["clientName"] || "Valued Client"}
-${input.fields["clientAddress"] ? `Property: ${input.fields["clientAddress"]}` : ""}
+Client: ${input.fields["client_name"] || "Valued Client"}
+${input.fields["client_address"] ? `Property: ${input.fields["client_address"]}` : ""}
 
-Relevant project details:
-${relevantFields || fieldContext}`;
+Project details:
+${fieldContext}`;
 
         const response = await invokeLLM({
           messages: [{ role: "user", content: sectionPrompt }],
@@ -560,21 +549,10 @@ ${relevantFields || fieldContext}`;
 
       // Assemble the full markdown document from sections
       const markdownParts: string[] = [];
-      for (const section of template.sections) {
-        if (section.type === "visualization") continue; // handled by PDF renderer
+      for (const section of PROPOSAL_SECTIONS) {
         markdownParts.push(`## ${section.title}\n\n${sectionContents[section.id] || ""}`);
       }
       const generatedContent = markdownParts.join("\n\n");
-
-      // Determine trade type (map template trade to DB enum)
-      const tradeMap: Record<string, string> = {
-        hvac: "hvac", plumbing: "plumbing", electrical: "electrical",
-        roofing: "roofing", general: "general", painting: "painting",
-        flooring: "flooring", landscaping: "landscaping", carpentry: "carpentry",
-        concrete: "concrete", masonry: "masonry", insulation: "insulation",
-        drywall: "drywall", windows: "windows", solar: "solar",
-      };
-      const tradeType = (tradeMap[template.trade] || "general") as typeof ALL_TRADE_TYPES[number];
 
       const trackingToken = nanoid(32);
       const isFree = sub.plan === "free" && !isAdmin;
@@ -582,22 +560,25 @@ ${relevantFields || fieldContext}`;
         ? `${generatedContent}\n\n---\n*This proposal was generated with ProposAI Free. Upgrade to remove this watermark.*`
         : generatedContent;
 
+      // Store the style ID and the fields for later export
       const proposal = await createProposal({
         userId: ctx.user.id,
         title: input.title,
-        tradeType,
-        clientName: input.fields["clientName"] || null,
-        clientEmail: input.fields["clientEmail"] || null,
-        clientAddress: input.fields["clientAddress"] || null,
-        jobScope: input.fields["jobScope"] || "See proposal content",
-        materials: input.fields["materials"] || null,
-        laborCost: input.fields["laborCost"] || null,
-        materialsCost: input.fields["materialsCost"] || null,
-        totalCost: input.fields["totalCost"] || null,
+        tradeType: tradeType || "general",
+        clientName: input.fields["client_name"] || null,
+        clientEmail: input.fields["client_email"] || null,
+        clientAddress: input.fields["client_address"] || null,
+        jobScope: input.fields["job_description"] || "See proposal content",
+        materials: null,
+        laborCost: input.fields["labor_cost"] || null,
+        materialsCost: input.fields["materials_cost"] || null,
+        totalCost: input.fields["total_cost"] || null,
         generatedContent: watermarkedContent,
         trackingToken,
         status: "draft",
         expiryDays: 30,
+        templateId: style.id,
+        templateFields: JSON.stringify(input.fields),
       });
 
       if (!proposal) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to save proposal" });
@@ -605,7 +586,7 @@ ${relevantFields || fieldContext}`;
       await incrementProposalUsage(ctx.user.id);
       await notifyOwner({
         title: "New Template Proposal Generated",
-        content: `${ctx.user.name || ctx.user.email} used template "${template.name}" to create: "${input.title}"`,
+        content: `${ctx.user.name || ctx.user.email} used style "${style.name}" to create: "${input.title}"`,
       }).catch(() => {});
 
       return { id: proposal.id };
@@ -627,25 +608,26 @@ ${relevantFields || fieldContext}`;
       try {
         // Use template renderer if proposal was created from a template
         if (proposal.templateId) {
-          const { getTemplateById } = await import("../../shared/templateDefs");
-          const template = getTemplateById(proposal.templateId);
-          if (template) {
+          const { getTemplateStyle } = await import("../../shared/templateDefs");
+          const style = getTemplateStyle(proposal.templateId);
+          {
             const { renderTemplatePdf } = await import("../utils/templatePdfRenderer");
             const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
 
             // Parse section contents from generatedContent
             const sectionContents: Record<string, string> = {};
             const content = proposal.generatedContent || "";
-            const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n\n([\s\S]*?)(?=\n\n## |$)/g));
+            const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
             for (const match of sectionMatches) {
               const sectionTitle = match[1].trim();
-              const section = template.sections.find(s => s.title === sectionTitle);
-              if (section) sectionContents[section.id] = match[2].trim();
+              if (sectionTitle) sectionContents[sectionTitle] = match[2].trim();
             }
+            if (Object.keys(sectionContents).length === 0) sectionContents["content"] = content;
 
             const pdfBuffer = await renderTemplatePdf({
-              template,
+              style,
               title: proposal.title,
+              tradeType: proposal.tradeType || "General Contracting",
               businessName,
               businessPhone: profile?.phone || "",
               businessEmail: profile?.email || ctx.user.email || "",
@@ -711,7 +693,7 @@ ${relevantFields || fieldContext}`;
 
       try {
         const { htmlToDocx } = await import("../utils/htmlToDocx");
-        const { getTemplateById, TEMPLATE_DEFS } = await import("../../shared/templateDefs");
+        const { getTemplateStyle, TEMPLATE_STYLES } = await import("../../shared/templateDefs");
         const { buildHtml } = await import("../utils/templatePdfRenderer");
         const { generateProposalPdf, buildProposalHtml } = await import("../utils/proposalPdfExport");
 
@@ -719,21 +701,21 @@ ${relevantFields || fieldContext}`;
 
         if (proposal.templateId) {
           // Template-based proposal: use the same HTML as the PDF renderer
-          const template = getTemplateById(proposal.templateId) || TEMPLATE_DEFS[0];
+          const template = proposal.templateId ? getTemplateStyle(proposal.templateId) : TEMPLATE_STYLES[0];
           const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
           const sectionContents: Record<string, string> = {};
           const content = proposal.generatedContent || "";
           const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
           for (const match of sectionMatches) {
             const sectionTitle = match[1].trim();
-            const section = template.sections.find(s => s.title === sectionTitle);
-            if (section) sectionContents[section.id] = match[2].trim();
+            if (sectionTitle) sectionContents[sectionTitle] = match[2].trim();
           }
           if (Object.keys(sectionContents).length === 0) {
             sectionContents["content"] = content;
           }
           html = await buildHtml({
-            template,
+            style: template,
+            tradeType: proposal.tradeType || "General Contracting",
             title: proposal.title,
             businessName,
             businessPhone: profile?.phone || "",
@@ -800,24 +782,23 @@ ${relevantFields || fieldContext}`;
 
       try {
         const { exportToGoogleDocs } = await import("../utils/googleDocsExporter");
-        const { getTemplateById, TEMPLATE_DEFS } = await import("../../shared/templateDefs");
+        const { getTemplateStyle, TEMPLATE_STYLES } = await import("../../shared/templateDefs");
 
-        const template = proposal.templateId ? getTemplateById(proposal.templateId) : TEMPLATE_DEFS[0];
-        if (!template) throw new TRPCError({ code: "NOT_FOUND", message: "Template not found" });
+        const template = proposal.templateId ? getTemplateStyle(proposal.templateId) : TEMPLATE_STYLES[0];
 
         const fields: Record<string, string> = proposal.templateFields ? JSON.parse(proposal.templateFields) : {};
         const sectionContents: Record<string, string> = {};
         const content = proposal.generatedContent || "";
-        const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n\n([\s\S]*?)(?=\n\n## |$)/g));
+        const sectionMatches = Array.from(content.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
         for (const match of sectionMatches) {
           const sectionTitle = match[1].trim();
-          const section = template.sections.find(s => s.title === sectionTitle);
-          if (section) sectionContents[section.id] = match[2].trim();
+          if (sectionTitle) sectionContents[sectionTitle] = match[2].trim();
         }
         if (Object.keys(sectionContents).length === 0) sectionContents["content"] = content;
 
         const result = await exportToGoogleDocs({
-          template,
+          style: template,
+          tradeType: proposal.tradeType || "General Contracting",
           title: proposal.title,
           businessName,
           businessPhone: profile?.phone || "",

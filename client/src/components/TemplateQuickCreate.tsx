@@ -2,13 +2,15 @@ import React from "react";
 import { trpc } from "@/lib/trpc";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectSeparator } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Zap, LayoutTemplate } from "lucide-react";
+import { LayoutTemplate } from "lucide-react";
 import { toast } from "sonner";
 import { useLocation } from "wouter";
-import { TEMPLATE_DEFS } from "../../../shared/templateDefs";
+import { TEMPLATE_STYLES } from "../../../shared/templateDefs";
 
 interface TemplateQuickCreateProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   form: any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   setForm: (form: any) => void;
 }
 
@@ -20,10 +22,6 @@ const TRADE_LABELS: Record<string, string> = {
   drywall: "Drywall", windows: "Windows & Doors", solar: "Solar",
 };
 
-const STYLE_LABELS: Record<string, string> = {
-  modern: "Modern", classic: "Classic", minimal: "Minimal",
-};
-
 export function TemplateQuickCreate({ form, setForm }: TemplateQuickCreateProps) {
   const { data: savedTemplates } = trpc.templates.list.useQuery();
   const [selectedTemplate, setSelectedTemplate] = React.useState<string>("");
@@ -31,32 +29,20 @@ export function TemplateQuickCreate({ form, setForm }: TemplateQuickCreateProps)
 
   const handleLoadTemplate = (value: string) => {
     if (value === "__browse__") {
-      navigate("/templates/pick");
+      navigate("/proposals/template");
       return;
     }
 
-    // Check if it's a built-in template (prefixed with "builtin:")
-    if (value.startsWith("builtin:")) {
-      const templateId = value.replace("builtin:", "");
-      const template = TEMPLATE_DEFS.find(t => t.id === templateId);
-      if (!template) return;
-
-      // Pre-fill the form with template defaults
-      setForm({
-        ...form,
-        title: `${TRADE_LABELS[template.trade] || template.trade} Proposal`,
-        tradeType: template.trade,
-        // Set a helpful job scope placeholder based on the template's sections
-        jobScope: template.sections.map(s => `${s.title}: [describe ${s.title.toLowerCase()} here]`).join("\n"),
-      });
-
-      toast.success(`Loaded "${template.name}" template — fill in the details below`);
-      setSelectedTemplate("");
+    // Check if it's a built-in style (prefixed with "style:")
+    if (value.startsWith("style:")) {
+      const styleId = value.replace("style:", "");
+      // Navigate to the full template form with this style pre-selected
+      navigate(`/proposals/from-template?style=${styleId}`);
       return;
     }
 
     // User-saved template
-    const template = savedTemplates?.find(t => t.id === parseInt(value));
+    const template = savedTemplates?.find((t) => t.id === parseInt(value));
     if (!template) return;
 
     setForm({
@@ -88,35 +74,34 @@ export function TemplateQuickCreate({ form, setForm }: TemplateQuickCreateProps)
         <div className="flex-1 min-w-0">
           <p className="font-semibold text-sm text-blue-900">Start from a Template</p>
           <p className="text-xs text-blue-700 mt-0.5 mb-3">
-            Choose a built-in template to pre-fill your proposal structure, or{" "}
+            Choose a visual style to create a fully AI-generated proposal, or{" "}
             <button
-              onClick={() => navigate("/templates/pick")}
+              onClick={() => navigate("/proposals/template")}
               className="underline font-medium hover:text-blue-900"
             >
-              browse the full template library
+              browse all styles
             </button>
             {" "}for a guided experience.
           </p>
           <Select value={selectedTemplate} onValueChange={handleLoadTemplate}>
             <SelectTrigger className="w-full bg-white border-blue-200 text-sm">
-              <SelectValue placeholder="Choose a template to pre-fill..." />
+              <SelectValue placeholder="Choose a visual style..." />
             </SelectTrigger>
             <SelectContent>
-              {/* Built-in templates grouped by trade */}
               <SelectItem value="__browse__" className="font-semibold text-blue-700">
-                🗂 Browse Full Template Library →
+                🗂 Browse All Visual Styles →
               </SelectItem>
               <SelectSeparator />
-              {TEMPLATE_DEFS.map(template => (
-                <SelectItem key={template.id} value={`builtin:${template.id}`}>
-                  {TRADE_LABELS[template.trade] || template.trade} — {template.name} ({STYLE_LABELS[template.style] || template.style})
+              {TEMPLATE_STYLES.map((style) => (
+                <SelectItem key={style.id} value={`style:${style.id}`}>
+                  {style.name} — {style.tagline}
                 </SelectItem>
               ))}
               {/* User-saved templates */}
               {hasUserTemplates && (
                 <>
                   <SelectSeparator />
-                  {savedTemplates!.map(template => (
+                  {savedTemplates!.map((template) => (
                     <SelectItem key={`saved-${template.id}`} value={template.id.toString()}>
                       ⭐ {template.name} ({TRADE_LABELS[template.tradeType] || template.tradeType})
                     </SelectItem>

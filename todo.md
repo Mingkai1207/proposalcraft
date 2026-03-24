@@ -471,3 +471,22 @@
 - [x] Build AI refinement Sheet panel using AIChatBox component
 - [x] Wire up refinement chat: user message -> AI -> save -> refetch proposal
 - [x] All 27 tests pass
+
+## Phase 30: Visual Style Templates + Quality Audit
+- [ ] Redesign templateDefs.ts: 5 visual styles (Modern Minimal, Classic Professional, Bold Executive, Detailed Technical, Simple One-Pager)
+- [ ] Redesign TemplatePicker UI to show visual style previews
+- [ ] Redesign PDF/Word renderer to implement each visual style
+- [ ] Update proposal form and AI prompt for style-based templates
+- [ ] Act as user: generate 3 proposals with different styles
+- [ ] Export each as PDF, Word, Google Docs and inspect all 9 outputs
+- [ ] Fix all formatting errors and quality issues found
+- [ ] Re-export to verify fixes
+
+## Phase 30 Completion: TypeScript Fixes for Visual Style Templates
+- [x] Redesign templateDefs.ts: 5 visual styles (Modern Wave, Classic Letterhead, Bold Dark, Minimal Clean, Executive Sidebar)
+- [x] Redesign TemplatePicker UI to show visual style previews (TEMPLATE_STYLES, no trade filter)
+- [x] Redesign PDF/Word renderer to implement each visual style (templatePdfRenderer.ts, wordExporter.ts)
+- [x] Update proposal form (NewProposalFromTemplate.tsx) for style-based templates with PROPOSAL_INPUT_FIELDS
+- [x] Fix all TypeScript errors (0 errors after fixes)
+- [x] All 27 tests pass
+- [x] Fix copyright concern: TemplateQuickCreate, TemplatePicker, NewProposalFromTemplate all rewritten with original code

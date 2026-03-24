@@ -9,11 +9,17 @@ import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Zap, Loader2, FileText, BarChart2, CheckCircle } from "lucide-react";
-import { getTemplateById, type ProposalTemplateDef, type TemplateField } from "../../../shared/templateDefs";
+import { ArrowLeft, Zap, Loader2, FileText, BarChart2 } from "lucide-react";
+import {
+  getTemplateStyle,
+  PROPOSAL_INPUT_FIELDS,
+  PROPOSAL_SECTIONS,
+  type ProposalInputField,
+  type TemplateStyle,
+} from "../../../shared/templateDefs";
 
 function FieldInput({ field, value, onChange }: {
-  field: TemplateField;
+  field: ProposalInputField;
   value: string;
   onChange: (v: string) => void;
 }) {
@@ -21,17 +27,17 @@ function FieldInput({ field, value, onChange }: {
     return (
       <Select value={value} onValueChange={onChange}>
         <SelectTrigger>
-          <SelectValue placeholder={`Select ${field.label.toLowerCase()}...`} />
+          <SelectValue placeholder={field.placeholder || `Select ${field.label.toLowerCase()}...`} />
         </SelectTrigger>
         <SelectContent>
-          {field.options.map(opt => (
+          {field.options.map((opt: string) => (
             <SelectItem key={opt} value={opt}>{opt}</SelectItem>
           ))}
         </SelectContent>
       </Select>
     );
   }
-  if (field.type === "textarea" || field.type === "multiline_list") {
+  if (field.type === "textarea") {
     return (
       <Textarea
         value={value}
@@ -39,6 +45,15 @@ function FieldInput({ field, value, onChange }: {
         placeholder={field.placeholder}
         rows={4}
         className="resize-none"
+      />
+    );
+  }
+  if (field.type === "date") {
+    return (
+      <Input
+        type="date"
+        value={value}
+        onChange={e => onChange(e.target.value)}
       />
     );
   }
@@ -55,21 +70,14 @@ function FieldInput({ field, value, onChange }: {
 export default function NewProposalFromTemplate() {
   const search = useSearch();
   const params = new URLSearchParams(search);
-  const templateId = params.get("template") || "";
+  const styleId = params.get("style") || "modern-wave";
   const [, navigate] = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
 
-  const template = getTemplateById(templateId);
+  const style: TemplateStyle = getTemplateStyle(styleId);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [proposalTitle, setProposalTitle] = useState("");
   const [language, setLanguage] = useState("english");
-
-  // Redirect if no valid template
-  useEffect(() => {
-    if (!template && !authLoading) {
-      navigate("/proposals/template");
-    }
-  }, [template, authLoading]);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -93,26 +101,25 @@ export default function NewProposalFromTemplate() {
   }
 
   function handleSubmit() {
-    if (!template) return;
     if (!proposalTitle.trim()) {
       toast.error("Please enter a proposal title");
       return;
     }
-    const requiredFields = template.inputFields.filter(f => f.required);
-    const missing = requiredFields.filter(f => !formValues[f.id]?.trim());
+    const requiredFields = PROPOSAL_INPUT_FIELDS.filter((f) => f.required);
+    const missing = requiredFields.filter((f) => !formValues[f.id]?.trim());
     if (missing.length > 0) {
-      toast.error(`Please fill in: ${missing.map(f => f.label).join(", ")}`);
+      toast.error(`Please fill in: ${missing.map((f) => f.label).join(", ")}`);
       return;
     }
     generateMutation.mutate({
-      templateId: template.id,
+      templateId: style.id,
       title: proposalTitle,
       language,
       fields: formValues,
     });
   }
 
-  if (authLoading || !template) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -120,12 +127,14 @@ export default function NewProposalFromTemplate() {
     );
   }
 
-  // Group fields: client info first, then trade-specific, then costs
-  const clientFieldIds = ["clientName", "clientAddress", "clientEmail"];
-  const costFieldIds = ["laborCost", "materialsCost", "totalCost"];
-  const clientFields = template.inputFields.filter(f => clientFieldIds.includes(f.id));
-  const costFields = template.inputFields.filter(f => costFieldIds.includes(f.id));
-  const tradeFields = template.inputFields.filter(f => !clientFieldIds.includes(f.id) && !costFieldIds.includes(f.id));
+  // Group fields: client info first, then project details, then pricing
+  const clientFieldIds = ["client_name", "client_address", "client_email"];
+  const costFieldIds = ["labor_cost", "materials_cost", "total_cost"];
+  const clientFields = PROPOSAL_INPUT_FIELDS.filter((f) => clientFieldIds.includes(f.id));
+  const costFields = PROPOSAL_INPUT_FIELDS.filter((f) => costFieldIds.includes(f.id));
+  const projectFields = PROPOSAL_INPUT_FIELDS.filter(
+    (f) => !clientFieldIds.includes(f.id) && !costFieldIds.includes(f.id)
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -134,20 +143,18 @@ export default function NewProposalFromTemplate() {
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate("/proposals/template")} className="gap-1">
-              <ArrowLeft className="w-4 h-4" /> Templates
+              <ArrowLeft className="w-4 h-4" /> Styles
             </Button>
             <div className="h-5 w-px bg-border" />
             <div>
-              <h1 className="font-bold text-foreground">{template.name}</h1>
-              <p className="text-xs text-muted-foreground">
-                {template.sections.length} sections · {template.visualizations.length} charts · AI-filled
-              </p>
+              <h1 className="font-bold text-foreground">{style.name}</h1>
+              <p className="text-xs text-muted-foreground">{style.tagline}</p>
             </div>
           </div>
-          {/* Template accent preview */}
+          {/* Style color preview */}
           <div
             className="w-8 h-8 rounded-lg"
-            style={{ background: template.accentColor }}
+            style={{ background: style.previewGradient }}
           />
         </div>
       </div>
@@ -157,11 +164,13 @@ export default function NewProposalFromTemplate() {
         <div className="lg:col-span-2 space-y-8">
           {/* Proposal title */}
           <div className="space-y-2">
-            <Label className="text-base font-semibold">Proposal Title <span className="text-destructive">*</span></Label>
+            <Label className="text-base font-semibold">
+              Proposal Title <span className="text-destructive">*</span>
+            </Label>
             <Input
               value={proposalTitle}
               onChange={e => setProposalTitle(e.target.value)}
-              placeholder={`e.g. HVAC Replacement — Smith Residence`}
+              placeholder="e.g. HVAC Replacement — Smith Residence"
               className="text-base"
             />
           </div>
@@ -169,7 +178,7 @@ export default function NewProposalFromTemplate() {
           {/* Client info */}
           <div className="space-y-4">
             <h2 className="font-semibold text-foreground border-b pb-2">Client Information</h2>
-            {clientFields.map(field => (
+            {clientFields.map((field) => (
               <div key={field.id} className="space-y-1.5">
                 <Label>
                   {field.label}
@@ -181,10 +190,10 @@ export default function NewProposalFromTemplate() {
             ))}
           </div>
 
-          {/* Trade-specific fields */}
+          {/* Project details */}
           <div className="space-y-4">
             <h2 className="font-semibold text-foreground border-b pb-2">Project Details</h2>
-            {tradeFields.map(field => (
+            {projectFields.map((field) => (
               <div key={field.id} className="space-y-1.5">
                 <Label>
                   {field.label}
@@ -197,29 +206,30 @@ export default function NewProposalFromTemplate() {
           </div>
 
           {/* Cost fields */}
-          {costFields.length > 0 && (
-            <div className="space-y-4">
-              <h2 className="font-semibold text-foreground border-b pb-2">Pricing</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {costFields.map(field => (
-                  <div key={field.id} className="space-y-1.5">
-                    <Label>{field.label}</Label>
-                    {field.hint && <p className="text-xs text-muted-foreground">{field.hint}</p>}
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
-                      <Input
-                        type="number"
-                        value={formValues[field.id] || ""}
-                        onChange={e => updateField(field.id, e.target.value)}
-                        placeholder={field.placeholder}
-                        className="pl-7"
-                      />
-                    </div>
+          <div className="space-y-4">
+            <h2 className="font-semibold text-foreground border-b pb-2">Pricing</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {costFields.map((field) => (
+                <div key={field.id} className="space-y-1.5">
+                  <Label>
+                    {field.label}
+                    {field.required && <span className="text-destructive ml-1">*</span>}
+                  </Label>
+                  {field.hint && <p className="text-xs text-muted-foreground">{field.hint}</p>}
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+                    <Input
+                      type="number"
+                      value={formValues[field.id] || ""}
+                      onChange={e => updateField(field.id, e.target.value)}
+                      placeholder={field.placeholder}
+                      className="pl-7"
+                    />
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
 
           {/* Language */}
           <div className="space-y-2">
@@ -254,7 +264,9 @@ export default function NewProposalFromTemplate() {
           {generateMutation.isPending && (
             <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 text-sm text-primary">
               <div className="font-medium mb-1">AI is building your proposal...</div>
-              <div className="text-primary/70">Filling {template.sections.filter(s => s.type === "ai_filled").length} sections with professional content and generating {template.visualizations.length} data visualizations. This takes about 15–30 seconds.</div>
+              <div className="text-primary/70">
+                Filling {PROPOSAL_SECTIONS.length} sections with professional content and generating data visualizations. This takes about 15–30 seconds.
+              </div>
             </div>
           )}
         </div>
@@ -262,36 +274,32 @@ export default function NewProposalFromTemplate() {
         {/* Sidebar: template preview */}
         <div className="space-y-4">
           <div className="rounded-xl border border-border overflow-hidden sticky top-24">
-            {/* Template header */}
-            <div
-              className="p-4"
-              style={{ background: `linear-gradient(135deg, ${template.accentColor} 0%, ${template.accentColor}cc 100%)` }}
-            >
-              <div className="text-white/80 text-xs font-medium uppercase tracking-wider mb-1">{template.name}</div>
-              <div className="text-white text-sm">{template.description}</div>
+            {/* Style header */}
+            <div className="p-4" style={{ background: style.previewGradient }}>
+              <div className="text-white/80 text-xs font-medium uppercase tracking-wider mb-1">{style.name}</div>
+              <div className="text-white text-sm">{style.description}</div>
             </div>
 
             {/* Sections list */}
             <div className="p-4 bg-card space-y-2">
               <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">What's included</div>
-              {template.sections.map(section => (
+              {PROPOSAL_SECTIONS.map((section) => (
                 <div key={section.id} className="flex items-center gap-2 text-sm">
-                  {section.type === "visualization" ? (
-                    <BarChart2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                  ) : section.type === "ai_filled" ? (
-                    <Zap className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                  ) : (
-                    <FileText className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                  )}
+                  <Zap className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
                   <span className="text-foreground">{section.title}</span>
-                  {section.type === "ai_filled" && (
-                    <span className="text-xs text-muted-foreground ml-auto">AI</span>
-                  )}
-                  {section.type === "visualization" && (
-                    <span className="text-xs text-primary ml-auto">Chart</span>
-                  )}
+                  <span className="text-xs text-muted-foreground ml-auto">AI</span>
                 </div>
               ))}
+              <div className="flex items-center gap-2 text-sm">
+                <BarChart2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                <span className="text-foreground">Cost Breakdown Chart</span>
+                <span className="text-xs text-primary ml-auto">Chart</span>
+              </div>
+              <div className="flex items-center gap-2 text-sm">
+                <BarChart2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                <span className="text-foreground">Payment Schedule</span>
+                <span className="text-xs text-primary ml-auto">Chart</span>
+              </div>
             </div>
 
             {/* Export formats */}

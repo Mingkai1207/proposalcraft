@@ -5,7 +5,7 @@
  * Uses Puppeteer to render Chart.js in a headless browser, then returns a base64 PNG.
  */
 
-import type { TemplateVisualization } from "../../shared/templateDefs";
+import type { ProposalVisualization } from "../../shared/templateDefs";
 
 export interface VisualizationData {
   laborCost?: number;
@@ -368,6 +368,52 @@ function buildComparisonBarConfig(data: VisualizationData) {
 }
 
 /**
+ * Payment schedule bar chart
+ */
+function buildPaymentScheduleBarConfig(data: VisualizationData): object {
+  const total = data.totalCost || 10000;
+  const terms = (data.paymentTerms as string) || "50% upfront, 50% on completion";
+  let payments: { label: string; amount: number }[] = [];
+  if (terms.includes("33%")) {
+    payments = [
+      { label: "Upfront (33%)", amount: Math.round(total * 0.33) },
+      { label: "Midpoint (33%)", amount: Math.round(total * 0.33) },
+      { label: "Completion (34%)", amount: Math.round(total * 0.34) },
+    ];
+  } else if (terms.includes("100%")) {
+    payments = [{ label: "On Completion (100%)", amount: total }];
+  } else {
+    payments = [
+      { label: "Upfront (50%)", amount: Math.round(total * 0.5) },
+      { label: "On Completion (50%)", amount: Math.round(total * 0.5) },
+    ];
+  }
+  return {
+    type: "bar",
+    data: {
+      labels: payments.map(p => p.label),
+      datasets: [{
+        label: "Payment Amount ($)",
+        data: payments.map(p => p.amount),
+        backgroundColor: ["#3b82f6", "#10b981", "#f59e0b"],
+        borderRadius: 6,
+      }],
+    },
+    options: {
+      indexAxis: "y",
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: "Payment Schedule", font: { size: 14, weight: "bold", family: "Arial" }, padding: { bottom: 10 } },
+      },
+      scales: {
+        x: { ticks: { callback: (v: number) => `$${v.toLocaleString()}`, font: { size: 11, family: "Arial" } } },
+        y: { ticks: { font: { size: 12, family: "Arial" } } },
+      },
+    },
+  };
+}
+
+/**
  * Generate a scope checklist as an HTML table (not a chart)
  * Returns an HTML string instead of a PNG
  */
@@ -404,14 +450,10 @@ function buildScopeChecklistHtml(data: VisualizationData): string {
  * Main entry point: generate a visualization and return either a base64 PNG or HTML string
  */
 export async function generateVisualization(
-  viz: TemplateVisualization,
+  viz: ProposalVisualization,
   data: VisualizationData
 ): Promise<{ type: "image"; base64: string } | { type: "html"; html: string }> {
   try {
-    if (viz.type === "scope_checklist") {
-      return { type: "html", html: buildScopeChecklistHtml(data) };
-    }
-
     let chartConfig: object;
     switch (viz.type) {
       case "cost_breakdown_pie":
@@ -420,14 +462,14 @@ export async function generateVisualization(
       case "timeline_gantt":
         chartConfig = buildTimelineGanttConfig(data);
         break;
-      case "roi_line":
-        chartConfig = buildRoiLineConfig(data);
-        break;
       case "savings_bar":
         chartConfig = buildSavingsBarConfig(data);
         break;
       case "comparison_bar":
         chartConfig = buildComparisonBarConfig(data);
+        break;
+      case "payment_schedule_bar":
+        chartConfig = buildPaymentScheduleBarConfig(data);
         break;
       default:
         chartConfig = buildCostBreakdownPieConfig(data);
