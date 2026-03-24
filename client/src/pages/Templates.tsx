@@ -120,7 +120,7 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 text-sm text-primary">
-            Upload an existing proposal or template document. Claude will use its structure and format when generating new proposals.
+            Upload an existing proposal or template document. ProposAI will use its structure and format when generating new proposals.
           </div>
 
           <div className="space-y-1.5">
@@ -186,7 +186,7 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
               value={extractedContent}
               onChange={e => setExtractedContent(e.target.value)}
               rows={10}
-              placeholder="Paste or edit your template content here. This is what Claude will use as the structural reference..."
+              placeholder="Paste or edit your template content here. This is what ProposAI will use as the structural reference..."
               className="font-mono text-sm resize-none"
             />
             <p className="text-xs text-muted-foreground">{extractedContent.length.toLocaleString()} characters</p>
@@ -307,7 +307,7 @@ export function Templates() {
                 My Templates
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Save proposals as reusable templates, or upload your own. Claude will follow the template's structure when generating new proposals.
+                Save proposals as reusable templates, or upload your own. ProposAI will follow the template's structure when generating new proposals.
               </p>
             </div>
             <div className="flex gap-2">
@@ -350,7 +350,7 @@ export function Templates() {
               {[
                 { icon: Upload, title: "1. Add a Template", desc: "Upload an existing proposal or save one you've already generated." },
                 { icon: FileText, title: "2. Fill Project Info", desc: "Enter the new client and job details. No style questions needed." },
-                { icon: Sparkles, title: "3. Claude Generates", desc: "Claude writes a new proposal that follows your template's exact structure." },
+                { icon: Sparkles, title: "3. ProposAI Generates", desc: "ProposAI writes a new proposal that follows your template's exact structure." },
               ].map(({ icon: Icon, title, desc }) => (
                 <div key={title} className="p-4 rounded-xl border border-border bg-card text-center">
                   <Icon className="w-6 h-6 text-primary mx-auto mb-2" />

@@ -134,7 +134,7 @@ function WaitingScreen({ templateName }: { templateName: string }) {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          Claude AI is crafting a detailed proposal that follows your template's structure and format.
+          ProposAI is crafting a detailed proposal that follows your template's structure and format.
         </p>
       </div>
     </div>
@@ -353,7 +353,7 @@ export default function NewProposalFromTemplate() {
           </div>
 
           <p className="text-xs text-center text-muted-foreground">
-            Claude AI will follow your template's structure and incorporate all the information above.
+            ProposAI will follow your template's structure and incorporate all the information above.
             This typically takes 30–60 seconds.
           </p>
         </div>
@@ -392,7 +392,7 @@ export default function NewProposalFromTemplate() {
             Select Template <span className="text-destructive">*</span>
           </Label>
           <p className="text-sm text-muted-foreground">
-            Choose a saved template. Claude will follow its structure when writing your new proposal.
+            Choose a saved template. ProposAI will follow its structure when writing your new proposal.
           </p>
           {templatesLoading ? (
             <div className="flex items-center gap-2 text-muted-foreground text-sm py-4">

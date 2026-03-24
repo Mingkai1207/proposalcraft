@@ -180,7 +180,7 @@ function WaitingScreen() {
             <Sparkles className="w-8 h-8 text-primary animate-pulse" />
           </div>
           <h2 className="text-2xl font-bold text-white mb-2">Crafting Your Proposal</h2>
-          <p className="text-slate-400 text-sm">Claude AI is writing a professional, detailed proposal for you. This typically takes 30–90 seconds.</p>
+          <p className="text-slate-400 text-sm">ProposAI is writing a professional, detailed proposal for you. This typically takes 30–90 seconds.</p>
         </div>
 
         {/* Steps */}
@@ -634,7 +634,7 @@ export default function NewProposal() {
               <Edit3 className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="text-sm font-medium text-blue-800">Edit before generating</p>
-                <p className="text-xs text-blue-600 mt-0.5">This summary will be sent to Claude to write your full proposal. Make sure all details are accurate — especially costs, dates, and client information.</p>
+                <p className="text-xs text-blue-600 mt-0.5">This summary will be sent to ProposAI to write your full proposal. Make sure all details are accurate — especially costs, dates, and client information.</p>
               </div>
             </div>
 
@@ -674,7 +674,7 @@ export default function NewProposal() {
 
             <div className="text-center">
               <p className="text-xs text-muted-foreground">
-                Generation typically takes 30–90 seconds. Claude AI will write a complete, professional proposal with analytic charts.
+                Generation typically takes 30–90 seconds. ProposAI will write a complete, professional proposal with analytic charts.
               </p>
             </div>
           </div>

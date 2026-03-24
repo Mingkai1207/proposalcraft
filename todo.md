@@ -534,3 +534,7 @@
 - [x] Remove any built-in style cards (Modern, Classic, etc.) from My Templates page
 - [x] Templates page should only show user-saved and uploaded templates
 - [x] Style selection belongs on the New Proposal form only
+
+## Branding Fix: Remove Claude References from UI
+- [x] Replace all "Claude" mentions in frontend .tsx files with "ProposAI" branding
+- [x] Check waiting screens, empty states, how-it-works sections, and tooltips

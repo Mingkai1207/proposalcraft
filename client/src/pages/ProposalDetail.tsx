@@ -571,7 +571,7 @@ export default function ProposalDetail() {
               Revise with AI
             </SheetTitle>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Describe any changes you'd like. Claude will update the proposal and regenerate your documents.
+              Describe any changes you'd like. ProposAI will update the proposal and regenerate your documents.
             </p>
           </SheetHeader>
           <div className="flex-1 min-h-0">
