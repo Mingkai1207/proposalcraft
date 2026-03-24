@@ -421,12 +421,7 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       }
 
       const profile = await getContractorProfile(ctx.user.id);
-      if (!profile) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Contractor profile not found",
-        });
-      }
+      // Gracefully handle missing profile — use user info and sensible defaults
 
       // Parse proposal content to extract structured sections
       const parsedContent = proposal.generatedContent 
@@ -441,11 +436,11 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
           };
 
       const pdfData: ProposalPdfData = {
-        businessName: profile.businessName || ctx.user.name || "Your Business",
-        businessPhone: profile.phone || "(555) 000-0000",
-        businessEmail: profile.email || ctx.user.email || "info@business.com",
-        businessAddress: profile.address || "123 Main St, City, ST 12345",
-        licenseNumber: profile.licenseNumber || "License #",
+        businessName: profile?.businessName || ctx.user.name || "Your Business",
+        businessPhone: profile?.phone || "",
+        businessEmail: profile?.email || ctx.user.email || "",
+        businessAddress: profile?.address || "",
+        licenseNumber: profile?.licenseNumber || "",
         clientName: proposal.clientName || "Valued Client",
         clientAddress: proposal.clientAddress || "Client Address",
         clientPhone: "(555) 000-0000",
@@ -461,7 +456,7 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
         materials: parsedContent.materials,
         timeline: parsedContent.timeline,
         whyChooseUs: parsedContent.whyChooseUs,
-        termsAndConditions: profile.defaultTerms || parsedContent.termsAndConditions,
+        termsAndConditions: profile?.defaultTerms || parsedContent.termsAndConditions,
         laborCost: parseInt(proposal.laborCost || "2000") || 2000,
         materialsCost: parseInt(proposal.materialsCost || "3000") || 3000,
         totalCost: parseInt(proposal.totalCost || "5000") || 5000,

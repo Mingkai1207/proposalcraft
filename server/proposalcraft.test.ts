@@ -38,6 +38,23 @@ vi.mock("./storage", () => ({
   storagePut: vi.fn().mockResolvedValue({ url: "https://cdn.example.com/test.png", key: "test.png" }),
 }));
 
+// Mock PDF generation to avoid running Puppeteer in tests
+vi.mock("./utils/proposalPdfExport", () => ({
+  generateProposalPdf: vi.fn().mockResolvedValue(Buffer.from("fake-pdf-content")),
+}));
+
+// Mock content parser
+vi.mock("./utils/proposalContentParser", () => ({
+  parseProposalContent: vi.fn().mockReturnValue({
+    executiveSummary: "Test summary",
+    scopeOfWork: ["Item 1", "Item 2"],
+    materials: ["Material A"],
+    timeline: ["Day 1: Work"],
+    whyChooseUs: "We are great.",
+    termsAndConditions: "50% deposit.",
+  }),
+}));
+
 function createMockContext(overrides?: Partial<TrpcContext>): TrpcContext {
   return {
     user: {
@@ -155,6 +172,35 @@ describe("paypal", () => {
     expect(pro).toBeDefined();
     expect(starter?.available).toBe(true);
     expect(pro?.available).toBe(true);
+  });
+});
+
+describe("exportPdf", () => {
+  it("does not throw when contractor profile is missing", async () => {
+    // getContractorProfile is already mocked to return null
+    // getProposalById needs to return a valid proposal owned by user
+    const { getProposalById } = await import("./db");
+    (getProposalById as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      id: 1,
+      userId: 1,
+      title: "Test Proposal",
+      clientName: "Test Client",
+      clientEmail: "client@test.com",
+      clientAddress: "123 Test St",
+      jobScope: "Test job scope",
+      generatedContent: "## Executive Summary\n\nTest proposal content.\n\n## Scope of Work\n\n- Item 1\n- Item 2",
+      laborCost: "1000",
+      materialsCost: "2000",
+      totalCost: "3000",
+      createdAt: new Date(),
+    });
+
+    const ctx = createMockContext();
+    const caller = appRouter.createCaller(ctx);
+    // Should not throw "Contractor profile not found"
+    const result = await caller.proposals.exportPdf({ id: 1 });
+    expect(result.url).toBeTruthy();
+    expect(result.fileName).toContain("proposal-1");
   });
 });
 

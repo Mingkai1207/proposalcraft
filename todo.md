@@ -396,3 +396,6 @@
 - [x] Self-check downloaded PDF matches illustration quality
 - [x] Add PDF export unit tests (content parser tests)
 - [x] Add loading state and CTA section for PDF download
+
+## Bug Fix: Contractor Profile Not Found on PDF Export
+- [x] Fix exportPdf to gracefully handle missing contractor profile (use defaults instead of throwing)
