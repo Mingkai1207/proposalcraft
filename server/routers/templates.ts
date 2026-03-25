@@ -4,6 +4,7 @@ import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
 import { proposalTemplates } from "../../drizzle/schema";
 import { eq, and } from "drizzle-orm";
+import { extractStyleFromHtml, extractTextFromHtml } from "../utils/styleExtractor";
 
 export const templatesRouter = router({
   // List all templates for the authenticated user
@@ -132,12 +133,29 @@ export const templatesRouter = router({
       if (!proposal) throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
       if (!proposal.generatedContent) throw new TRPCError({ code: "BAD_REQUEST", message: "Proposal has no generated content to save as template" });
 
+      // Extract style metadata and text content from the HTML proposal
+      const htmlContent = proposal.generatedContent;
+      const isHtml = htmlContent.trimStart().toLowerCase().startsWith("<!doctype");
+
+      let extractedText: string;
+      let styleMetadata: string | null = null;
+
+      if (isHtml) {
+        extractedText = extractTextFromHtml(htmlContent);
+        const styleMeta = extractStyleFromHtml(htmlContent);
+        styleMetadata = JSON.stringify(styleMeta);
+      } else {
+        // Markdown content — use as-is, no style extraction needed
+        extractedText = htmlContent;
+      }
+
       const result = await db.insert(proposalTemplates).values({
         userId: ctx.user.id,
         name: input.name,
         tradeType: proposal.tradeType || "general",
         description: input.description || null,
-        content: proposal.generatedContent,
+        content: extractedText,
+        styleMetadata,
         clientName: null,
         clientAddress: null,
         jobScope: null,
@@ -169,12 +187,25 @@ export const templatesRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
+      // If the uploaded content is HTML, extract style metadata
+      const isHtml = input.content.trimStart().toLowerCase().startsWith("<!doctype");
+      let styleMetadata: string | null = null;
+      let content = input.content;
+
+      if (isHtml) {
+        const styleMeta = extractStyleFromHtml(input.content);
+        styleMetadata = JSON.stringify(styleMeta);
+        // Also extract plain text for structural reference
+        content = extractTextFromHtml(input.content);
+      }
+
       await db.insert(proposalTemplates).values({
         userId: ctx.user.id,
         name: input.name,
         tradeType: input.tradeType,
         description: input.description || null,
-        content: input.content,
+        content,
+        styleMetadata,
         clientName: null,
         clientAddress: null,
         jobScope: null,

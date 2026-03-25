@@ -160,9 +160,9 @@ function buildModernWaveHtml(input: TemplatePdfInput, sections: string, vizHtml:
 <meta charset="UTF-8">
 <title>${input.title}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  /* System fonts only — no external imports for PDF reliability */
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',Arial,sans-serif; color:${style.textColor}; background:#fff; font-size:13.5px; line-height:1.65; }
+  body { font-family:'Segoe UI',-apple-system,Arial,sans-serif; color:${style.textColor}; background:#fff; font-size:13.5px; line-height:1.65; }
 
   /* Cover */
   .cover { min-height:100vh; page-break-after:always; }
@@ -350,19 +350,19 @@ function buildClassicLetterheadHtml(input: TemplatePdfInput, sections: string, v
 <meta charset="UTF-8">
 <title>${input.title}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Serif+4:wght@300;400;600&display=swap');
+  /* System fonts only — no external imports for PDF reliability */
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Source Serif 4','Georgia',serif; color:${style.textColor}; background:${style.bgColor}; font-size:13.5px; line-height:1.7; }
+  body { font-family:Georgia,'Times New Roman',serif; color:${style.textColor}; background:${style.bgColor}; font-size:13.5px; line-height:1.7; }
 
   /* Cover */
   .cover { min-height:100vh; page-break-after:always; padding:0; }
   .cover-top-bar { height:8px; background:${style.accentColor}; }
   .cover-header { padding:48px 64px 36px; border-bottom:1px solid #e8e0d0; }
   .cover-header-row { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:36px; }
-  .cover-biz-block h1 { font-family:'Playfair Display',serif; font-size:22px; font-weight:700; color:${style.primaryColor}; }
+  .cover-biz-block h1 { font-family:Georgia,'Times New Roman',serif; font-size:22px; font-weight:700; color:${style.primaryColor}; }
   .cover-biz-block p { font-size:12px; color:#6b7280; margin-top:4px; }
   .cover-proposal-label { font-size:11px; font-weight:600; letter-spacing:2px; text-transform:uppercase; color:${style.accentColor}; margin-bottom:10px; }
-  .cover-title { font-family:'Playfair Display',serif; font-size:34px; font-weight:700; color:${style.primaryColor}; line-height:1.2; margin-bottom:8px; }
+  .cover-title { font-family:Georgia,'Times New Roman',serif; font-size:34px; font-weight:700; color:${style.primaryColor}; line-height:1.2; margin-bottom:8px; }
   .cover-sub { font-size:14px; color:#6b7280; }
   .cover-meta { padding:36px 64px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:32px; border-bottom:1px solid #e8e0d0; }
   .meta-block h4 { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:${style.accentColor}; margin-bottom:8px; }
@@ -372,20 +372,20 @@ function buildClassicLetterheadHtml(input: TemplatePdfInput, sections: string, v
   .cover-summary h4 { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:${style.accentColor}; margin-bottom:20px; }
   .sum-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
   .sum-item { border:1px solid #e8e0d0; border-radius:6px; padding:18px; text-align:center; background:#fff; }
-  .sum-val { font-family:'Playfair Display',serif; font-size:24px; font-weight:700; color:${style.primaryColor}; }
+  .sum-val { font-family:Georgia,'Times New Roman',serif; font-size:24px; font-weight:700; color:${style.primaryColor}; }
   .sum-lbl { font-size:10px; color:#9ca3af; text-transform:uppercase; letter-spacing:0.5px; margin-top:4px; }
 
   /* Running header */
   .run-header { padding:10px 64px; border-bottom:2px solid ${style.primaryColor}; display:flex; justify-content:space-between; align-items:center; }
-  .run-header-title { font-family:'Playfair Display',serif; font-size:13px; font-weight:600; color:${style.primaryColor}; }
+  .run-header-title { font-family:Georgia,'Times New Roman',serif; font-size:13px; font-weight:600; color:${style.primaryColor}; }
   .run-header-sub { font-size:11px; color:#9ca3af; }
 
   /* Content */
   .content { padding:36px 64px 60px; }
   .section { margin-bottom:36px; page-break-inside:avoid; }
-  .section-title { font-family:'Playfair Display',serif; font-size:18px; font-weight:700; color:${style.primaryColor}; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid ${style.accentColor}; }
+  .section-title { font-family:Georgia,'Times New Roman',serif; font-size:18px; font-weight:700; color:${style.primaryColor}; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid ${style.accentColor}; }
   .section-content p { color:#374151; margin-bottom:10px; line-height:1.75; }
-  .section-content h1,.section-content h2,.section-content h3 { font-family:'Playfair Display',serif; font-size:14px; font-weight:600; color:${style.primaryColor}; margin:14px 0 6px; }
+  .section-content h1,.section-content h2,.section-content h3 { font-family:Georgia,'Times New Roman',serif; font-size:14px; font-weight:600; color:${style.primaryColor}; margin:14px 0 6px; }
   .section-content ul,.section-content ol { padding-left:22px; margin-bottom:12px; }
   .section-content li { color:#374151; margin-bottom:5px; line-height:1.7; }
   .section-content li::marker { color:${style.accentColor}; }
@@ -399,7 +399,7 @@ function buildClassicLetterheadHtml(input: TemplatePdfInput, sections: string, v
 
   /* Signature */
   .sig-page { page-break-before:always; padding:40px 64px; }
-  .sig-h { font-family:'Playfair Display',serif; font-size:24px; font-weight:700; color:${style.primaryColor}; margin-bottom:6px; }
+  .sig-h { font-family:Georgia,'Times New Roman',serif; font-size:24px; font-weight:700; color:${style.primaryColor}; margin-bottom:6px; }
   .sig-sub { color:#6b7280; font-size:13px; margin-bottom:28px; }
   .inv-table { width:100%; border-collapse:collapse; margin-bottom:32px; font-size:13.5px; }
   .inv-table th { background:${style.primaryColor}; color:#fff; padding:10px 16px; text-align:left; font-weight:600; }
@@ -523,9 +523,9 @@ function buildBoldDarkHtml(input: TemplatePdfInput, sections: string, vizHtml: {
 <meta charset="UTF-8">
 <title>${input.title}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+  /* System fonts only — no external imports for PDF reliability */
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',Arial,sans-serif; color:${style.textColor}; background:#fff; font-size:13.5px; line-height:1.65; }
+  body { font-family:'Segoe UI',-apple-system,Arial,sans-serif; color:${style.textColor}; background:#fff; font-size:13.5px; line-height:1.65; }
 
   /* Cover */
   .cover { min-height:100vh; page-break-after:always; }
@@ -691,9 +691,9 @@ function buildMinimalCleanHtml(input: TemplatePdfInput, sections: string, vizHtm
 <meta charset="UTF-8">
 <title>${input.title}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+  /* System fonts only — no external imports for PDF reliability */
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',Arial,sans-serif; color:${style.textColor}; background:${style.bgColor}; font-size:13.5px; line-height:1.7; }
+  body { font-family:'Segoe UI',-apple-system,Arial,sans-serif; color:${style.textColor}; background:${style.bgColor}; font-size:13.5px; line-height:1.7; }
 
   /* Cover */
   .cover { min-height:100vh; page-break-after:always; padding:64px 72px; }
@@ -862,9 +862,9 @@ function buildExecutiveSidebarHtml(input: TemplatePdfInput, sections: string, vi
 <meta charset="UTF-8">
 <title>${input.title}</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  /* System fonts only — no external imports for PDF reliability */
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Inter',Arial,sans-serif; color:${style.textColor}; background:#fff; font-size:13.5px; line-height:1.65; }
+  body { font-family:'Segoe UI',-apple-system,Arial,sans-serif; color:${style.textColor}; background:#fff; font-size:13.5px; line-height:1.65; }
 
   /* Cover — sidebar layout */
   .cover { min-height:100vh; page-break-after:always; display:grid; grid-template-columns:280px 1fr; }

@@ -142,6 +142,7 @@ export const proposalTemplates = mysqlTable("proposal_templates", {
   tradeType: varchar("tradeType", { length: 64 }).notNull(),
   description: text("description"),
   content: text("content").notNull(),
+  styleMetadata: text("styleMetadata"),   // JSON: extracted visual style (colors, layout, fonts, etc.)
   clientName: varchar("clientName", { length: 255 }),
   clientAddress: varchar("clientAddress", { length: 512 }),
   jobScope: text("jobScope"),

@@ -26,7 +26,6 @@ export const appRouter = router({
     }),
   }),
   proposals: proposalRouter,
-  import: importRouter,
   profile: profileRouter,
   subscription: subscriptionRouter,
   tracking: trackingRouter,
@@ -37,6 +36,7 @@ export const appRouter = router({
   versions: versionsRouter,
   feedback: feedbackRouter,
   recommendations: recommendationsRouter,
+  import: importRouter,
 });
 
 export type AppRouter = typeof appRouter;

@@ -66,6 +66,8 @@ type FormData = {
   paymentTerms: string;
   specialNotes: string;
   expiryDays: number;
+  colorScheme: string;
+  tone: string;
 };
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
@@ -203,7 +205,8 @@ export default function NewProposal() {
     paymentTerms: "50% upfront, 50% on completion",
     specialNotes: "",
     expiryDays: 30,
-
+    colorScheme: "auto",
+    tone: "professional",
   });
 
   // Auto-fill profile data
@@ -278,7 +281,8 @@ export default function NewProposal() {
       paymentTerms: form.paymentTerms || undefined,
       specialNotes: form.specialNotes || undefined,
       expiryDays: form.expiryDays,
-
+      colorScheme: form.colorScheme || undefined,
+      tone: form.tone || undefined,
     });
   };
 
@@ -481,6 +485,43 @@ export default function NewProposal() {
                 rows={3}
                 className="resize-none"
               />
+            </div>
+
+            {/* Style Preferences */}
+            <div className="space-y-4 pt-2 border-t border-border">
+              <h3 className="text-sm font-semibold text-foreground">Style Preferences</h3>
+
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Color Scheme</Label>
+                <Select value={form.colorScheme} onValueChange={val => update("colorScheme", val)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="auto">Auto (Let AI Choose)</SelectItem>
+                    <SelectItem value="navy">Navy & Blue</SelectItem>
+                    <SelectItem value="teal">Teal & Amber</SelectItem>
+                    <SelectItem value="dark">Dark Blue & Orange</SelectItem>
+                    <SelectItem value="forest">Forest Green & Gold</SelectItem>
+                    <SelectItem value="burgundy">Burgundy & Cream</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Tone</Label>
+                <Select value={form.tone} onValueChange={val => update("tone", val)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="professional">Professional</SelectItem>
+                    <SelectItem value="friendly">Friendly & Approachable</SelectItem>
+                    <SelectItem value="technical">Technical & Detailed</SelectItem>
+                    <SelectItem value="executive">Executive & Formal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="flex gap-3">

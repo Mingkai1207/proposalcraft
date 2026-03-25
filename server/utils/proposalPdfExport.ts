@@ -113,10 +113,36 @@ export function buildProposalHtml(data: ProposalPdfData): string {
 }
 
 /**
+ * Sanitize Claude-generated HTML before PDF rendering.
+ * Strips known problematic CSS patterns that break Puppeteer layout.
+ */
+function sanitizeHtmlForPdf(html: string): string {
+  // Remove h1::before / h2::before / h3::before pseudo-element rules that displace headers
+  // Matches: h1::before, h2::before, h3::before { ... }
+  let sanitized = html.replace(
+    /h[1-6]::before\s*,?\s*h[1-6]::before\s*,?\s*h[1-6]::before\s*\{[^}]*\}/gi,
+    "/* removed ::before page-break hack */"
+  );
+  // Also catch individual h1::before { ... } patterns
+  sanitized = sanitized.replace(
+    /h[1-6]::before\s*\{[^}]*height:\s*\d+rem[^}]*\}/gi,
+    "/* removed ::before page-break hack */"
+  );
+  // Remove any @import url() rules (Google Fonts etc.) — system fonts only
+  sanitized = sanitized.replace(
+    /@import\s+url\([^)]*\)\s*;?/gi,
+    "/* removed external font import */"
+  );
+  return sanitized;
+}
+
+/**
  * Render a raw HTML string directly to PDF using Puppeteer.
  * Used when Claude generates the full HTML document.
  */
 export async function generatePdfFromHtml(html: string): Promise<Buffer> {
+  const sanitizedHtml = sanitizeHtmlForPdf(html);
+
   const browser = await puppeteer.launch({
     headless: true,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
@@ -124,9 +150,11 @@ export async function generatePdfFromHtml(html: string): Promise<Buffer> {
 
   try {
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
-    // Give SVG charts and fonts time to render
-    await new Promise((r) => setTimeout(r, 2500));
+    // Set viewport to match expected content width
+    await page.setViewport({ width: 800, height: 1200 });
+    await page.setContent(sanitizedHtml, { waitUntil: "networkidle0" });
+    // Give SVG charts time to render
+    await new Promise((r) => setTimeout(r, 1500));
 
     const pdfBuffer = await page.pdf({
       format: "A4",
@@ -185,11 +213,11 @@ function _buildLegacyHtml(p: {
 <title>${esc(jobTitle)}</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+/* System fonts only — no external imports for PDF reliability */
 
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:100%;height:100%}
-body{font-family:'Inter',system-ui,-apple-system,sans-serif;color:#1e293b;background:#fff;font-size:10px;line-height:1.6;-webkit-font-smoothing:antialiased}
+body{font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;color:#1e293b;background:#fff;font-size:10px;line-height:1.6;-webkit-font-smoothing:antialiased}
 
 /* ═══════════════════════════════════════════════════════
    COVER PAGE

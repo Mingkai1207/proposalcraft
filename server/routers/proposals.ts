@@ -477,134 +477,6 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       return { success: true };
     }),
 
-  // Old generateFromTemplate removed — see new generateFromTemplate below (Function 2)
-  _placeholder_removed: protectedProcedure
-    .input(z.object({ _: z.string().optional() }))
-    .mutation(async () => { throw new TRPCError({ code: "NOT_FOUND", message: "Removed" }); }),
-
-  // Placeholder to keep router valid until old code is fully removed
-  _old_generateFromTemplate_removed: protectedProcedure
-    .input(
-      z.object({
-        templateId: z.string().min(1),
-        title: z.string().min(1),
-        language: z.string().optional().default("english"),
-        fields: z.record(z.string(), z.string()),
-      })
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { getTemplateStyle, PROPOSAL_SECTIONS, PROPOSAL_INPUT_FIELDS } = await import("../../shared/templateDefs");
-      const style = getTemplateStyle(input.templateId);
-
-      // Check subscription limits (admin bypasses)
-      const isAdmin = ctx.user.role === "admin";
-      const sub = await ensureSubscription(ctx.user.id);
-      if (!sub) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Subscription error" });
-      if (!isAdmin) {
-        const limit = getPlanLimit(sub.plan);
-        if (sub.proposalsUsedThisMonth >= limit) {
-          throw new TRPCError({
-            code: "FORBIDDEN",
-            message: `You've reached your ${sub.plan} plan limit of ${limit} proposals/month. Please upgrade to continue.`,
-          });
-        }
-      }
-
-      const profile = await getContractorProfile(ctx.user.id);
-      const businessName = profile?.businessName || ctx.user.name || "Your Business";
-
-      const langMap: Record<string, string> = {
-        english: "English", chinese: "Simplified Chinese (简体中文)",
-        spanish: "Spanish (Español)", french: "French (Français)",
-      };
-      const outputLang = langMap[input.language] || "English";
-
-      // Build field context string for the AI using the standard input fields
-      const fieldContext = PROPOSAL_INPUT_FIELDS
-        .filter((f) => input.fields[f.id])
-        .map((f) => `${f.label}: ${input.fields[f.id]}`)
-        .join("\n");
-
-      const tradeType = (input.fields["trade_type"] || "general").toLowerCase().replace(/[^a-z]/g, "") as typeof ALL_TRADE_TYPES[number];
-      const tradeName = input.fields["trade_type"] || "General Contracting";
-
-      // Fill each standard section individually with section-specific prompts
-      const sectionContents: Record<string, string> = {};
-
-      for (const section of PROPOSAL_SECTIONS) {
-        const sectionPrompt = `You are an expert proposal writer for ${tradeName} contractors.
-Write ONLY the content for the "${section.title}" section. Do NOT include the section header.
-Write in ${outputLang}.
-Do NOT include placeholder text like [Your X]. Do NOT include signature blocks or contact info.
-
-Section instructions: ${section.aiPromptHint}
-
-Business name: ${businessName}
-Client: ${input.fields["client_name"] || "Valued Client"}
-${input.fields["client_address"] ? `Property: ${input.fields["client_address"]}` : ""}
-
-Project details:
-${fieldContext}`;
-
-        const response = await invokeLLM({
-          messages: [{ role: "user", content: sectionPrompt }],
-          model: "gemini-2.5-flash",
-        });
-
-        const content = response.choices[0]?.message?.content;
-        sectionContents[section.id] = typeof content === "string" ? content.trim() : "";
-      }
-
-      // Assemble the full markdown document from sections
-      const markdownParts: string[] = [];
-      for (const section of PROPOSAL_SECTIONS) {
-        markdownParts.push(`## ${section.title}\n\n${sectionContents[section.id] || ""}`);
-      }
-      const generatedContent = markdownParts.join("\n\n");
-
-      const trackingToken = nanoid(32);
-      const isFree = sub.plan === "free" && !isAdmin;
-      const watermarkedContent = isFree
-        ? `${generatedContent}\n\n---\n*This proposal was generated with ProposAI Free. Upgrade to remove this watermark.*`
-        : generatedContent;
-
-      // Store the style ID and the fields for later export
-      const proposal = await createProposal({
-        userId: ctx.user.id,
-        title: input.title,
-        tradeType: tradeType || "general",
-        clientName: input.fields["client_name"] || null,
-        clientEmail: input.fields["client_email"] || null,
-        clientAddress: input.fields["client_address"] || null,
-        jobScope: input.fields["job_description"] || "See proposal content",
-        materials: null,
-        laborCost: input.fields["labor_cost"] || null,
-        materialsCost: input.fields["materials_cost"] || null,
-        totalCost: input.fields["total_cost"] || null,
-        generatedContent: watermarkedContent,
-        trackingToken,
-        status: "draft",
-        expiryDays: 30,
-        templateId: style.id,
-        templateFields: JSON.stringify(input.fields),
-      });
-
-      if (!proposal) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to save proposal" });
-
-      await incrementProposalUsage(ctx.user.id);
-      await notifyOwner({
-        title: "New Template Proposal Generated",
-        content: `${ctx.user.name || ctx.user.email} used style "${style.name}" to create: "${input.title}"`,
-      }).catch(() => {});
-
-      return { id: proposal.id };
-    }),
-
-  // ─── Helper: parse markdown sections by title and remap to canonical IDs ─────
-  // The AI generates markdown with ## Title headers. The template renderer
-  // looks up content by section ID (e.g. "executive_summary"). This helper
-  // bridges the gap by mapping titles → IDs.
-
   exportPdf: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
@@ -942,6 +814,8 @@ ${fieldContext}`;
         specialNotes: z.string().optional(),
         language: z.string().optional(),
         expiryDays: z.number().min(1).default(30),
+        colorScheme: z.string().optional(),
+        tone: z.string().optional(),
 
       })
     )
@@ -1036,7 +910,10 @@ RULES:
 
       // Save a draft proposal record with the summary
       const trackingToken = nanoid(32);
-      const stylePreferences = JSON.stringify({});
+      const stylePreferences = JSON.stringify({
+        colorScheme: input.colorScheme || "auto",
+        tone: input.tone || "professional",
+      });
 
       const proposal = await createProposal({
         userId: ctx.user.id,
@@ -1089,6 +966,32 @@ RULES:
       const businessName = profile?.businessName || ctx.user.name || "Your Business";
       const tradeName = TRADE_TEMPLATES[proposal.tradeType] || "General Contracting";
 
+      // Parse style preferences
+      let stylePref = { colorScheme: "auto", tone: "professional" };
+      try {
+        if (proposal.stylePreferences) stylePref = JSON.parse(proposal.stylePreferences);
+      } catch {}
+
+      const COLOR_SCHEMES: Record<string, string> = {
+        navy: "Primary: #1B3A5C, Accent: #3498db, Success: #2ecc71, Highlight: #e74c3c",
+        teal: "Primary: #0f4c5c, Accent: #0d9488, Highlight: #f59e0b, Success: #10b981",
+        dark: "Primary: #0c1e33, Accent: #1e5a9e, Highlight: #f97316, Success: #22c55e",
+        forest: "Primary: #1a3c34, Accent: #2d6a4f, Highlight: #d4a843, Success: #52b788",
+        burgundy: "Primary: #4a1942, Accent: #8b2252, Highlight: #c4a35a, Success: #6b8e4e",
+      };
+
+      const colorInstruction = stylePref.colorScheme !== "auto" && COLOR_SCHEMES[stylePref.colorScheme]
+        ? `USE THIS EXACT COLOR SCHEME: ${COLOR_SCHEMES[stylePref.colorScheme]}`
+        : "Choose one of these color palettes:\n  * Navy theme: primary #1B3A5C, accent #3498db, success #2ecc71\n  * Dark blue theme: primary #0c1e33, accent #1e5a9e, highlight #f97316\n  * Teal theme: primary #0f4c5c, accent #0d9488, highlight #f59e0b";
+
+      const TONE_MAP: Record<string, string> = {
+        professional: "Use a professional, confident tone. Clear and direct.",
+        friendly: "Use a warm, friendly tone. Approachable but still credible.",
+        technical: "Use a highly technical, detailed tone. Include specs, codes, and precise measurements.",
+        executive: "Use a formal, executive tone. Concise, authoritative, and polished.",
+      };
+      const toneInstruction = TONE_MAP[stylePref.tone] || TONE_MAP.professional;
+
       const TRADE_CONTEXT: Record<string, string> = {
         hvac: "Use HVAC-specific terminology: SEER2 ratings, BTU, tonnage, refrigerant types (R-410A, R-32), AFUE%, variable-speed blowers, heat exchangers, ductwork CFM, static pressure, load calculations. Mention permits, EPA 608 certification, and manufacturer warranties.",
         plumbing: "Use plumbing-specific terminology: pipe materials (PEX, copper, CPVC, ABS), fixture units, GPM/GPH flow rates, water pressure (PSI), drain slopes, venting requirements, shut-off valves, P-traps, cleanouts. Mention permits and code compliance.",
@@ -1112,44 +1015,72 @@ RULES:
 
 STRICT OUTPUT RULES:
 - Return ONLY raw HTML starting with <!DOCTYPE html>. No markdown, no backticks, no text before or after.
-- Inline CSS only. No external stylesheets or fonts.
+- Inline CSS only. No external stylesheets, no external fonts, no @import url() rules, no JavaScript.
 - Do NOT use emoji characters anywhere in the document.
+- Never omit, abbreviate, or skip any information from the summary.
 
 PAGE LAYOUT (CRITICAL):
-- The PDF is rendered by Puppeteer with top/bottom margins of 0.6in and left/right margins of 0.4in. Your HTML body content will be placed inside these margins.
+- The PDF is rendered by Puppeteer with top/bottom margins of 0.6in and left/right margins of 0.4in.
 - Do NOT add your own @page margin rules — Puppeteer controls the margins externally.
 - The content area width is approximately 700px. Design your layout to fit within this width.
-- html, body must have height: auto and overflow: visible — never set height: 100vh or overflow: hidden.
+- Use a .container wrapper: width: 700px; margin: 0 auto; padding: 0;
+- html, body must have: margin: 0; padding: 0; height: auto; overflow: visible;
 
-PAGE BREAK RULES (CRITICAL — these are the exact CSS rules that work in Chrome/Puppeteer):
-- NEVER use break-inside: avoid or page-break-inside: avoid on large section-level divs — this causes content truncation when a section is taller than one page.
-- Do NOT use h1::before, h2::before, h3::before pseudo-elements for page break control — they displace cover banners and headers. Instead, simply keep headings together with their content using: h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
-- To prevent table rows from splitting across pages: tr { break-inside: avoid; page-break-inside: avoid; }
-- To prevent small callout boxes, stat cards, and chart containers from splitting: apply break-inside: avoid; page-break-inside: avoid; display: block; to those specific small elements only.
-- Use orphans: 3; widows: 3; on p elements to prevent isolated lines at page boundaries.
-- Do NOT use break-before: page on sections — that wastes space. Sections should flow naturally and share pages.
-- Do NOT use position: running() or @page @top-right/@bottom-center content: element() — these are not supported by Chrome.
+PAGE BREAK RULES (CRITICAL):
+- NEVER use break-inside: avoid on large section-level divs — this truncates content taller than one page.
+- NEVER use h1::before, h2::before, h3::before pseudo-elements — they displace cover banners and headers.
+- To keep headings with their following content: h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
+- Table rows: tr { break-inside: avoid; page-break-inside: avoid; }
+- Small callout boxes and chart containers only: break-inside: avoid; page-break-inside: avoid; display: block;
+- Paragraphs: orphans: 3; widows: 3;
+- Do NOT use break-before: page — let sections flow naturally.
 
-SVG CHARTS (required):
-- Identify data in the summary that benefits from visualization — cost breakdowns, timelines, material quantities, payment schedules, efficiency ratings, etc.
-- Render all charts as inline SVG (no JavaScript, no external libraries).
-- Charts must be accurate, clearly labeled, and visually integrated with the document's design.
-- SVG sizing: use width="100%" viewBox="0 0 700 [height]" — use 700px viewBox width to match the content area exactly.
-- Inside each SVG, add at least 120px padding on the left for axis/row labels and 80px padding on the right for value labels — labels must NEVER be clipped or truncated.
-- For horizontal bar charts: calculate bar widths as (value / maxValue) * 420. Ensure end labels have 80px of space on the right.
-- For Gantt-style timeline charts: use shorter phase labels (max 15 characters) and increase the label area to 130px. If a phase name is long, abbreviate it.
-- CRITICAL — Do NOT use pie charts or donut charts. SVG arc path math is error-prone and produces wrong proportions. Instead, always use a horizontal stacked bar or grouped horizontal bars for percentage/allocation data. For example, for "Budget Allocation", render a single horizontal stacked bar (full width = total) divided into color-coded segments with labels. This is more accurate and visually cleaner.
-- Wrap each chart in a div with break-inside: avoid; page-break-inside: avoid; display: block; so charts never split across pages.
-- Good chart types: horizontal bar chart for cost breakdown, Gantt-style chart for timeline, horizontal stacked bar for budget allocation, comparison bars for equipment specs.
+VISUAL DESIGN (CRITICAL — the PDF must look polished and professional):
+- ${colorInstruction}
+- TONE: ${toneInstruction}
+- Cover banner: Full-width colored banner at the top of page 1 with the proposal title in large white bold text, client name, address, and presenter name. Make it prominent (at least 100px tall).
+- Section headers: Each major section (Executive Summary, Scope of Work, etc.) must have a visually distinct header — use a colored background bar, a thick left border accent, or an underline with the primary color. They must stand out clearly from body text.
+- Tables: Styled with colored header row (primary color background, white text), alternating row backgrounds (#f9f9f9 / white), and clean 1px borders. Table text should be 0.9em for readability.
+- Numbered lists (Scope of Work): Each item should have a bold label followed by the detail text. Use adequate spacing (margin-bottom: 0.5em) between items.
+- Investment/cost total: The total amount should be in a highlighted box — colored background with white bold text.
+- Signature block: Two-column layout with signature lines, printed name lines, and date lines for both parties.
+- Font stack: font-family: 'Segoe UI', -apple-system, Arial, sans-serif; for body. Georgia or serif for headings if desired.
+- Base font size: 13.5px-14px with line-height: 1.6 for body text.
 
-DESIGN:
-- Make the document visually appealing and professional. You have full creative freedom over layout, typography, and color scheme.
-- Optimized for A4 PDF output (printBackground: true in Puppeteer).
-- Use a professional font stack with system fonts only (no Google Fonts): font-family: 'Segoe UI', Arial, sans-serif for body; font-family: Georgia, 'Times New Roman', serif for headings if you want a serif accent.
+SVG CHARTS (required — include at least 2 charts):
+- Identify data that benefits from visualization: cost breakdowns, timelines, payment schedules, efficiency ratings, material quantities.
+- Render all charts as inline SVG. No JavaScript, no external libraries.
+- SVG sizing: width="100%" viewBox="0 0 700 [height]" to match the 700px content area.
+
+Chart spacing rules (CRITICAL — prevents clipped labels):
+- Left padding: at least 130px for row/axis labels.
+- Right padding: at least 80px for value labels.
+- Bar max width: (value / maxValue) * 400 to leave room for labels.
+
+REQUIRED chart: Horizontal bar chart for cost breakdown
+- One bar per cost category (Labor, Materials, Permits, etc.).
+- Each bar has a different color. Show dollar amounts as labels to the right of each bar.
+- Add a light gray track behind each bar (full width) for visual context.
+- Include rounded corners (rx="4") on bars.
+
+REQUIRED chart: Project timeline / Gantt chart
+- One row per project phase. Each bar spans the phase's duration.
+- Use different colors per phase. Keep phase labels short (max 15 chars, abbreviate if needed).
+- Show day labels along the top or bottom axis.
+
+RECOMMENDED chart: Budget allocation stacked bar
+- A single horizontal stacked bar showing the proportion of each cost category.
+- Color-coded segments with a legend below or to the right.
+- NEVER use pie or donut charts — SVG arc math produces wrong proportions. Always use stacked bars instead.
+
+Chart styling:
+- Wrap each chart in a container div with: background: #fcfcfc; border: 1px solid #eee; border-radius: 6px; padding: 16px; margin: 1.5em 0; break-inside: avoid; display: block;
+- Add a centered chart title above each chart in bold.
+- Use the document's color scheme for bar fills.
 
 STRUCTURE:
-- Organize content into logical sections with clear headings.
-- End with an Acceptance & Signature block for both parties.`;
+- Organize content into these sections (in order): Cover Banner, Executive Summary, Scope of Work, Materials & Equipment, Project Timeline (with Gantt chart), Investment Summary (with bar chart and stacked bar), Why Choose Us (if data available), Terms & Conditions, Acceptance & Signature Block.
+- If a section is not in the summary, omit it gracefully — no placeholder text.`;
 
       const { invokeAnthropic } = await import("../utils/anthropicLLM");
       const result = await invokeAnthropic({
@@ -1254,30 +1185,31 @@ STRUCTURE:
 
 STRICT OUTPUT RULES:
 - Return ONLY raw HTML starting with <!DOCTYPE html>. No markdown, no backticks, no text before or after.
-- Inline CSS only. No external stylesheets or fonts.
+- Inline CSS only. No external stylesheets, no external fonts, no @import url() rules, no JavaScript.
 - Do NOT use emoji characters anywhere in the document.
 
 PAGE BREAK RULES (preserve these in your output):
 - NEVER use break-inside: avoid on large section-level divs.
-- Do NOT use h1::before, h2::before, h3::before pseudo-elements for page break control. Instead use: h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
-- If the existing HTML has h1::before/h2::before/h3::before rules, REMOVE them and replace with the break-after approach above.
+- NEVER use h1::before, h2::before, h3::before pseudo-elements — they displace headers. If the existing HTML has these rules, REMOVE them.
+- Instead use: h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
 - Table rows: tr { break-inside: avoid; page-break-inside: avoid; }
-- Small callout boxes and chart containers: break-inside: avoid; display: block;
-- html, body: height: auto; overflow: visible;
+- Small callout boxes and chart containers only: break-inside: avoid; display: block;
+- html, body: margin: 0; padding: 0; height: auto; overflow: visible;
 
 SVG CHARTS:
 - Use width="100%" viewBox="0 0 700 [height]" for all SVGs.
-- Add 120px left padding and 80px right padding inside each SVG for labels.
-- Horizontal bar charts: bars at most 420px wide.
-- Do NOT use pie charts or donut charts — use horizontal stacked bars for allocation data instead.
-- Wrap each chart in a div with break-inside: avoid; display: block;
+- Left padding: 130px for labels. Right padding: 80px for value labels. Bar max width: 400px.
+- NEVER use pie or donut charts — use horizontal stacked bars for allocation data instead.
+- Wrap each chart in a styled container div with break-inside: avoid; display: block;
+- If updating chart data (costs, timeline, etc.), recalculate all bar widths and labels to match new values.
 
 Your job:
 1. Understand exactly what the user wants to change.
 2. Apply the requested changes to the affected section(s).
 3. Return the COMPLETE updated HTML document (not just the changed section).
 4. Maintain the same professional design, inline CSS styles, SVG charts, and structure.
-5. Keep the document optimized for A4 PDF output (Puppeteer, printBackground: true).`,
+5. Keep the document optimized for A4 PDF output (Puppeteer, printBackground: true).
+6. Ensure the cover banner is the FIRST element inside the container — nothing should appear before it.`,
           messages: [{
             role: "user",
             content: `Here is the current proposal HTML:\n\n${currentContent}\n\n---\n\nRevision request: ${input.message}`,
@@ -1414,7 +1346,6 @@ Your job:
       z.object({
         templateId: z.number(),
         approvedSummary: z.string().min(10),
-        // Basic proposal fields for the new proposal record
         title: z.string().min(1),
         tradeType: z.enum(ALL_TRADE_TYPES),
         clientName: z.string().optional(),
@@ -1454,16 +1385,89 @@ Your job:
       const businessName = profile?.businessName || ctx.user.name || "Your Business";
       const tradeName = TRADE_TEMPLATES[input.tradeType] || "General Contracting";
 
-      const systemPrompt = `You are an expert proposal writer for ${tradeName} contractors.
-You are given a template proposal and new project information. Write a NEW proposal that:
-1. Follows the EXACT same structure and format as the template
-2. Incorporates ALL the new project information provided
-3. Maintains the professional tone and style of the template
-4. Uses the actual business name, client name, and project details — never placeholders
-5. Includes visually appealing analytic graphs where relevant (cost breakdown, timeline, payment schedule)
-6. Does NOT include signature blocks, contact information sections, or placeholder text
+      // Parse style metadata from template (if available)
+      let styleInfo = "";
+      if (template.styleMetadata) {
+        try {
+          const meta = JSON.parse(template.styleMetadata);
+          styleInfo = `
+TEMPLATE STYLE TO MATCH:
+- Color palette: Primary ${meta.colors?.primary || "#1B3A5C"}, Accent ${meta.colors?.accent || "#3498db"}, Highlight ${meta.colors?.highlight || "#e74c3c"}
+- Header style: ${meta.headerStyle || "banner"} (use colored banner headers for sections)
+- Table style: ${meta.tableStyle || "colored-header"} (colored header rows with white text)
+- Layout: ${meta.layoutPattern || "cover-banner"} (full-width cover banner at top)
+- Charts found in template: ${(meta.chartTypes || []).join(", ") || "horizontal-bar, gantt"}
+- Section order: ${(meta.sectionOrder || []).join(" → ") || "Executive Summary → Scope of Work → Materials → Timeline → Investment → Terms"}
+- Fonts: Heading: ${meta.fonts?.heading || "Georgia, serif"}, Body: ${meta.fonts?.body || "'Segoe UI', system-ui, Arial, sans-serif"}
+`;
+        } catch {}
+      }
 
-Business: ${businessName}`;
+      // Extract text content for structural reference
+      const templateText = template.content || "";
+      // Limit to first 3000 chars to avoid token bloat
+      const templateExcerpt = templateText.length > 3000 ? templateText.substring(0, 3000) + "\n...[truncated]" : templateText;
+
+      const TRADE_CONTEXT: Record<string, string> = {
+        hvac: "Use HVAC-specific terminology: SEER2 ratings, BTU, tonnage, refrigerant types, AFUE%, variable-speed blowers.",
+        plumbing: "Use plumbing-specific terminology: pipe materials (PEX, copper), fixture units, GPM flow rates, PSI.",
+        electrical: "Use electrical-specific terminology: amperage, voltage, circuit breakers, AFCI/GFCI, wire gauges, NEC code.",
+        roofing: "Use roofing-specific terminology: shingle types, underlayment, ice & water shield, flashing, pitch/slope.",
+        painting: "Use painting-specific terminology: surface prep, paint types, sheen levels, mil thickness, VOC content.",
+        flooring: "Use flooring-specific terminology: subfloor prep, moisture barrier, underlayment, wear layer, AC rating.",
+        landscaping: "Use landscaping-specific terminology: grading, drainage, soil amendments, irrigation, hardscape materials.",
+        carpentry: "Use carpentry-specific terminology: wood species, joinery methods, finish options, load-bearing analysis.",
+        concrete: "Use concrete-specific terminology: PSI strength, rebar size, control joints, finish type, cubic yards.",
+        masonry: "Use masonry-specific terminology: brick/block types, mortar mix, bond patterns, flashing, weep holes.",
+        insulation: "Use insulation-specific terminology: R-value, spray foam types, vapor barrier, air sealing.",
+        drywall: "Use drywall-specific terminology: board thickness, fire-rated Type X, joint compound coats, texture types.",
+        windows: "Use windows/doors-specific terminology: U-factor, SHGC, Low-E coating, frame materials, weatherstripping.",
+        solar: "Use solar-specific terminology: panel wattage, system size kW, inverter types, net metering, federal ITC 30%.",
+        general: "Use general contracting terminology appropriate to the specific work described.",
+      };
+      const tradeContext = TRADE_CONTEXT[input.tradeType] || TRADE_CONTEXT.general;
+
+      const systemPrompt = `You are a professional proposal document generator for ${tradeName} contractors.
+You are given a TEMPLATE PROPOSAL for reference and NEW PROJECT INFORMATION. Generate a complete, self-contained HTML document that:
+1. Follows the same STRUCTURE and SECTION ORDER as the template
+2. Matches the template's VISUAL STYLE (colors, header treatment, table design, chart types)
+3. Uses ALL the new project information provided
+4. Includes embedded SVG analytic charts (cost breakdown bar chart, project timeline Gantt chart)
+
+${tradeContext}
+${styleInfo}
+
+STRICT OUTPUT RULES:
+- Return ONLY raw HTML starting with <!DOCTYPE html>. No markdown, no backticks, no text before or after.
+- Inline CSS only. No external stylesheets, no external fonts, no @import url() rules, no JavaScript.
+- Do NOT use emoji characters anywhere in the document.
+- Never omit, abbreviate, or skip any information from the project summary.
+
+PAGE LAYOUT (CRITICAL):
+- The PDF is rendered by Puppeteer with top/bottom margins of 0.6in and left/right margins of 0.4in.
+- Do NOT add your own @page margin rules — Puppeteer controls the margins externally.
+- The content area width is approximately 700px. Use a .container wrapper: width: 700px; margin: 0 auto;
+- html, body must have: margin: 0; padding: 0; height: auto; overflow: visible;
+
+PAGE BREAK RULES (CRITICAL):
+- NEVER use break-inside: avoid on large section-level divs.
+- NEVER use h1::before, h2::before, h3::before pseudo-elements.
+- To keep headings with content: h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
+- Table rows: tr { break-inside: avoid; page-break-inside: avoid; }
+- Paragraphs: orphans: 3; widows: 3;
+
+SVG CHARTS (required — include at least 2 charts):
+- Render all charts as inline SVG. No JavaScript, no external libraries.
+- SVG sizing: width="100%" viewBox="0 0 700 [height]"
+- Left padding: at least 130px for labels. Right padding: at least 80px for value labels.
+- Bar max width: (value / maxValue) * 400 to leave room for labels.
+- REQUIRED: Horizontal bar chart for cost breakdown
+- REQUIRED: Project timeline / Gantt chart
+- NEVER use pie or donut charts — use horizontal stacked bars instead.
+- Wrap each chart in a container div with: background: #fcfcfc; border: 1px solid #eee; border-radius: 6px; padding: 16px; margin: 1.5em 0; break-inside: avoid; display: block;
+
+Font stack: font-family: 'Segoe UI', -apple-system, Arial, sans-serif;
+Base font size: 13.5px-14px with line-height: 1.6 for body text.`;
 
       const { invokeAnthropic } = await import("../utils/anthropicLLM");
       const result = await invokeAnthropic({
@@ -1471,45 +1475,29 @@ Business: ${businessName}`;
         systemPrompt,
         messages: [{
           role: "user",
-          content: `TEMPLATE PROPOSAL (follow this structure):\n\n${template.content}\n\n---\n\nNEW PROJECT INFORMATION:\n\n${input.approvedSummary}\n\nWrite the complete new proposal now, following the template's structure.`,
+          content: `TEMPLATE PROPOSAL (follow this structure and style):\n\n${templateExcerpt}\n\n---\n\nNEW PROJECT INFORMATION:\n\n${input.approvedSummary}\n\nGenerate the complete HTML proposal now.`,
         }],
-        maxTokens: 8192,
+        maxTokens: 40000,
       });
 
-      let generatedContent = result.content
-        .replace(/#{1,6}\s*Contact\s*Information[\s\S]*?(?=#{1,6}\s|$)/gi, "")
-        .replace(/#{1,6}\s*(Accepted By|Acceptance|Signature)[\s\S]*?(?=#{1,6}\s|$)/gi, "")
-        .replace(/\[Your[^\]]+\]/g, "")
-        .replace(/\n{3,}/g, "\n\n")
+      // Extract raw HTML
+      let generatedHtml = result.content
+        .replace(/^```html\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```\s*$/i, "")
         .trim();
 
+      if (!generatedHtml.toLowerCase().startsWith("<!doctype")) {
+        const idx = generatedHtml.toLowerCase().indexOf("<!doctype");
+        if (idx > 0) generatedHtml = generatedHtml.slice(idx);
+      }
+
+      let generatedContent = generatedHtml;
+
       if (sub.plan === "free" && !isAdmin) {
-        generatedContent += "\n\n---\n*This proposal was generated with ProposAI Free. Upgrade to remove this watermark and unlock Word & Google Docs export.*";
+        // For free plan, we'll add a watermark via the PDF export, not in the HTML
       }
 
-      // Parse sections
-      const TITLE_TO_ID: Record<string, string> = {
-        "Executive Summary": "executive_summary",
-        "Scope of Work": "scope_of_work",
-        "Materials & Equipment": "materials_equipment",
-        "Project Timeline": "timeline",
-        "Investment Summary": "investment",
-        "Why Choose Us": "why_choose_us",
-        "Terms & Conditions": "terms",
-      };
-      const sectionContents: Record<string, string> = {};
-      const sectionMatches = Array.from(generatedContent.matchAll(/## ([^\n]+)\n([\s\S]*?)(?=\n## |$)/g));
-      for (const match of sectionMatches) {
-        const sectionTitle = match[1].trim();
-        if (!sectionTitle) continue;
-        sectionContents[sectionTitle] = match[2].trim();
-        const id = TITLE_TO_ID[sectionTitle];
-        if (id) sectionContents[id] = match[2].trim();
-      }
-      if (Object.keys(sectionContents).length === 0) sectionContents["content"] = generatedContent;
-
-      const { getTemplateStyle } = await import("../../shared/templateDefs");
-      const style = getTemplateStyle("modern-wave");
       const trackingToken = nanoid(32);
 
       // Create proposal record
@@ -1527,55 +1515,46 @@ Business: ${businessName}`;
         trackingToken,
         status: "draft",
         expiryDays: input.expiryDays,
+        templateId: String(input.templateId),
       });
       if (!proposal) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to save proposal" });
 
-      const preparedDate = new Date().toLocaleDateString();
-      const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString();
+      // Auto-generate PDF from HTML using Puppeteer
+      let pdfUrl: string | null = null;
+      try {
+        const { generatePdfFromHtml } = await import("../utils/proposalPdfExport");
+        const pdfBuffer = await generatePdfFromHtml(generatedContent);
+        const pdfFileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
+        const { url } = await storagePut(pdfFileName, pdfBuffer, "application/pdf");
+        pdfUrl = url;
+        await updateProposal(proposal.id, ctx.user.id, { pdfUrl });
+      } catch (pdfErr) {
+        console.error(`[PDF] Auto-generation failed for template proposal ${proposal.id}:`, pdfErr);
+      }
 
-      const exportInput = {
-        style,
-        tradeType: input.tradeType,
-        title: input.title,
-        businessName,
-        businessPhone: profile?.phone || "",
-        businessEmail: profile?.email || ctx.user.email || "",
-        businessAddress: profile?.address || "",
-        licenseNumber: profile?.licenseNumber || "",
-        clientName: input.clientName || "Valued Client",
-        clientAddress: input.clientAddress || "",
-        clientEmail: input.clientEmail || "",
-        preparedDate,
-        validUntil,
-        sectionContents,
-        fields: {},
-      };
-
-      const { renderTemplatePdf } = await import("../utils/templatePdfRenderer");
-      const pdfBuffer = await renderTemplatePdf(exportInput);
-      const pdfFileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
-      const { url: pdfUrl } = await storagePut(pdfFileName, pdfBuffer, "application/pdf");
-
+      // Auto-generate Word + Google Docs for Starter/Pro
       let wordUrl: string | null = null;
       let googleDocUrl: string | null = null;
       const canExportAdvanced = isAdmin || sub.plan === "starter" || sub.plan === "pro";
       if (canExportAdvanced) {
-        const { htmlToDocx } = await import("../utils/htmlToDocx");
-        const { buildHtml } = await import("../utils/templatePdfRenderer");
-        const html = await buildHtml(exportInput);
-        const docxBuffer = await htmlToDocx(html);
-        const wordFileName = `proposal-${proposal.id}-${Date.now()}.docx`;
-        const { url: wUrl } = await storagePut(
-          wordFileName,
-          docxBuffer,
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        );
-        wordUrl = wUrl;
-        googleDocUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(wUrl)}&embedded=false`;
+        try {
+          const { htmlToDocx } = await import("../utils/htmlToDocx");
+          const docxBuffer = await htmlToDocx(generatedContent);
+          const wordFileName = `proposal-${proposal.id}-${Date.now()}.docx`;
+          const { url: wUrl } = await storagePut(
+            wordFileName,
+            docxBuffer,
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          );
+          wordUrl = wUrl;
+          googleDocUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(wUrl)}&embedded=false`;
+        } catch (wordErr) {
+          console.error(`[Word] Auto-generation failed for template proposal ${proposal.id}:`, wordErr);
+        }
       }
 
       await updateProposal(proposal.id, ctx.user.id, {
-        pdfUrl,
+        pdfUrl: pdfUrl || undefined,
         wordUrl: wordUrl || undefined,
         googleDocUrl: googleDocUrl || undefined,
       });
@@ -1586,7 +1565,7 @@ Business: ${businessName}`;
         content: `${ctx.user.name || ctx.user.email} generated a ${tradeName} proposal from template: "${input.title}"`,
       }).catch(() => {});
 
-      return { proposalId: proposal.id, pdfUrl, wordUrl, googleDocUrl };
+      return { proposalId: proposal.id, pdfUrl, wordUrl, googleDocUrl, usedAnthropicApi: result.usedAnthropicApi };
     }),
 
   /**
@@ -1618,30 +1597,31 @@ Business: ${businessName}`;
 
 STRICT OUTPUT RULES:
 - Return ONLY raw HTML starting with <!DOCTYPE html>. No markdown, no backticks, no text before or after.
-- Inline CSS only. No external stylesheets or fonts.
+- Inline CSS only. No external stylesheets, no external fonts, no @import url() rules, no JavaScript.
 - Do NOT use emoji characters anywhere in the document.
 
 PAGE BREAK RULES (preserve these in your output):
 - NEVER use break-inside: avoid on large section-level divs.
-- Do NOT use h1::before, h2::before, h3::before pseudo-elements for page break control. Instead use: h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
-- If the existing HTML has h1::before/h2::before/h3::before rules, REMOVE them and replace with the break-after approach above.
+- NEVER use h1::before, h2::before, h3::before pseudo-elements — they displace headers. If the existing HTML has these rules, REMOVE them.
+- Instead use: h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
 - Table rows: tr { break-inside: avoid; page-break-inside: avoid; }
-- Small callout boxes and chart containers: break-inside: avoid; display: block;
-- html, body: height: auto; overflow: visible;
+- Small callout boxes and chart containers only: break-inside: avoid; display: block;
+- html, body: margin: 0; padding: 0; height: auto; overflow: visible;
 
 SVG CHARTS:
 - Use width="100%" viewBox="0 0 700 [height]" for all SVGs.
-- Add 120px left padding and 80px right padding inside each SVG for labels.
-- Horizontal bar charts: bars at most 420px wide.
-- Do NOT use pie charts or donut charts — use horizontal stacked bars for allocation data instead.
-- Wrap each chart in a div with break-inside: avoid; display: block;
+- Left padding: 130px for labels. Right padding: 80px for value labels. Bar max width: 400px.
+- NEVER use pie or donut charts — use horizontal stacked bars for allocation data instead.
+- Wrap each chart in a styled container div with break-inside: avoid; display: block;
+- If updating chart data (costs, timeline, etc.), recalculate all bar widths and labels to match new values.
 
 Your job:
 1. Understand exactly what the user wants to change.
 2. Apply the requested changes to the affected section(s).
 3. Return the COMPLETE updated HTML document (not just the changed section).
 4. Maintain the same professional design, inline CSS styles, SVG charts, and structure.
-5. Keep the document optimized for A4 PDF output (Puppeteer, printBackground: true).`,
+5. Keep the document optimized for A4 PDF output (Puppeteer, printBackground: true).
+6. Ensure the cover banner is the FIRST element inside the container — nothing should appear before it.`,
           messages: [{
             role: "user",
             content: `Here is the current proposal HTML:\n\n${currentContent}\n\n---\n\nRevision request: ${input.message}`,
