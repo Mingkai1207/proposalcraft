@@ -1123,16 +1123,7 @@ PAGE LAYOUT (CRITICAL):
 
 PAGE BREAK RULES (CRITICAL — these are the exact CSS rules that work in Chrome/Puppeteer):
 - NEVER use break-inside: avoid or page-break-inside: avoid on large section-level divs — this causes content truncation when a section is taller than one page.
-- To prevent orphaned headings (a heading alone at the bottom of a page with no content below it), use this exact CSS pattern on ALL h1, h2, h3 elements:
-  h1::before, h2::before, h3::before {
-    content: "";
-    display: block;
-    height: 5rem;
-    margin-bottom: -5rem;
-    break-inside: avoid;
-    page-break-inside: avoid;
-  }
-  This reserves 5rem of space before each heading so it cannot appear in the last 5rem of a page.
+- Do NOT use h1::before, h2::before, h3::before pseudo-elements for page break control — they displace cover banners and headers. Instead, simply keep headings together with their content using: h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
 - To prevent table rows from splitting across pages: tr { break-inside: avoid; page-break-inside: avoid; }
 - To prevent small callout boxes, stat cards, and chart containers from splitting: apply break-inside: avoid; page-break-inside: avoid; display: block; to those specific small elements only.
 - Use orphans: 3; widows: 3; on p elements to prevent isolated lines at page boundaries.
@@ -1143,11 +1134,13 @@ SVG CHARTS (required):
 - Identify data in the summary that benefits from visualization — cost breakdowns, timelines, material quantities, payment schedules, efficiency ratings, etc.
 - Render all charts as inline SVG (no JavaScript, no external libraries).
 - Charts must be accurate, clearly labeled, and visually integrated with the document's design.
-- SVG sizing: use width="100%" viewBox="0 0 640 [height]" — the 640px viewBox leaves adequate room for labels within the 700px content area.
-- Inside each SVG, add at least 50px padding on the left for axis labels and 70px padding on the right for bar end labels — labels must NEVER be clipped.
-- For horizontal bar charts: ensure bars are at most 480px wide so end labels have 70px of space on the right.
+- SVG sizing: use width="100%" viewBox="0 0 700 [height]" — use 700px viewBox width to match the content area exactly.
+- Inside each SVG, add at least 120px padding on the left for axis/row labels and 80px padding on the right for value labels — labels must NEVER be clipped or truncated.
+- For horizontal bar charts: calculate bar widths as (value / maxValue) * 420. Ensure end labels have 80px of space on the right.
+- For Gantt-style timeline charts: use shorter phase labels (max 15 characters) and increase the label area to 130px. If a phase name is long, abbreviate it.
+- CRITICAL — Do NOT use pie charts or donut charts. SVG arc path math is error-prone and produces wrong proportions. Instead, always use a horizontal stacked bar or grouped horizontal bars for percentage/allocation data. For example, for "Budget Allocation", render a single horizontal stacked bar (full width = total) divided into color-coded segments with labels. This is more accurate and visually cleaner.
 - Wrap each chart in a div with break-inside: avoid; page-break-inside: avoid; display: block; so charts never split across pages.
-- Examples: bar chart for cost breakdown, Gantt-style chart for timeline, donut chart for budget allocation, comparison bars for equipment specs.
+- Good chart types: horizontal bar chart for cost breakdown, Gantt-style chart for timeline, horizontal stacked bar for budget allocation, comparison bars for equipment specs.
 
 DESIGN:
 - Make the document visually appealing and professional. You have full creative freedom over layout, typography, and color scheme.
@@ -1166,7 +1159,7 @@ STRUCTURE:
           role: "user",
           content: input.approvedSummary,
         }],
-        maxTokens: 30000,
+        maxTokens: 40000,
       });
 
       // Extract raw HTML — strip any accidental markdown code fences
@@ -1266,16 +1259,17 @@ STRICT OUTPUT RULES:
 
 PAGE BREAK RULES (preserve these in your output):
 - NEVER use break-inside: avoid on large section-level divs.
-- Headings must use this ::before pattern to prevent orphaning:
-  h1::before, h2::before, h3::before { content: ""; display: block; height: 5rem; margin-bottom: -5rem; break-inside: avoid; page-break-inside: avoid; }
+- Do NOT use h1::before, h2::before, h3::before pseudo-elements for page break control. Instead use: h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
+- If the existing HTML has h1::before/h2::before/h3::before rules, REMOVE them and replace with the break-after approach above.
 - Table rows: tr { break-inside: avoid; page-break-inside: avoid; }
 - Small callout boxes and chart containers: break-inside: avoid; display: block;
 - html, body: height: auto; overflow: visible;
 
 SVG CHARTS:
-- Use width="100%" viewBox="0 0 640 [height]" for all SVGs.
-- Add 50px left padding and 70px right padding inside each SVG for labels.
-- Horizontal bar charts: bars at most 480px wide.
+- Use width="100%" viewBox="0 0 700 [height]" for all SVGs.
+- Add 120px left padding and 80px right padding inside each SVG for labels.
+- Horizontal bar charts: bars at most 420px wide.
+- Do NOT use pie charts or donut charts — use horizontal stacked bars for allocation data instead.
 - Wrap each chart in a div with break-inside: avoid; display: block;
 
 Your job:
@@ -1629,16 +1623,17 @@ STRICT OUTPUT RULES:
 
 PAGE BREAK RULES (preserve these in your output):
 - NEVER use break-inside: avoid on large section-level divs.
-- Headings must use this ::before pattern to prevent orphaning:
-  h1::before, h2::before, h3::before { content: ""; display: block; height: 5rem; margin-bottom: -5rem; break-inside: avoid; page-break-inside: avoid; }
+- Do NOT use h1::before, h2::before, h3::before pseudo-elements for page break control. Instead use: h1, h2, h3 { break-after: avoid; page-break-after: avoid; }
+- If the existing HTML has h1::before/h2::before/h3::before rules, REMOVE them and replace with the break-after approach above.
 - Table rows: tr { break-inside: avoid; page-break-inside: avoid; }
 - Small callout boxes and chart containers: break-inside: avoid; display: block;
 - html, body: height: auto; overflow: visible;
 
 SVG CHARTS:
-- Use width="100%" viewBox="0 0 640 [height]" for all SVGs.
-- Add 50px left padding and 70px right padding inside each SVG for labels.
-- Horizontal bar charts: bars at most 480px wide.
+- Use width="100%" viewBox="0 0 700 [height]" for all SVGs.
+- Add 120px left padding and 80px right padding inside each SVG for labels.
+- Horizontal bar charts: bars at most 420px wide.
+- Do NOT use pie charts or donut charts — use horizontal stacked bars for allocation data instead.
 - Wrap each chart in a div with break-inside: avoid; display: block;
 
 Your job:

@@ -7,11 +7,11 @@ const paddle = new Paddle(apiKey, {
 });
 
 async function setup() {
-  console.log("Creating ProposAI products in Paddle...\n");
+  console.log("Creating ProposalCraft AI products in Paddle...\n");
 
   // Create Starter product
   const starterProduct = await paddle.products.create({
-    name: "ProposAI Starter",
+    name: "ProposalCraft Starter",
     description: "20 AI-generated proposals per month with email delivery and open tracking",
     taxCategory: "saas",
   });
@@ -20,7 +20,7 @@ async function setup() {
   // Create Starter price
   const starterPrice = await paddle.prices.create({
     productId: starterProduct.id,
-    description: "ProposAI Starter - Monthly",
+    description: "ProposalCraft Starter - Monthly",
     unitPrice: { amount: "2900", currencyCode: "USD" },
     billingCycle: { interval: "month", frequency: 1 },
     trialPeriod: null,
@@ -29,7 +29,7 @@ async function setup() {
 
   // Create Pro product
   const proProduct = await paddle.products.create({
-    name: "ProposAI Pro",
+    name: "ProposalCraft Pro",
     description: "Unlimited AI-generated proposals with priority generation and advanced analytics",
     taxCategory: "saas",
   });
@@ -38,7 +38,7 @@ async function setup() {
   // Create Pro price
   const proPrice = await paddle.prices.create({
     productId: proProduct.id,
-    description: "ProposAI Pro - Monthly",
+    description: "ProposalCraft Pro - Monthly",
     unitPrice: { amount: "5900", currencyCode: "USD" },
     billingCycle: { interval: "month", frequency: 1 },
     trialPeriod: null,

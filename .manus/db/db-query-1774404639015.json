@@ -1,0 +1,17 @@
+{
+  "query": "SELECT id, title, pdfUrl, createdAt, CHAR_LENGTH(generatedContent) as html_length FROM proposals ORDER BY createdAt DESC LIMIT 1;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user FeC7Hhjo94vzeQP.root --database TxoyTEEFMfksnn9C3wscL4 --execute SELECT id, title, pdfUrl, createdAt, CHAR_LENGTH(generatedContent) as html_length FROM proposals ORDER BY createdAt DESC LIMIT 1;",
+  "rows": [
+    {
+      "id": "330001",
+      "title": "HVAC System Replacement – 123 Main St",
+      "pdfUrl": "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposal-330001-1774404428397.pdf",
+      "createdAt": "2026-03-25 02:01:19",
+      "html_length": "33267"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tpdfUrl\tcreatedAt\thtml_length\n330001\tHVAC System Replacement – 123 Main St\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposal-330001-1774404428397.pdf\t2026-03-25 02:01:19\t33267\n",
+  "stderr": "",
+  "execution_time_ms": 350
+}

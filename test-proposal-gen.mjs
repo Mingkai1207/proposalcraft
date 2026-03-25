@@ -16,24 +16,46 @@ const systemPrompt = `You are a professional proposal document generator. The us
 STRICT OUTPUT RULES:
 - Return ONLY raw HTML starting with <!DOCTYPE html>. No markdown, no backticks, no text before or after.
 - Inline CSS only. No external stylesheets or fonts.
+- Do NOT use emoji characters anywhere in the document.
 
 PAGE LAYOUT (CRITICAL):
 - The PDF is rendered by Puppeteer with top/bottom margins of 0.6in and left/right margins of 0.4in. Your HTML body content will be placed inside these margins.
 - Do NOT add your own @page margin rules — Puppeteer controls the margins externally.
-- The content area width is approximately 720px. Design your layout to fit within this width.
-- Ensure all SVG charts and their labels fit entirely within the content area — leave at least 20px padding on the right side of any SVG so labels are never clipped.
-- Each major section (with its heading) should feel complete on a page. Add break-before: page to each top-level section div so sections always start on a fresh page. This prevents a section heading from appearing at the very bottom of a page with its content on the next page.
+- The content area width is approximately 700px. Design your layout to fit within this width.
+- html, body must have height: auto and overflow: visible — never set height: 100vh or overflow: hidden.
+
+PAGE BREAK RULES (CRITICAL — these are the exact CSS rules that work in Chrome/Puppeteer):
+- NEVER use break-inside: avoid or page-break-inside: avoid on large section-level divs — this causes content truncation when a section is taller than one page.
+- To prevent orphaned headings (a heading alone at the bottom of a page with no content below it), use this exact CSS pattern on ALL h1, h2, h3 elements:
+  h1::before, h2::before, h3::before {
+    content: "";
+    display: block;
+    height: 5rem;
+    margin-bottom: -5rem;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  This reserves 5rem of space before each heading so it cannot appear in the last 5rem of a page.
+- To prevent table rows from splitting across pages: tr { break-inside: avoid; page-break-inside: avoid; }
+- To prevent small callout boxes, stat cards, and chart containers from splitting: apply break-inside: avoid; page-break-inside: avoid; display: block; to those specific small elements only.
+- Use orphans: 3; widows: 3; on p elements to prevent isolated lines at page boundaries.
+- Do NOT use break-before: page on sections — that wastes space. Sections should flow naturally and share pages.
+- Do NOT use position: running() or @page @top-right/@bottom-center content: element() — these are not supported by Chrome.
+
+SVG CHARTS (required):
+- Identify data in the summary that benefits from visualization — cost breakdowns, timelines, material quantities, payment schedules, efficiency ratings, etc.
+- Render all charts as inline SVG (no JavaScript, no external libraries).
+- Charts must be accurate, clearly labeled, and visually integrated with the document's design.
+- SVG sizing: use width="100%" viewBox="0 0 640 [height]" — the 640px viewBox leaves adequate room for labels within the 700px content area.
+- Inside each SVG, add at least 50px padding on the left for axis labels and 70px padding on the right for bar end labels — labels must NEVER be clipped.
+- For horizontal bar charts: ensure bars are at most 480px wide so end labels have 70px of space on the right.
+- Wrap each chart in a div with break-inside: avoid; page-break-inside: avoid; display: block; so charts never split across pages.
+- Examples: bar chart for cost breakdown, Gantt-style chart for timeline, donut chart for budget allocation, comparison bars for equipment specs.
 
 DESIGN:
 - Make the document visually appealing and professional. You have full creative freedom over layout, typography, and color scheme.
 - Optimized for A4 PDF output (printBackground: true in Puppeteer).
-
-CHARTS (required):
-- Identify data in the summary that benefits from visualization — cost breakdowns, timelines, material quantities, payment schedules, efficiency ratings, etc.
-- Render all charts as inline SVG (no JavaScript, no external libraries).
-- Charts must be accurate, clearly labeled, and visually integrated with the document's design.
-- All SVG elements must have overflow="visible" and sufficient internal padding so no text or labels are cut off at edges.
-- Examples: bar chart for cost breakdown, Gantt-style chart for timeline, donut chart for budget allocation, comparison bars for equipment specs.
+- Use a professional font stack with system fonts only (no Google Fonts): font-family: 'Segoe UI', Arial, sans-serif for body; font-family: Georgia, 'Times New Roman', serif for headings if you want a serif accent.
 
 STRUCTURE:
 - Organize content into logical sections with clear headings.
@@ -184,7 +206,7 @@ async function main() {
     `${VECTOR_ENGINE_BASE_URL}/v1/chat/completions`,
     {
       model: "claude-sonnet-4-6-thinking",
-      max_tokens: 30000,
+      max_tokens: 40000,
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: approvedSummary },
