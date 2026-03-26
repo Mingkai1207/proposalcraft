@@ -24,7 +24,9 @@ export default function Settings() {
     businessName: "", ownerName: "", phone: "", email: "",
     address: "", licenseNumber: "", website: "", defaultTerms: "",
   });
-  const [preferredModel, setPreferredModel] = useState("gemini-2.5-flash");
+  const [preferredModel, setPreferredModel] = useState("claude-sonnet-4-6-thinking");
+  const { data: subscription } = trpc.subscription.get.useQuery(undefined, { enabled: isAuthenticated });
+  const isPaidUser = subscription?.plan === "starter" || subscription?.plan === "pro";
   const [smtpForm, setSmtpForm] = useState({
     smtpHost: "", smtpPort: 587, smtpUsername: "", smtpPassword: "",
     smtpFromEmail: "", smtpFromName: "",
@@ -32,13 +34,28 @@ export default function Settings() {
   const [followUpTemplate, setFollowUpTemplate] = useState("");
 
   const AI_MODELS = [
-    { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash", provider: "Google", flag: "🌐", badge: "Default", badgeColor: "bg-blue-100 text-blue-700", desc: "Fast, capable, and great for English proposals. Best all-around choice.", bestFor: "English · Fast · Free tier" },
-    { id: "deepseek-v3", name: "DeepSeek V3", provider: "DeepSeek", flag: "🇨🇳", badge: "Best for Chinese", badgeColor: "bg-red-100 text-red-700", desc: "Trained on massive Chinese datasets. Writes fluent, natural Chinese proposals that sound native.", bestFor: "Chinese · Mandarin · Bilingual" },
-    { id: "deepseek-r1", name: "DeepSeek R1", provider: "DeepSeek", flag: "🇨🇳", badge: "Reasoning", badgeColor: "bg-orange-100 text-orange-700", desc: "DeepSeek's reasoning model. Thinks step-by-step for complex, technical proposals.", bestFor: "Chinese · Technical · Complex jobs" },
-    { id: "gpt-4o", name: "GPT-4o", provider: "OpenAI", flag: "🇺🇸", badge: "Premium", badgeColor: "bg-green-100 text-green-700", desc: "OpenAI's flagship model. Excellent English writing quality, persuasive tone, and detailed proposals.", bestFor: "English · Premium quality" },
-    { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "OpenAI", flag: "🇺🇸", badge: "Fast", badgeColor: "bg-emerald-100 text-emerald-700", desc: "Lighter version of GPT-4o. Faster and still high quality for standard proposals.", bestFor: "English · Speed · Cost-efficient" },
-    { id: "claude-3-7-sonnet-20250219", name: "Claude 3.7 Sonnet", provider: "Anthropic", flag: "🇺🇸", badge: "Best Writing", badgeColor: "bg-purple-100 text-purple-700", desc: "Anthropic's best model. Produces the most polished, human-like proposal writing with excellent structure.", bestFor: "English · Best prose quality" },
-    { id: "qwen-max", name: "Qwen Max", provider: "Alibaba", flag: "🇨🇳", badge: "Chinese Alt", badgeColor: "bg-yellow-100 text-yellow-700", desc: "Alibaba's top model. Strong Chinese language support, good for contractors in China or writing to Chinese clients.", bestFor: "Chinese · Alibaba ecosystem" },
+    {
+      id: "claude-sonnet-4-6-thinking",
+      name: "Claude Sonnet 4.6",
+      provider: "Anthropic",
+      flag: "🇺🇸",
+      badge: "All Plans",
+      badgeColor: "bg-blue-100 text-blue-700",
+      desc: "Anthropic's fast, capable model. Writes polished, professional proposals with excellent structure and persuasive language. Available to all users.",
+      bestFor: "English · Fast · All plans",
+      requiresPaid: false,
+    },
+    {
+      id: "claude-opus-4-6",
+      name: "Claude Opus 4.6",
+      provider: "Anthropic",
+      flag: "🇺🇸",
+      badge: "Paid Only",
+      badgeColor: "bg-purple-100 text-purple-700",
+      desc: "Anthropic's most powerful model. The highest-quality proposal writing available — deeply reasoned, highly persuasive, and tailored to win complex jobs.",
+      bestFor: "English · Maximum quality · Starter & Pro",
+      requiresPaid: true,
+    },
   ];
 
   useEffect(() => {
@@ -53,7 +70,7 @@ export default function Settings() {
         website: profile.website || "",
         defaultTerms: profile.defaultTerms || "",
       });
-      setPreferredModel(profile.preferredModel || "gemini-2.5-flash");
+      setPreferredModel(profile.preferredModel || "claude-sonnet-4-6-thinking");
       setSmtpForm({
         smtpHost: profile.smtpHost || "",
         smtpPort: profile.smtpPort || 587,
@@ -188,40 +205,54 @@ export default function Settings() {
             <Bot className="w-4 h-4 text-primary" />
             <h2 className="font-semibold text-foreground">AI Model</h2>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">Choose which AI model writes your proposals. Different models excel at different languages and styles.</p>
+          <p className="text-sm text-muted-foreground mb-4">Choose which AI model writes your proposals. Claude Opus 4.6 is available on paid plans for maximum quality.</p>
           <div className="grid grid-cols-1 gap-3">
-            {AI_MODELS.map(m => (
-              <button
-                key={m.id}
-                onClick={() => setPreferredModel(m.id)}
-                className={`text-left rounded-xl border-2 p-4 transition-all ${
-                  preferredModel === m.id
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:border-primary/40 bg-background"
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">{m.flag}</span>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-foreground text-sm">{m.name}</span>
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${m.badgeColor}`}>{m.badge}</span>
+            {AI_MODELS.map(m => {
+              const isLocked = m.requiresPaid && !isPaidUser;
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => {
+                    if (isLocked) {
+                      toast.error("Claude Opus 4.6 requires a Starter or Pro plan. Upgrade to unlock.");
+                      return;
+                    }
+                    setPreferredModel(m.id);
+                  }}
+                  className={`text-left rounded-xl border-2 p-4 transition-all ${
+                    isLocked
+                      ? "border-border bg-muted/30 opacity-70 cursor-not-allowed"
+                      : preferredModel === m.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/40 bg-background"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">{m.flag}</span>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-foreground text-sm">{m.name}</span>
+                          <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${m.badgeColor}`}>{m.badge}</span>
+                          {isLocked && (
+                            <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">🔒 Upgrade to unlock</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">{m.provider} · {m.bestFor}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{m.provider} · {m.bestFor}</p>
                     </div>
+                    {!isLocked && preferredModel === m.id && (
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
                   </div>
-                  {preferredModel === m.id && (
-                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
-                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{m.desc}</p>
-              </button>
-            ))}
+                  <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{m.desc}</p>
+                </button>
+              );
+            })}
           </div>
         </div>
 

@@ -1019,20 +1019,41 @@ export default function Home() {
       <section className="py-24 bg-white">
         <div className="container">
           <div className="text-center mb-14">
-            <Badge className="mb-4 bg-orange-50 text-orange-700 border-orange-100">Choose Your AI</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Pick the AI that fits your market</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">ProposAI supports multiple AI models. Writing proposals in Chinese? There's a model for that. Need the most polished English? There's one for that too.</p>
+            <Badge className="mb-4 bg-purple-50 text-purple-700 border-purple-100">Powered by Anthropic</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Best-in-class AI for every plan</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">ProposAI runs on Anthropic's Claude — the AI model trusted by professionals for its polished writing, careful reasoning, and persuasive tone.</p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {[
-              { flag: "🌐", name: "Gemini 2.5 Flash", provider: "Google", badge: "Default", badgeColor: "bg-blue-100 text-blue-700", desc: "Fast and capable. The best all-around choice for English proposals.", tags: ["English", "Fast", "Reliable"] },
-              { flag: "🇨🇳", name: "DeepSeek V3", provider: "DeepSeek", badge: "Best for Chinese", badgeColor: "bg-red-100 text-red-700", desc: "Writes fluent, native-sounding Chinese proposals. Ideal for contractors in China or serving Chinese clients.", tags: ["Chinese", "Mandarin", "Bilingual"] },
-              { flag: "🇨🇳", name: "DeepSeek R1", provider: "DeepSeek", badge: "Reasoning", badgeColor: "bg-orange-100 text-orange-700", desc: "Thinks step-by-step before writing. Best for complex, technical jobs that need careful scoping.", tags: ["Chinese", "Technical", "Complex"] },
-              { flag: "🇺🇸", name: "GPT-4o", provider: "OpenAI", badge: "Premium", badgeColor: "bg-green-100 text-green-700", desc: "OpenAI's flagship. Persuasive, detailed English proposals with a professional tone that wins jobs.", tags: ["English", "Premium", "Persuasive"] },
-              { flag: "🇺🇸", name: "Claude 3.7 Sonnet", provider: "Anthropic", badge: "Best Writing", badgeColor: "bg-purple-100 text-purple-700", desc: "The most polished, human-like writing of any model. Proposals that read like they were written by a copywriter.", tags: ["English", "Best prose", "Human-like"] },
-              { flag: "🇨🇳", name: "Qwen Max", provider: "Alibaba", badge: "Chinese Alt", badgeColor: "bg-yellow-100 text-yellow-700", desc: "Alibaba's top model. Strong Chinese language support for contractors working in the Chinese market.", tags: ["Chinese", "Alibaba", "Simplified"] },
-            ].map(({ flag, name, provider, badge, badgeColor, desc, tags }) => (
-              <div key={name} className="bg-slate-50 border border-border rounded-2xl p-5 hover:shadow-md transition-shadow">
+              {
+                flag: "🇺🇸",
+                name: "Claude Sonnet 4.6",
+                provider: "Anthropic",
+                badge: "All Plans — Free",
+                badgeColor: "bg-blue-100 text-blue-700",
+                desc: "Fast, capable, and available to every user. Writes polished, professional proposals with excellent structure and persuasive language. Perfect for daily use.",
+                tags: ["All plans", "Fast", "Professional"],
+                highlight: false,
+              },
+              {
+                flag: "🇺🇸",
+                name: "Claude Opus 4.6",
+                provider: "Anthropic",
+                badge: "Starter & Pro",
+                badgeColor: "bg-purple-100 text-purple-700",
+                desc: "Anthropic's most powerful model. Deeply reasoned, highly persuasive proposals that stand out from the competition. Ideal for complex, high-value jobs where winning matters most.",
+                tags: ["Paid plans", "Maximum quality", "Complex jobs"],
+                highlight: true,
+              },
+            ].map(({ flag, name, provider, badge, badgeColor, desc, tags, highlight }) => (
+              <div key={name} className={`relative border rounded-2xl p-6 hover:shadow-md transition-shadow ${
+                highlight ? "bg-purple-50 border-purple-200 shadow-sm" : "bg-slate-50 border-border"
+              }`}>
+                {highlight && (
+                  <div className="absolute -top-3 left-6 text-xs font-bold px-3 py-1 rounded-full bg-purple-600 text-white">
+                    Premium Quality
+                  </div>
+                )}
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-2xl">{flag}</span>
@@ -1046,13 +1067,15 @@ export default function Home() {
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3">{desc}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {tags.map(t => (
-                    <span key={t} className="text-xs bg-white border border-border text-muted-foreground px-2 py-0.5 rounded-full">{t}</span>
+                    <span key={t} className={`text-xs border px-2 py-0.5 rounded-full ${
+                      highlight ? "bg-purple-100 border-purple-200 text-purple-700" : "bg-white border-border text-muted-foreground"
+                    }`}>{t}</span>
                   ))}
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-center text-sm text-muted-foreground mt-8">Switch models anytime in Settings — no extra cost, no re-setup required.</p>
+          <p className="text-center text-sm text-muted-foreground mt-8">Switch models anytime in Settings. Claude Opus 4.6 unlocks automatically when you upgrade.</p>
         </div>
       </section>
 

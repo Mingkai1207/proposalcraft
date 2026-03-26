@@ -204,28 +204,9 @@ export default function Dashboard() {
               <span className="text-xs text-primary font-medium">Change &rarr;</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-sm">
-                {(() => {
-                  const m = profile?.preferredModel || "gemini-2.5-flash";
-                  if (m.includes("deepseek")) return "🇨🇳";
-                  if (m.includes("gpt") || m.includes("o4") || m.includes("o3")) return "🇺🇸";
-                  if (m.includes("claude")) return "🇺🇸";
-                  if (m.includes("qwen")) return "🇨🇳";
-                  return "🌐";
-                })()}
-              </span>
+              <span className="text-sm">🇺🇸</span>
               <span className="text-xs font-medium text-sidebar-foreground truncate">
-                {(() => {
-                  const m = profile?.preferredModel || "gemini-2.5-flash";
-                  if (m === "gemini-2.5-flash") return "Gemini 2.5 Flash";
-                  if (m === "deepseek-v3") return "DeepSeek V3";
-                  if (m === "deepseek-r1") return "DeepSeek R1";
-                  if (m === "gpt-4o") return "GPT-4o";
-                  if (m === "gpt-4o-mini") return "GPT-4o Mini";
-                  if (m === "claude-3-7-sonnet-20250219") return "Claude 3.7 Sonnet";
-                  if (m === "qwen-max") return "Qwen Max";
-                  return m;
-                })()}
+                {profile?.preferredModel === "claude-opus-4-6" ? "Claude Opus 4.6" : "Claude Sonnet 4.6"}
               </span>
             </div>
           </button>

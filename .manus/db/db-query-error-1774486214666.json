@@ -1,0 +1,8 @@
+{
+  "query": "ALTER TABLE `proposal_templates` ADD `styleMetadata` text;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user FeC7Hhjo94vzeQP.root --database TxoyTEEFMfksnn9C3wscL4 --execute ALTER TABLE `proposal_templates` ADD `styleMetadata` text;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1060 (42S21) at line 1: Duplicate column name 'styleMetadata'"
+  ]
+}

@@ -168,15 +168,19 @@ ${profile?.defaultTerms ? `Terms & Conditions: ${profile.defaultTerms}` : "Inclu
 
 Write a complete, ready-to-send proposal. Use professional formatting with clear section headers.`;
 
-      // Gate premium models by plan — free users are silently downgraded to Gemini 2.5 Flash
-      const PREMIUM_MODELS = ["gpt-4o", "gpt-4o-mini", "claude-3-7-sonnet-20250219", "deepseek-r1"];
-      const PRO_ONLY_MODELS = ["gpt-4o", "claude-3-7-sonnet-20250219", "deepseek-r1"];
-      const requestedModel = profile?.preferredModel || "gemini-2.5-flash";
-      let model = requestedModel;
-      if (sub.plan === "free" && PREMIUM_MODELS.includes(requestedModel)) {
-        model = "gemini-2.5-flash"; // Free plan: downgrade to default
-      } else if (sub.plan === "starter" && PRO_ONLY_MODELS.includes(requestedModel)) {
-        model = "deepseek-v3"; // Starter plan: downgrade Pro-only models to DeepSeek V3
+      // Model gating:
+      // - All users: Claude Sonnet 4.6 (claude-sonnet-4-6-thinking) — default
+      // - Paid users (starter/pro): Claude Opus 4.6 (claude-opus-4-6) — premium option
+      const SONNET_MODEL = "claude-sonnet-4-6-thinking";
+      const OPUS_MODEL = "claude-opus-4-6";
+      const requestedModel = profile?.preferredModel || SONNET_MODEL;
+      let model: string;
+      if (requestedModel === OPUS_MODEL && sub.plan === "free") {
+        model = SONNET_MODEL; // Free plan: silently downgrade Opus → Sonnet
+      } else if (requestedModel === OPUS_MODEL) {
+        model = OPUS_MODEL; // Paid plan: allow Opus
+      } else {
+        model = SONNET_MODEL; // Default for all other values
       }
 
       const response = await invokeLLM({

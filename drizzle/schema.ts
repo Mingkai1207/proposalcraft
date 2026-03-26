@@ -37,7 +37,7 @@ export const contractorProfiles = mysqlTable("contractor_profiles", {
   logoUrl: text("logoUrl"),
   website: varchar("website", { length: 512 }),
   defaultTerms: text("defaultTerms"),
-  preferredModel: varchar("preferredModel", { length: 128 }).default("gemini-2.5-flash").notNull(),
+  preferredModel: varchar("preferredModel", { length: 128 }).default("claude-sonnet-4-6-thinking").notNull(),
   smtpHost: varchar("smtpHost", { length: 255 }),
   smtpPort: int("smtpPort"),
   smtpUsername: varchar("smtpUsername", { length: 255 }),

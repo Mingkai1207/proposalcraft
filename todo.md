@@ -687,3 +687,11 @@
 
 ## Illustration Page Static PDF Fix
 - [x] Replace editable walkthrough form with fixed, non-editable display using the provided HVAC PDF (John Smith, 123 Main St., $8,500, June 10 2024)
+
+## AI Model Update
+- [x] Replace all model options with only Claude Sonnet 4.6 (free, all users) and Claude Opus 4.6 (paid only)
+- [x] Update backend gating: free → claude-sonnet-4-6-thinking, paid → claude-opus-4-6 allowed
+- [x] Update Settings page model selector UI
+- [x] Update Dashboard model name display
+- [x] Update Home page AI model comparison section
+- [x] Update schema default for preferredModel

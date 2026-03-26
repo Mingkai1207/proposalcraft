@@ -1,0 +1,2 @@
+ALTER TABLE `contractor_profiles` MODIFY COLUMN `preferredModel` varchar(128) NOT NULL DEFAULT 'claude-sonnet-4-6-thinking';--> statement-breakpoint
+ALTER TABLE `proposal_templates` ADD `styleMetadata` text;
