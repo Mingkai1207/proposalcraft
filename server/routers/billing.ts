@@ -56,7 +56,7 @@ export const billingRouter = router({
               locale: "en-US",
               shipping_preference: "NO_SHIPPING",
               user_action: "SUBSCRIBE_NOW",
-              return_url: `${origin}/dashboard?upgraded=1&plan=${input.plan}`,
+              return_url: `${origin}/payment-success?plan=${input.plan}`,
               cancel_url: `${origin}/pricing`,
             },
           }),

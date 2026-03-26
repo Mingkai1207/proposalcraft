@@ -716,3 +716,7 @@
 
 ## Hero Section Redesign
 - [x] Replace empty hero right column with rich inline proposal preview card (floating badges, glows, animated elements)
+
+## Billing Fix & Congratulations Page
+- [x] Fix PayPal subscription: plan not upgrading after successful payment
+- [x] Add /payment-success congratulations page shown after checkout

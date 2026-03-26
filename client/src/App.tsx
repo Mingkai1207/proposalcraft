@@ -17,6 +17,7 @@ import ClientPortal from "./pages/ClientPortal";
 import Templates from "./pages/Templates";
 import ProposalEditor from "./pages/ProposalEditor";
 import NewProposalFromTemplate from "./pages/NewProposalFromTemplate";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 function Router() {
   return (
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/privacy" component={Privacy} />
       <Route path="/refund" component={Refund} />
       <Route path="/client-portal" component={ClientPortal} />
+      <Route path="/payment-success" component={PaymentSuccess} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
