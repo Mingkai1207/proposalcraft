@@ -671,6 +671,21 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
 export default function Home() {
   const { isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
+
+  // SEO: set page title and meta keywords for homepage
+  useEffect(() => {
+    document.title = "ProposAI — AI Proposals for Trade Contractors";
+    let meta = document.querySelector('meta[name="keywords"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "keywords";
+      document.head.appendChild(meta);
+    }
+    meta.content = "AI proposal generator, contractor proposals, HVAC proposal, plumbing proposal, electrical proposal, roofing proposal, job estimate software, trade contractor tools";
+    return () => {
+      document.title = "ProposAI";
+    };
+  }, []);
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const checkoutMutation = trpc.billing.createCheckout.useMutation({

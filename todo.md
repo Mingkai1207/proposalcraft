@@ -706,3 +706,7 @@
 - [x] Update PAYPAL_PRO_PLAN_ID to P-4PT41736B61852114NHCJOQY
 - [x] Update products.ts prices to $5.99/$9.99
 - [x] Update all UI pricing displays
+
+## SEO Fixes (Homepage /)
+- [x] Fix page title: set to 30-60 chars with target keywords
+- [x] Add meta keywords tag to homepage
