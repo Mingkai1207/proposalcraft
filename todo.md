@@ -710,3 +710,6 @@
 ## SEO Fixes (Homepage /)
 - [x] Fix page title: set to 30-60 chars with target keywords
 - [x] Add meta keywords tag to homepage
+
+## Homepage Visual Enhancement
+- [x] Add visually rich hero section to replace missing graph (proposal preview card, stats, animated elements)

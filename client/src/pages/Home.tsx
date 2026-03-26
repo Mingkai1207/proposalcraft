@@ -414,30 +414,68 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
               </div>
             </div>
 
-            {/* Right: preview of what you get */}
-            <div className="bg-slate-50 border-l border-border p-8 lg:p-10 flex flex-col justify-center">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-5">What you'll get</p>
-              <div className="space-y-4">
-                {[
-                  { icon: FileText, color: "bg-blue-100 text-blue-600", title: "Professional PDF proposal", desc: "Itemized costs, scope of work, analytic charts, your logo & license" },
-                  { icon: FileCheck, color: "bg-purple-100 text-purple-600", title: "Word & Google Doc", desc: "Starter & Pro users get all three formats in one click" },
-                  { icon: Sparkles, color: "bg-green-100 text-green-600", title: "AI summary review", desc: "Review and edit the AI-compiled summary before generating" },
-                  { icon: Layers, color: "bg-orange-100 text-orange-600", title: "Save as template", desc: "Reuse this proposal's structure for every new job" },
-                ].map(({ icon: ItemIcon, color, title, desc }) => (
-                  <div key={title} className="flex items-start gap-3">
-                    <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center flex-shrink-0`}>
-                      <ItemIcon className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{title}</p>
-                      <p className="text-xs text-muted-foreground">{desc}</p>
+            {/* Right: animated mock proposal preview */}
+            <div className="bg-gradient-to-br from-slate-900 to-slate-800 border-l border-white/10 p-6 lg:p-8 flex flex-col justify-center relative overflow-hidden">
+              {/* Background grid */}
+              <div className="absolute inset-0 opacity-5" style={{backgroundImage: 'linear-gradient(rgba(255,255,255,.3) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.3) 1px, transparent 1px)', backgroundSize: '24px 24px'}} />
+              {/* Badge */}
+              <div className="relative z-10">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-green-400 text-xs font-semibold mb-4">
+                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
+                  Sample Output Preview
+                </div>
+                {/* Mock proposal card */}
+                <div className="bg-white rounded-2xl shadow-2xl shadow-black/40 overflow-hidden">
+                  {/* Header */}
+                  <div className="bg-primary px-5 py-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-white font-bold text-sm">HVAC Replacement Proposal</p>
+                        <p className="text-primary-foreground/70 text-xs mt-0.5">Mr. John Smith · 123 Main St</p>
+                      </div>
+                      <div className="w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center">
+                        <Wrench className="w-4 h-4 text-white" />
+                      </div>
                     </div>
                   </div>
-                ))}
-              </div>
-              <div className="mt-6 p-4 bg-orange-50 border border-orange-100 rounded-xl">
-                <p className="text-xs font-semibold text-orange-700 mb-1">⚡ Average time: 47 seconds</p>
-                <p className="text-xs text-orange-600">From blank form to ready-to-send proposal.</p>
+                  {/* Cost breakdown */}
+                  <div className="px-5 py-4">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Cost Breakdown</p>
+                    {[
+                      { label: "Equipment & Materials", amount: "$5,200", pct: 61 },
+                      { label: "Labor & Installation", amount: "$2,100", pct: 25 },
+                      { label: "Permits & Inspection", amount: "$1,200", pct: 14 },
+                    ].map(({ label, amount, pct }) => (
+                      <div key={label} className="mb-2.5">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs text-slate-600">{label}</span>
+                          <span className="text-xs font-bold text-slate-800">{amount}</span>
+                        </div>
+                        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all duration-1000"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-700">Total Estimate</span>
+                      <span className="text-base font-extrabold text-primary">$8,500</span>
+                    </div>
+                  </div>
+                  {/* Footer badges */}
+                  <div className="px-5 pb-4 flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium"><FileText className="w-3 h-3" /> PDF</span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-50 text-purple-700 rounded-full text-xs font-medium"><FileCheck className="w-3 h-3" /> Word</span>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-green-50 text-green-700 rounded-full text-xs font-medium"><CheckCircle className="w-3 h-3" /> Charts</span>
+                  </div>
+                </div>
+                {/* Time badge */}
+                <div className="mt-4 flex items-center gap-2 text-xs text-slate-400">
+                  <Timer className="w-3.5 h-3.5 text-orange-400" />
+                  <span>Generated in <span className="text-orange-400 font-semibold">47 seconds</span> · Ready to send</span>
+                </div>
               </div>
             </div>
           </div>
