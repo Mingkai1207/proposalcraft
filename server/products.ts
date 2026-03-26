@@ -6,8 +6,8 @@ export const PLANS = {
     id: "starter",
     name: "Starter",
     description: "20 proposals/month with email delivery and tracking",
-    price: 399, // $3.99 in cents
-    priceDisplay: "$3.99",
+    price: 599, // $5.99 in cents
+    priceDisplay: "$5.99",
     interval: "month" as const,
     proposals: 20,
     paypalPlanId: process.env.PAYPAL_STARTER_PLAN_ID || "",
@@ -16,8 +16,8 @@ export const PLANS = {
     id: "pro",
     name: "Pro",
     description: "Unlimited proposals with priority AI and advanced analytics",
-    price: 599, // $5.99 in cents
-    priceDisplay: "$5.99",
+    price: 999, // $9.99 in cents
+    priceDisplay: "$9.99",
     interval: "month" as const,
     proposals: Infinity,
     paypalPlanId: process.env.PAYPAL_PRO_PLAN_ID || "",

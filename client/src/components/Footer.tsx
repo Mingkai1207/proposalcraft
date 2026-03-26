@@ -46,7 +46,7 @@ export default function Footer() {
           ProposAI helps trade contractors (HVAC, plumbing, electrical, roofing) generate professional proposals in under 60 seconds using AI.
           &nbsp;&middot;&nbsp;
           <a href="https://proposai.org/pricing" className="underline hover:text-foreground">
-            View plans from $3.99/month
+            View plans from $5.99/month
           </a>
         </div>
       </div>

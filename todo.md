@@ -700,3 +700,9 @@
 - [x] Update PAYPAL_STARTER_PLAN_ID and PAYPAL_PRO_PLAN_ID env vars
 - [x] Update products.ts prices and display strings
 - [x] Update landing page pricing section
+
+## Pricing Update ($5.99 Starter / $9.99 Pro)
+- [x] Update PAYPAL_STARTER_PLAN_ID to P-8WM27926WS648141PNHCJNYY
+- [x] Update PAYPAL_PRO_PLAN_ID to P-4PT41736B61852114NHCJOQY
+- [x] Update products.ts prices to $5.99/$9.99
+- [x] Update all UI pricing displays

@@ -38,7 +38,7 @@ const PLANS = [
   {
     id: "starter",
     name: "Starter",
-    price: "$3.99",
+    price: "$5.99",
     period: "/month",
     proposals: "20 proposals/month",
     badge: "Most Popular",
@@ -64,7 +64,7 @@ const PLANS = [
   {
     id: "pro",
     name: "Pro",
-    price: "$5.99",
+    price: "$9.99",
     period: "/month",
     proposals: "Unlimited proposals",
     badge: "Best Value",
