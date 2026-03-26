@@ -684,3 +684,6 @@
 - [x] Apply same improvements to reviseWithAI and refineProposal prompts
 - [x] Mark maxTokens and page margins items as completed (already done in previous sessions)
 - [x] All 35 tests passing
+
+## Illustration Page Static PDF Fix
+- [x] Replace editable walkthrough form with fixed, non-editable display using the provided HVAC PDF (John Smith, 123 Main St., $8,500, June 10 2024)

@@ -175,21 +175,36 @@ const COMPARISON = [
   { feature: "Cost", manual: "Your time = $$$", proposai: "From $0/month" },
 ];
 
-// The generated proposal text that typewriters in during the AI step
-const PROPOSAL_PREVIEW_LINES = [
+
+// Fixed illustration data — John Smith HVAC proposal (non-editable)
+const DEMO_PDF_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/pasted_file_1SBXzL_HVAC_Replacement_Proposal_JohnSmith_edb68410.pdf";
+const DEMO_DATA = {
+  trade: "HVAC",
+  clientName: "Mr. John Smith",
+  address: "123 Main St.",
+  estimatedCost: "8,500",
+  jobScope: "Full HVAC system replacement — 4-ton Carrier unit (16 SEER), 92.1% AFUE furnace, ecobee smart thermostat, EPA-certified installation, 5-day project",
+  total: "$8,500.00",
+  generatedIn: "47s",
+  validUntil: "Jul 10, 2024",
+  date: "June 10, 2024",
+  projectStart: "June 17, 2024",
+};
+const DEMO_TYPEWRITER_LINES = [
   "HVAC System Replacement Proposal",
-  "Prepared for: Johnson Residence",
+  "Prepared for: Mr. John Smith",
   "────────────────────────────────",
   "Scope of Work:",
-  "• Remove & dispose of existing 3-ton Carrier system",
-  "• Install new Carrier 3.5-ton 18 SEER2 system",
-  "• Replace refrigerant lines (40 ft copper)",
-  "• Install Ecobee SmartThermostat + 2 sensors",
-  "• Seal & pressure-test all ductwork",
-  "• Pull City of Austin mechanical permit",
+  "• Remove existing outdoor condensing unit & furnace",
+  "• Install Carrier 4-ton 16 SEER condenser",
+  "• Install Carrier furnace 92.1% AFUE",
+  "• Install ecobee smart thermostat",
+  "• Fabricate & install copper refrigerant line set",
+  "• Triple evacuation + system charge (R-410A)",
+  "• Pull permit & final commissioning",
   "────────────────────────────────",
-  "Total: $8,175.62",
-  "Valid until: April 6, 2026",
+  "Total: $8,500.00",
+  "Project Start: June 17, 2024",
 ];
 
 function FAQItem({ q, a }: { q: string; a: string }) {
@@ -225,46 +240,24 @@ type WalkthroughStep = 0 | 1 | 2;
 
 function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
   const [activeStep, setActiveStep] = useState<WalkthroughStep>(0);
-  const [formData, setFormData] = useState({
-    trade: "HVAC",
-    jobScope: "Full HVAC system replacement — 3-ton Carrier unit, 2,400 sq ft home, 2-story",
-    clientName: "Johnson Residence",
-    address: "4412 Meadowbrook Lane, Austin TX",
-    estimatedCost: "8175",
-  });
-  const [currentPdfUrl, setCurrentPdfUrl] = useState(TRADE_SAMPLE_PDFS.HVAC);
   const [aiLines, setAiLines] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationDone, setGenerationDone] = useState(false);
-  const [showLeadCapture, setShowLeadCapture] = useState(false);
-  const [leadEmail, setLeadEmail] = useState("");
   const aiRef = useRef<HTMLDivElement>(null);
   const lineIndexRef = useRef(0);
   const charIndexRef = useRef(0);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-advance demo
-  const handleGenerate = () => {
-    setActiveStep(1);
-    setIsGenerating(true);
-    setAiLines([]);
-    setGenerationDone(false);
-    lineIndexRef.current = 0;
-    charIndexRef.current = 0;
-    trackWalkthroughStep("ai_generation_start", { trade: formData.trade });
-    typeNextChar();
-  };
-
   const typeNextChar = () => {
     const li = lineIndexRef.current;
     const ci = charIndexRef.current;
-    if (li >= PROPOSAL_PREVIEW_LINES.length) {
+    if (li >= DEMO_TYPEWRITER_LINES.length) {
       setIsGenerating(false);
       setGenerationDone(true);
-      trackWalkthroughStep("ai_generation_complete", { trade: formData.trade });
+      trackWalkthroughStep("ai_generation_complete", { trade: DEMO_DATA.trade });
       return;
     }
-    const line = PROPOSAL_PREVIEW_LINES[li];
+    const line = DEMO_TYPEWRITER_LINES[li];
     const partial = line.slice(0, ci + 1);
     setAiLines(prev => {
       const next = [...prev];
@@ -281,6 +274,29 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
     }
   };
 
+  const handleGenerate = () => {
+    setActiveStep(1);
+    setIsGenerating(true);
+    setAiLines([]);
+    setGenerationDone(false);
+    lineIndexRef.current = 0;
+    charIndexRef.current = 0;
+    trackWalkthroughStep("ai_generation_start", { trade: DEMO_DATA.trade });
+    typeNextChar();
+  };
+
+  const handleSkipAnimation = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setIsGenerating(false);
+    setGenerationDone(true);
+    trackWalkthroughStep("ai_generation_complete", { trade: DEMO_DATA.trade, skipped: true });
+  };
+
+  const handleViewPDF = () => {
+    setActiveStep(2);
+    trackWalkthroughStep("pdf_view", { trade: DEMO_DATA.trade });
+  };
+
   useEffect(() => {
     if (aiRef.current) {
       aiRef.current.scrollTop = aiRef.current.scrollHeight;
@@ -290,29 +306,6 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
   useEffect(() => {
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, []);
-
-  const handleViewPDF = () => {
-    setActiveStep(2);
-    trackWalkthroughStep("pdf_view", { trade: formData.trade });
-    setShowLeadCapture(true);
-  };
-
-  const handleSkipAnimation = () => {
-    if (timerRef.current) clearTimeout(timerRef.current);
-    setIsGenerating(false);
-    setGenerationDone(true);
-    trackWalkthroughStep("ai_generation_complete", { trade: formData.trade, skipped: true });
-  };
-
-  const handleLeadCapture = async () => {
-    if (!leadEmail.trim()) {
-      toast.error("Please enter a valid email");
-      return;
-    }
-    toast.success("Thanks! Check your email to get started.");
-    setShowLeadCapture(false);
-    setLeadEmail("");
-  };
 
   const steps = [
     { id: 0, label: "Fill in job details", icon: Smartphone },
@@ -369,129 +362,54 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
       {/* Panel */}
       <div className="bg-white rounded-3xl border border-border shadow-2xl shadow-slate-200/80 overflow-hidden">
 
-        {/* ── Step 0: Form ── */}
+        {/* ── Step 0: Fixed job details display ── */}
         {activeStep === 0 && (
           <div className="grid lg:grid-cols-2 min-h-[520px]">
-            {/* Left: form */}
+            {/* Left: read-only job details */}
             <div className="p-8 lg:p-10 flex flex-col">
               <div className="mb-6">
-                <h3 className="text-xl font-bold text-foreground mb-1">Describe your job</h3>
-                <p className="text-sm text-muted-foreground">Fill in the details below — the AI handles the rest.</p>
+                <h3 className="text-xl font-bold text-foreground mb-1">Sample job details</h3>
+                <p className="text-sm text-muted-foreground">A real HVAC replacement job — click Generate to see the AI in action.</p>
               </div>
-              <div className="space-y-4 flex-1">
+              <div className="space-y-3 flex-1">
+                {/* Trade badge */}
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5" htmlFor="demo-trade">
-                    Trade Type
-                  </label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {["HVAC", "Plumbing", "Electrical", "Roofing"].map(t => (
-                      <button
-                        key={t}
-                        id={t === "HVAC" ? "demo-trade" : undefined}
-                        onClick={() => {
-                          setFormData(f => ({ ...f, trade: t }));
-                          setCurrentPdfUrl(TRADE_SAMPLE_PDFS[t as keyof typeof TRADE_SAMPLE_PDFS]);
-                        }}
-                        aria-pressed={formData.trade === t}
-                        className={`py-2 px-2 rounded-lg text-xs font-semibold border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                          formData.trade === t
-                            ? "bg-primary text-white border-primary shadow-sm"
-                            : "bg-white text-muted-foreground border-border hover:border-primary/50 hover:text-foreground"
-                        }`}
-                      >
-                        {t}
-                      </button>
-                    ))}
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Trade Type</p>
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold shadow-sm">
+                    <Wrench className="w-4 h-4" />
+                    {DEMO_DATA.trade}
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5" htmlFor="demo-client">
-                    Client Name / Property
-                  </label>
-                  <div className="relative">
-                    <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input
-                      id="demo-client"
-                      type="text"
-                      value={formData.clientName}
-                      onChange={e => setFormData(f => ({ ...f, clientName: e.target.value }))}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                      placeholder="e.g. Johnson Residence"
-                    />
+                {/* Read-only fields */}
+                {[
+                  { label: "Client Name", value: DEMO_DATA.clientName, icon: Building2 },
+                  { label: "Job Site Address", value: DEMO_DATA.address, icon: MapPin },
+                  { label: "Estimated Cost", value: `$${DEMO_DATA.estimatedCost}`, icon: DollarSign },
+                ].map(({ label, value, icon: FieldIcon }) => (
+                  <div key={label}>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">{label}</p>
+                    <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-border bg-slate-50 text-sm text-foreground">
+                      <FieldIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <span>{value}</span>
+                    </div>
                   </div>
-                </div>
+                ))}
                 <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5" htmlFor="demo-address">
-                    Job Site Address
-                  </label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input
-                      id="demo-address"
-                      type="text"
-                      value={formData.address}
-                      onChange={e => setFormData(f => ({ ...f, address: e.target.value }))}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                      placeholder="e.g. 4412 Meadowbrook Lane, Austin TX"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5" htmlFor="demo-scope">
-                    Job Scope
-                  </label>
-                  <textarea
-                    id="demo-scope"
-                    value={formData.jobScope}
-                    onChange={e => setFormData(f => ({ ...f, jobScope: e.target.value }))}
-                    rows={3}
-                    className="w-full px-3 py-2.5 rounded-lg border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
-                    placeholder="Describe the work to be done..."
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5" htmlFor="demo-cost">
-                    Your Estimated Cost ($)
-                  </label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <input
-                      id="demo-cost"
-                      type="number"
-                      value={formData.estimatedCost}
-                      onChange={e => setFormData(f => ({ ...f, estimatedCost: e.target.value }))}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-lg border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                      placeholder="8000"
-                    />
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Job Scope</p>
+                  <div className="px-3 py-2.5 rounded-lg border border-border bg-slate-50 text-sm text-foreground leading-relaxed">
+                    {DEMO_DATA.jobScope}
                   </div>
                 </div>
               </div>
               <div className="mt-8 pt-6 border-t border-border">
-                <p className="text-sm font-semibold text-foreground mb-3">Ready to see the magic? 🚀</p>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleGenerate}
-                    size="lg"
-                    className="flex-1 h-12 bg-primary hover:bg-primary/90 font-semibold text-base shadow-md shadow-primary/20 animate-pulse hover:animate-none transition-all"
-                  >
-                    <Sparkles className="w-5 h-5 mr-2" />
-                    Generate Proposal with AI
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      const text = `Trade: ${formData.trade}\nClient: ${formData.clientName}\nAddress: ${formData.address}\nScope: ${formData.jobScope}\nEstimated Cost: $${formData.estimatedCost}`;
-                      navigator.clipboard.writeText(text);
-                      trackCopyToClipboard();
-                      toast.success("Form data copied to clipboard!");
-                    }}
-                    size="lg"
-                    variant="outline"
-                    className="h-12 px-4 font-semibold text-base"
-                    title="Copy form data to clipboard"
-                  >
-                    <FileCheck className="w-5 h-5" />
-                  </Button>
-                </div>
+                <Button
+                  onClick={handleGenerate}
+                  size="lg"
+                  className="w-full h-12 bg-primary hover:bg-primary/90 font-semibold text-base shadow-md shadow-primary/20 animate-pulse hover:animate-none transition-all"
+                >
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Generate Proposal with AI
+                </Button>
                 <p className="text-xs text-muted-foreground text-center mt-3">Watch the AI write your proposal in real-time →</p>
               </div>
             </div>
@@ -504,11 +422,11 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   { icon: FileText, color: "bg-blue-100 text-blue-600", title: "Professional PDF proposal", desc: "Itemized costs, scope of work, analytic charts, your logo & license" },
                   { icon: FileCheck, color: "bg-purple-100 text-purple-600", title: "Word & Google Doc", desc: "Starter & Pro users get all three formats in one click" },
                   { icon: Sparkles, color: "bg-green-100 text-green-600", title: "AI summary review", desc: "Review and edit the AI-compiled summary before generating" },
-                  { icon: Layers, color: "bg-orange-100 text-orange-600", title: "Save as template", desc: "Reuse this proposal's structure for future jobs" },
-                ].map(({ icon: Icon, color, title, desc }) => (
+                  { icon: Layers, color: "bg-orange-100 text-orange-600", title: "Save as template", desc: "Reuse this proposal's structure for every new job" },
+                ].map(({ icon: ItemIcon, color, title, desc }) => (
                   <div key={title} className="flex items-start gap-3">
                     <div className={`w-9 h-9 rounded-xl ${color} flex items-center justify-center flex-shrink-0`}>
-                      <Icon className="w-4 h-4" />
+                      <ItemIcon className="w-4 h-4" />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-foreground">{title}</p>
@@ -536,14 +454,14 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
               </div>
               <div className="space-y-3 flex-1">
                 {[
-                  { label: "Trade", value: formData.trade, icon: Wrench },
-                  { label: "Client", value: formData.clientName, icon: Building2 },
-                  { label: "Address", value: formData.address, icon: MapPin },
-                  { label: "Estimated Cost", value: `$${Number(formData.estimatedCost).toLocaleString()}`, icon: DollarSign },
-                ].map(({ label, value, icon: Icon }) => (
+                  { label: "Trade", value: DEMO_DATA.trade, icon: Wrench },
+                  { label: "Client", value: DEMO_DATA.clientName, icon: Building2 },
+                  { label: "Address", value: DEMO_DATA.address, icon: MapPin },
+                  { label: "Estimated Cost", value: `$${DEMO_DATA.estimatedCost}`, icon: DollarSign },
+                ].map(({ label, value, icon: FieldIcon }) => (
                   <div key={label} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-border">
                     <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-4 h-4 text-primary" />
+                      <FieldIcon className="w-4 h-4 text-primary" />
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">{label}</p>
@@ -553,7 +471,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                 ))}
                 <div className="p-3 bg-slate-50 rounded-xl border border-border">
                   <p className="text-xs text-muted-foreground mb-1">Scope</p>
-                  <p className="text-sm text-foreground leading-relaxed">{formData.jobScope}</p>
+                  <p className="text-sm text-foreground leading-relaxed">{DEMO_DATA.jobScope}</p>
                 </div>
               </div>
               {generationDone && (
@@ -633,7 +551,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
         {activeStep === 2 && (
           <div className="grid lg:grid-cols-5 min-h-[520px]">
             {/* Left: actions sidebar */}
-              <div className="lg:col-span-2 p-8 lg:p-10 flex flex-col border-r border-border">
+            <div className="lg:col-span-2 p-8 lg:p-10 flex flex-col border-r border-border">
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
                   <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
@@ -641,30 +559,30 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   </div>
                   <span className="text-sm font-semibold text-green-700">Proposal Ready</span>
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-1">{formData.trade} Proposal</h3>
-                <p className="text-sm text-muted-foreground">{formData.clientName} · {formData.address.split(",").pop()}</p>
+                <h3 className="text-xl font-bold text-foreground mb-1">{DEMO_DATA.trade} Proposal</h3>
+                <p className="text-sm text-muted-foreground">{DEMO_DATA.clientName} · {DEMO_DATA.address}</p>
               </div>
 
               <div className="space-y-3 mb-6">
                 <div className="p-3 bg-slate-50 rounded-xl border border-border">
                   <p className="text-xs text-muted-foreground">Total Value</p>
-                  <p className="text-2xl font-bold text-foreground">$8,175.62</p>
+                  <p className="text-2xl font-bold text-foreground">{DEMO_DATA.total}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="p-3 bg-slate-50 rounded-xl border border-border">
                     <p className="text-xs text-muted-foreground">Generated in</p>
-                    <p className="text-lg font-bold text-foreground">47s</p>
+                    <p className="text-lg font-bold text-foreground">{DEMO_DATA.generatedIn}</p>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl border border-border">
-                    <p className="text-xs text-muted-foreground">Valid until</p>
-                    <p className="text-sm font-bold text-foreground">Apr 6, 2026</p>
+                    <p className="text-xs text-muted-foreground">Proposal date</p>
+                    <p className="text-sm font-bold text-foreground">Jun 10, 2024</p>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-3 flex-1">
                 <a
-                  href={currentPdfUrl}
+                  href={DEMO_PDF_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 w-full h-11 bg-primary text-white rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 shadow-md shadow-primary/20"
@@ -674,9 +592,9 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   Open Full PDF Sample
                 </a>
                 <a
-                  href={currentPdfUrl}
-                  download={`ProposAI-Sample-${formData.trade}-Proposal.pdf`}
-                  onClick={() => trackPdfDownload(formData.trade)}
+                  href={DEMO_PDF_URL}
+                  download="ProposAI-Sample-HVAC-Proposal.pdf"
+                  onClick={() => trackPdfDownload(DEMO_DATA.trade)}
                   className="flex items-center justify-center gap-2 w-full h-11 bg-white border border-border text-foreground rounded-lg font-semibold text-sm hover:bg-slate-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   aria-label="Download sample proposal PDF"
                 >
@@ -710,10 +628,10 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   <div className="w-3 h-3 rounded-full bg-green-400" />
                 </div>
                 <div className="flex-1 mx-3 bg-slate-100 rounded-md px-3 py-1 text-xs text-muted-foreground font-mono truncate">
-                  ProposAI-{formData.trade}-Proposal.pdf
+                  ProposAI-HVAC-JohnSmith-Proposal.pdf
                 </div>
                 <a
-                  href={currentPdfUrl}
+                  href={DEMO_PDF_URL}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-muted-foreground hover:text-foreground transition-colors"
@@ -724,57 +642,16 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
               </div>
               <div className="flex-1 relative min-h-[400px]">
                 <iframe
-                  src={`${currentPdfUrl}#view=FitH`}
-                  title={`Sample ${formData.trade} proposal generated by ProposAI`}
+                  src={`${DEMO_PDF_URL}#view=FitH`}
+                  title="Sample HVAC proposal generated by ProposAI for Mr. John Smith"
                   className="absolute inset-0 w-full h-full"
                   aria-label="Sample proposal PDF preview"
                 />
-                {/* Fallback overlay for browsers that block iframes */}
-                <noscript>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-100 gap-4">
-                    <FileText className="w-12 h-12 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">PDF preview requires JavaScript.</p>
-                    <a href={currentPdfUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline text-sm">Open PDF directly</a>
-                  </div>
-                </noscript>
               </div>
             </div>
           </div>
         )}
       </div>
-
-      {/* Lead capture modal */}
-      {showLeadCapture && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8">
-            <h3 className="text-2xl font-bold text-foreground mb-2">Get Started Free</h3>
-            <p className="text-sm text-muted-foreground mb-6">Enter your email to create your first proposal in 60 seconds. No credit card required.</p>
-            <div className="space-y-3">
-              <input
-                type="email"
-                placeholder="your@email.com"
-                value={leadEmail}
-                onChange={(e) => setLeadEmail(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleLeadCapture()}
-                className="w-full px-4 py-2.5 rounded-lg border border-border bg-white text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
-                autoFocus
-              />
-              <Button
-                onClick={handleLeadCapture}
-                className="w-full h-11 bg-primary hover:bg-primary/90 font-semibold text-sm"
-              >
-                Get Started
-              </Button>
-              <button
-                onClick={() => setShowLeadCapture(false)}
-                className="w-full h-11 bg-slate-100 hover:bg-slate-200 text-foreground font-semibold text-sm rounded-lg transition-colors"
-              >
-                Skip for now
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Step indicator dots */}
       <div className="flex justify-center gap-2 mt-6" role="tablist" aria-label="Walkthrough steps">
