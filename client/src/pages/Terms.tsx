@@ -32,7 +32,7 @@ export default function Terms() {
 
           <section>
             <h2 className="text-lg font-semibold mb-2">3. Subscription Plans and Billing</h2>
-            <p>The Service is offered under three plans: Free (3 proposals per month at no charge), Starter ($29.00 USD per month, 20 proposals), and Pro ($59.00 USD per month, unlimited proposals). Paid subscriptions are billed monthly in advance. You may cancel your subscription at any time through the billing portal; cancellation takes effect at the end of the current billing period.</p>
+            <p>The Service is offered under three plans: Free (3 proposals per month at no charge), Starter ($3.99 USD per month, 20 proposals), and Pro ($5.99 USD per month, unlimited proposals). Paid subscriptions are billed monthly in advance. You may cancel your subscription at any time through the billing portal; cancellation takes effect at the end of the current billing period.</p>
           </section>
 
           <section>

@@ -104,7 +104,7 @@ const PLANS = [
   {
     name: "Starter",
     planId: "starter",
-    price: "$29",
+    price: "$3.99",
     period: "/month",
     proposals: "20 proposals/month",
     features: [
@@ -122,7 +122,7 @@ const PLANS = [
   {
     name: "Pro",
     planId: "pro",
-    price: "$59",
+    price: "$5.99",
     period: "/month",
     proposals: "Unlimited proposals",
     features: [

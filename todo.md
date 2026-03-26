@@ -695,3 +695,8 @@
 - [x] Update Dashboard model name display
 - [x] Update Home page AI model comparison section
 - [x] Update schema default for preferredModel
+
+## Pricing Update ($3.99 Starter / $5.99 Pro)
+- [x] Update PAYPAL_STARTER_PLAN_ID and PAYPAL_PRO_PLAN_ID env vars
+- [x] Update products.ts prices and display strings
+- [x] Update landing page pricing section
