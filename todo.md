@@ -713,3 +713,6 @@
 
 ## Homepage Visual Enhancement
 - [x] Add visually rich hero section to replace missing graph (proposal preview card, stats, animated elements)
+
+## Hero Section Redesign
+- [x] Replace empty hero right column with rich inline proposal preview card (floating badges, glows, animated elements)
