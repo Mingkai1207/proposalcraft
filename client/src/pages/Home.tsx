@@ -1,4 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useTranslation } from "react-i18next";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getLoginUrl } from "@/const";
@@ -708,6 +710,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
 
 export default function Home() {
   const { isAuthenticated } = useAuth();
+  const { t } = useTranslation();
   const [, navigate] = useLocation();
 
   // SEO: set page title and meta keywords for homepage
@@ -777,23 +780,24 @@ export default function Home() {
             <span className="font-bold text-lg text-foreground tracking-tight">ProposAI</span>
           </div>
           <div className="hidden md:flex items-center gap-7">
-            <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">How It Works</a>
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">Features</a>
-            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">Pricing</a>
-            <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">FAQ</a>
+            <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">{t("nav.howItWorks")}</a>
+            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">{t("nav.features")}</a>
+            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">{t("nav.pricing")}</a>
+            <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium">{t("nav.faq")}</a>
           </div>
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             {isAuthenticated ? (
               <Button onClick={() => navigate("/dashboard")} size="sm">
-                Dashboard <ArrowRight className="w-4 h-4 ml-1" />
+                {t("nav.dashboard")} <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             ) : (
               <>
                 <Button variant="ghost" size="sm" onClick={() => { window.location.href = getLoginUrl(); }} className="hidden sm:flex">
-                  Sign In
+                  {t("nav.signIn")}
                 </Button>
                 <Button size="sm" onClick={handleCTA} className="shadow-sm">
-                  Start Free
+                  {t("nav.startFree")}
                 </Button>
               </>
             )}

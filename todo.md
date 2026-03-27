@@ -720,3 +720,15 @@
 ## Billing Fix & Congratulations Page
 - [x] Fix PayPal subscription: plan not upgrading after successful payment
 - [x] Add /payment-success congratulations page shown after checkout
+
+## Language Switcher (EN / ZH)
+- [ ] Install i18next and react-i18next
+- [ ] Create English and Chinese translation files
+- [ ] Add language switcher button to navigation (Navbar + DashboardLayout)
+- [ ] Wire translated strings across Home, Pricing, Settings, Dashboard pages
+
+## Language Switcher (EN / ZH-CN)
+- [x] Install i18next and react-i18next
+- [x] Create English and Chinese translation files
+- [x] Add LanguageSwitcher component to navigation (Home + DashboardLayout)
+- [x] Wire up key UI strings with t() calls

@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -221,6 +222,11 @@ function DashboardLayoutContent({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <div className="p-1">
+                    <LanguageSwitcher variant="ghost" size="sm" showLabel={true} />
+                  </div>
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={logout}
                   className="cursor-pointer text-destructive focus:text-destructive"
@@ -255,6 +261,7 @@ function DashboardLayoutContent({
                 </div>
               </div>
             </div>
+            <LanguageSwitcher variant="ghost" size="sm" />
           </div>
         )}
         <main className="flex-1 p-4">{children}</main>
