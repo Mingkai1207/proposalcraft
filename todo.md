@@ -732,3 +732,15 @@
 - [x] Create English and Chinese translation files
 - [x] Add LanguageSwitcher component to navigation (Home + DashboardLayout)
 - [x] Wire up key UI strings with t() calls
+
+## i18n Fix - Full Homepage Translation
+- [x] Wire t() calls to hero section (badge, headline, subheadline, CTAs, trust badges)
+- [x] Wire t() calls to walkthrough section (steps, labels, descriptions)
+- [x] Wire t() calls to features section
+- [x] Wire t() calls to pricing section
+- [x] Wire t() calls to FAQ section
+- [x] Wire t() calls to CTA section
+- [x] Wire t() calls to footer
+- [x] Wire t() calls to Dashboard page (sidebar, table headers, status labels, empty states)
+- [x] Wire t() calls to Footer component
+- [x] Add i18n coverage tests (server/i18n.test.ts) — 10 tests passing

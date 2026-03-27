@@ -1,6 +1,8 @@
 import { Link } from "wouter";
+import { useTranslation } from "react-i18next";
 
 export default function Footer() {
+  const { t } = useTranslation();
   const year = new Date().getFullYear();
 
   return (
@@ -14,36 +16,36 @@ export default function Footer() {
             </div>
             <span className="font-semibold text-foreground">ProposAI</span>
             <span className="text-muted-foreground text-sm ml-2">
-              &copy; {year} ProposAI. All rights reserved.
+              {t("footer.copyright", { year })}
             </span>
           </div>
 
           {/* Legal links */}
           <nav className="flex items-center gap-6 text-sm text-muted-foreground">
             <Link href="/pricing" className="hover:text-foreground transition-colors">
-              Pricing
+              {t("footer.links.pricing")}
             </Link>
             <Link href="/terms" className="hover:text-foreground transition-colors">
-              Terms of Service
+              {t("footer.links.terms")}
             </Link>
             <Link href="/privacy" className="hover:text-foreground transition-colors">
-              Privacy Policy
+              {t("footer.links.privacy")}
             </Link>
             <Link href="/refund" className="hover:text-foreground transition-colors">
-              Refund Policy
+              {t("footer.links.refund")}
             </Link>
             <a
               href="mailto:hello@proposai.org"
               className="hover:text-foreground transition-colors"
             >
-              Contact
+              {t("footer.links.contact")}
             </a>
           </nav>
         </div>
 
         {/* Tagline */}
         <div className="mt-4 pt-4 border-t border-border/50 text-center text-xs text-muted-foreground">
-          ProposAI helps trade contractors (HVAC, plumbing, electrical, roofing) generate professional proposals in under 60 seconds using AI.
+          {t("footer.tagline")}
           &nbsp;&middot;&nbsp;
           <a href="https://proposai.org/pricing" className="underline hover:text-foreground">
             View plans from $5.99/month

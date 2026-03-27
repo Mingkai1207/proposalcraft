@@ -9,7 +9,7 @@ import Footer from "@/components/Footer";
 import { useState, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
-import { trackWalkthroughStep, trackCopyToClipboard, trackPdfDownload, trackCtaClick } from "@/lib/analytics";
+import { trackWalkthroughStep, trackPdfDownload, trackCtaClick } from "@/lib/analytics";
 import {
   Zap, FileText, Mail, Eye, Shield,
   CheckCircle, ArrowRight, Wrench, Droplets,
@@ -17,169 +17,14 @@ import {
   TrendingUp, ChevronDown, ChevronUp,
   Smartphone, BarChart3, Layers, Timer,
   Play, Download, ExternalLink, Sparkles,
-  Building2, Phone, MapPin, DollarSign,
+  Building2, MapPin, DollarSign,
   FileCheck, Send
 } from "lucide-react";
 
-const FEATURES = [
-  {
-    icon: Zap,
-    title: "AI-Powered in Minutes",
-    desc: "Fill in a guided form, review an AI-compiled summary, then let ProposAI write a complete, professional proposal — with analytic charts included.",
-    color: "bg-orange-50 text-orange-600",
-  },
-  {
-    icon: FileText,
-    title: "PDF, Word & Google Doc",
-    desc: "Every proposal is exported as a polished PDF (free for all), plus Word and Google Doc for Starter and Pro users.",
-    color: "bg-blue-50 text-blue-600",
-  },
-  {
-    icon: Layers,
-    title: "Your Own Templates",
-    desc: "Upload a past proposal or save any generated proposal as a template. ProposAI will follow its exact structure for every new job.",
-    color: "bg-purple-50 text-purple-600",
-  },
-  {
-    icon: Sparkles,
-    title: "Revise with AI",
-    desc: "Not happy with a section? Describe the change and ProposAI rewrites the proposal and regenerates all your documents instantly.",
-    color: "bg-green-50 text-green-600",
-  },
-  {
-    icon: Shield,
-    title: "Profile Auto-Fill",
-    desc: "Save your business details once — name, license, phone, logo — and ProposAI fills them into every proposal automatically.",
-    color: "bg-indigo-50 text-indigo-600",
-  },
-  {
-    icon: TrendingUp,
-    title: "Win More Jobs",
-    desc: "Contractors who respond faster win more work. ProposAI gets you there first, every time.",
-    color: "bg-rose-50 text-rose-600",
-  },
-];
-
-const TRADES = [
-  { icon: Wrench, label: "HVAC", color: "bg-blue-50 text-blue-700 border border-blue-100" },
-  { icon: Droplets, label: "Plumbing", color: "bg-cyan-50 text-cyan-700 border border-cyan-100" },
-  { icon: Bolt, label: "Electrical", color: "bg-yellow-50 text-yellow-700 border border-yellow-100" },
-  { icon: BarChart3, label: "Roofing", color: "bg-orange-50 text-orange-700 border border-orange-100" },
-];
-
 const GUARANTEE_BADGE_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposai-guarantee-badge-iVr29Hp4v4FN5DhPsDtUwF.webp";
 
-const TRADE_SAMPLE_PDFS: Record<string, string> = {
-  HVAC: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_hvac_1b529b86.pdf",
-  Plumbing: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_plumbing_da05dcab.pdf",
-  Electrical: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_electrical_4dd05396.pdf",
-  Roofing: "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/sample_proposal_roofing_f517591e.pdf",
-};
-
-const SAMPLE_PDF_URL = TRADE_SAMPLE_PDFS.HVAC;
-
-const STATS = [
-  { value: "60s", label: "Average proposal time", icon: Timer },
-  { value: "65%", label: "Higher close rate reported", icon: TrendingUp },
-  { value: "3+", label: "Hours saved per week", icon: Clock },
-  { value: "4", label: "Trades supported", icon: Layers },
-];
-
-const PLANS = [
-  {
-    name: "Free",
-    planId: "free",
-    price: "$0",
-    period: "/month",
-    proposals: "3 proposals/month",
-    features: [
-      "AI proposal generation",
-      "Guided form with profile auto-fill",
-      "AI summary review before generation",
-      "PDF download",
-      "Save & upload templates",
-    ],
-    cta: "Get Started Free",
-    highlight: false,
-    badge: null,
-  },
-  {
-    name: "Starter",
-    planId: "starter",
-    price: "$5.99",
-    period: "/month",
-    proposals: "20 proposals/month",
-    features: [
-      "Everything in Free — no watermark",
-      "Word (.docx) & Google Doc export",
-      "Revise with AI chatbot",
-      "Custom logo & branding",
-      "Multi-language (EN, ZH, ES, FR)",
-      "Template-based generation",
-    ],
-    cta: "Start Starter Plan",
-    highlight: false,
-    badge: "Most Popular",
-  },
-  {
-    name: "Pro",
-    planId: "pro",
-    price: "$9.99",
-    period: "/month",
-    proposals: "Unlimited proposals",
-    features: [
-      "Everything in Starter",
-      "Unlimited proposal generation",
-      "Bulk export all proposals (ZIP)",
-      "Analytics: win rate & revenue",
-      "Priority support (4h response)",
-    ],
-    cta: "Go Pro",
-    highlight: true,
-    badge: "Best Value",
-  },
-];
-
-const FAQS = [
-  {
-    q: "Do I need any tech skills to use ProposAI?",
-    a: "None at all. Fill in a guided form, review the AI-compiled summary, and ProposAI generates a complete professional proposal with charts. No writing or formatting skills needed.",
-  },
-  {
-    q: "What file formats does ProposAI export?",
-    a: "All users get a polished PDF. Starter and Pro users also get a Word (.docx) file and a Google Doc, all generated automatically in one step.",
-  },
-  {
-    q: "Can I use my own proposal format?",
-    a: "Yes. Upload any past proposal or save a generated one as a template. ProposAI will follow its exact structure and format when writing new proposals.",
-  },
-  {
-    q: "Can I edit the proposal after it's generated?",
-    a: "Yes. Starter and Pro users can use the \"Revise with AI\" chatbot to describe any changes. ProposAI rewrites the relevant sections and regenerates all your documents instantly.",
-  },
-  {
-    q: "Can I add my own logo and business info?",
-    a: "Yes. Save your business name, logo, license number, and phone once in your profile. ProposAI auto-fills this information into every proposal you generate.",
-  },
-  {
-    q: "Can I cancel anytime?",
-    a: "Yes. No long-term contracts. Cancel from your account settings at any time. Free tier access remains after cancellation.",
-  },
-];
-
-const COMPARISON = [
-  { feature: "Time to write a proposal", manual: "1–3 hours", proposai: "A few minutes" },
-  { feature: "Professional formatting", manual: "Inconsistent", proposai: "Always polished" },
-  { feature: "Export formats", manual: "Manual Word/PDF", proposai: "PDF, Word & Google Doc" },
-  { feature: "Charts & visuals", manual: "DIY in Excel", proposai: "Auto-generated by AI" },
-  { feature: "Reusable templates", manual: "Copy-paste old docs", proposai: "Save any proposal as template" },
-  { feature: "Revisions", manual: "Rewrite from scratch", proposai: "Describe change, AI rewrites" },
-  { feature: "Cost", manual: "Your time = $$$", proposai: "From $0/month" },
-];
-
-
-// Fixed illustration data — John Smith HVAC proposal (non-editable)
 const DEMO_PDF_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/pasted_file_1SBXzL_HVAC_Replacement_Proposal_JohnSmith_edb68410.pdf";
+
 const DEMO_DATA = {
   trade: "HVAC",
   clientName: "Mr. John Smith",
@@ -188,10 +33,8 @@ const DEMO_DATA = {
   jobScope: "Full HVAC system replacement — 4-ton Carrier unit (16 SEER), 92.1% AFUE furnace, ecobee smart thermostat, EPA-certified installation, 5-day project",
   total: "$8,500.00",
   generatedIn: "47s",
-  validUntil: "Jul 10, 2024",
-  date: "June 10, 2024",
-  projectStart: "June 17, 2024",
 };
+
 const DEMO_TYPEWRITER_LINES = [
   "HVAC System Replacement Proposal",
   "Prepared for: Mr. John Smith",
@@ -240,7 +83,9 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 // ── Interactive Walkthrough ─────────────────────────────────────────────────
 type WalkthroughStep = 0 | 1 | 2;
 
-function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
+type TFunction = (key: string) => string;
+
+function InteractiveWalkthrough({ onCTA, t }: { onCTA: () => void; t: TFunction }) {
   const [activeStep, setActiveStep] = useState<WalkthroughStep>(0);
   const [aiLines, setAiLines] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -310,9 +155,9 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
   }, []);
 
   const steps = [
-    { id: 0, label: "Fill in job details", icon: Smartphone },
-    { id: 1, label: "AI generates proposal", icon: Sparkles },
-    { id: 2, label: "Download & send PDF", icon: FileCheck },
+    { id: 0, label: t("liveDemo.step0Label"), icon: Smartphone },
+    { id: 1, label: t("liveDemo.step1Label"), icon: Sparkles },
+    { id: 2, label: t("liveDemo.step2Label"), icon: FileCheck },
   ];
 
   return (
@@ -370,13 +215,13 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
             {/* Left: read-only job details */}
             <div className="p-8 lg:p-10 flex flex-col">
               <div className="mb-6">
-                <h3 className="text-xl font-bold text-foreground mb-1">Sample job details</h3>
-                <p className="text-sm text-muted-foreground">A real HVAC replacement job — click Generate to see the AI in action.</p>
+                <h3 className="text-xl font-bold text-foreground mb-1">{t("liveDemo.sampleJobTitle")}</h3>
+                <p className="text-sm text-muted-foreground">{t("liveDemo.sampleJobDesc")}</p>
               </div>
               <div className="space-y-3 flex-1">
                 {/* Trade badge */}
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Trade Type</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">{t("liveDemo.tradeType")}</p>
                   <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-semibold shadow-sm">
                     <Wrench className="w-4 h-4" />
                     {DEMO_DATA.trade}
@@ -384,12 +229,12 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                 </div>
                 {/* Read-only fields */}
                 {[
-                  { label: "Client Name", value: DEMO_DATA.clientName, icon: Building2 },
-                  { label: "Job Site Address", value: DEMO_DATA.address, icon: MapPin },
-                  { label: "Estimated Cost", value: `$${DEMO_DATA.estimatedCost}`, icon: DollarSign },
-                ].map(({ label, value, icon: FieldIcon }) => (
-                  <div key={label}>
-                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">{label}</p>
+                  { labelKey: "liveDemo.clientName", value: DEMO_DATA.clientName, icon: Building2 },
+                  { labelKey: "liveDemo.jobSiteAddress", value: DEMO_DATA.address, icon: MapPin },
+                  { labelKey: "liveDemo.estimatedCost", value: `$${DEMO_DATA.estimatedCost}`, icon: DollarSign },
+                ].map(({ labelKey, value, icon: FieldIcon }) => (
+                  <div key={labelKey}>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">{t(labelKey)}</p>
                     <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border border-border bg-slate-50 text-sm text-foreground">
                       <FieldIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                       <span>{value}</span>
@@ -397,7 +242,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   </div>
                 ))}
                 <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Job Scope</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">{t("liveDemo.jobScope")}</p>
                   <div className="px-3 py-2.5 rounded-lg border border-border bg-slate-50 text-sm text-foreground leading-relaxed">
                     {DEMO_DATA.jobScope}
                   </div>
@@ -410,9 +255,9 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   className="w-full h-12 bg-primary hover:bg-primary/90 font-semibold text-base shadow-md shadow-primary/20 animate-pulse hover:animate-none transition-all"
                 >
                   <Sparkles className="w-5 h-5 mr-2" />
-                  Generate Proposal with AI
+                  {t("liveDemo.generateBtn")}
                 </Button>
-                <p className="text-xs text-muted-foreground text-center mt-3">Watch the AI write your proposal in real-time →</p>
+                <p className="text-xs text-muted-foreground text-center mt-3">{t("liveDemo.generateHint")}</p>
               </div>
             </div>
 
@@ -424,7 +269,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
               <div className="relative z-10">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-green-400 text-xs font-semibold mb-4">
                   <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                  Sample Output Preview
+                  {t("liveDemo.sampleOutputPreview")}
                 </div>
                 {/* Mock proposal card */}
                 <div className="bg-white rounded-2xl shadow-2xl shadow-black/40 overflow-hidden">
@@ -442,15 +287,15 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   </div>
                   {/* Cost breakdown */}
                   <div className="px-5 py-4">
-                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Cost Breakdown</p>
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">{t("liveDemo.costBreakdown")}</p>
                     {[
-                      { label: "Equipment & Materials", amount: "$5,200", pct: 61 },
-                      { label: "Labor & Installation", amount: "$2,100", pct: 25 },
-                      { label: "Permits & Inspection", amount: "$1,200", pct: 14 },
-                    ].map(({ label, amount, pct }) => (
-                      <div key={label} className="mb-2.5">
+                      { labelKey: "liveDemo.equipment", amount: "$5,200", pct: 61 },
+                      { labelKey: "liveDemo.labor", amount: "$2,100", pct: 25 },
+                      { labelKey: "liveDemo.permits", amount: "$1,200", pct: 14 },
+                    ].map(({ labelKey, amount, pct }) => (
+                      <div key={labelKey} className="mb-2.5">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-slate-600">{label}</span>
+                          <span className="text-xs text-slate-600">{t(labelKey)}</span>
                           <span className="text-xs font-bold text-slate-800">{amount}</span>
                         </div>
                         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -462,7 +307,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                       </div>
                     ))}
                     <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-700">Total Estimate</span>
+                      <span className="text-xs font-bold text-slate-700">{t("liveDemo.totalEstimate")}</span>
                       <span className="text-base font-extrabold text-primary">$8,500</span>
                     </div>
                   </div>
@@ -476,7 +321,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                 {/* Time badge */}
                 <div className="mt-4 flex items-center gap-2 text-xs text-slate-400">
                   <Timer className="w-3.5 h-3.5 text-orange-400" />
-                  <span>Generated in <span className="text-orange-400 font-semibold">47 seconds</span> · Ready to send</span>
+                  <span>{t("liveDemo.generatedInSeconds")}</span>
                 </div>
               </div>
             </div>
@@ -489,28 +334,28 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
             {/* Left: job summary */}
             <div className="p-8 lg:p-10 flex flex-col border-r border-border">
               <div className="mb-6">
-                <h3 className="text-xl font-bold text-foreground mb-1">Your job details</h3>
-                <p className="text-sm text-muted-foreground">Sent to the AI engine.</p>
+                <h3 className="text-xl font-bold text-foreground mb-1">{t("liveDemo.yourJobDetails")}</h3>
+                <p className="text-sm text-muted-foreground">{t("liveDemo.sentToAI")}</p>
               </div>
               <div className="space-y-3 flex-1">
                 {[
-                  { label: "Trade", value: DEMO_DATA.trade, icon: Wrench },
-                  { label: "Client", value: DEMO_DATA.clientName, icon: Building2 },
-                  { label: "Address", value: DEMO_DATA.address, icon: MapPin },
-                  { label: "Estimated Cost", value: `$${DEMO_DATA.estimatedCost}`, icon: DollarSign },
-                ].map(({ label, value, icon: FieldIcon }) => (
-                  <div key={label} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-border">
+                  { labelKey: "liveDemo.trade", value: DEMO_DATA.trade, icon: Wrench },
+                  { labelKey: "liveDemo.client", value: DEMO_DATA.clientName, icon: Building2 },
+                  { labelKey: "liveDemo.address", value: DEMO_DATA.address, icon: MapPin },
+                  { labelKey: "liveDemo.estimatedCost", value: `$${DEMO_DATA.estimatedCost}`, icon: DollarSign },
+                ].map(({ labelKey, value, icon: FieldIcon }) => (
+                  <div key={labelKey} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl border border-border">
                     <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
                       <FieldIcon className="w-4 h-4 text-primary" />
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">{label}</p>
+                      <p className="text-xs text-muted-foreground">{t(labelKey)}</p>
                       <p className="text-sm font-semibold text-foreground">{value}</p>
                     </div>
                   </div>
                 ))}
                 <div className="p-3 bg-slate-50 rounded-xl border border-border">
-                  <p className="text-xs text-muted-foreground mb-1">Scope</p>
+                  <p className="text-xs text-muted-foreground mb-1">{t("liveDemo.scope")}</p>
                   <p className="text-sm text-foreground leading-relaxed">{DEMO_DATA.jobScope}</p>
                 </div>
               </div>
@@ -521,7 +366,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   className="w-full mt-6 h-12 bg-green-600 hover:bg-green-700 font-semibold text-base shadow-md shadow-green-600/20"
                 >
                   <FileCheck className="w-5 h-5 mr-2" />
-                  View Generated Proposal PDF
+                  {t("liveDemo.viewGeneratedPDF")}
                 </Button>
               )}
             </div>
@@ -533,19 +378,19 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   <Sparkles className="w-4 h-4 text-orange-400" />
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-white">ProposAI Engine</p>
+                  <p className="text-sm font-semibold text-white">{t("liveDemo.aiEngineTitle")}</p>
                   <p className="text-xs text-slate-400">
                     {isGenerating ? (
                       <span className="flex items-center gap-1.5">
                         <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse" />
-                        Generating…
+                        {t("liveDemo.aiGenerating")}
                       </span>
                     ) : generationDone ? (
                       <span className="flex items-center gap-1.5 text-green-400">
                         <CheckCircle className="w-3 h-3" />
-                        Complete
+                        {t("liveDemo.aiComplete")}
                       </span>
-                    ) : "Ready"}
+                    ) : t("liveDemo.aiReady")}
                   </p>
                 </div>
               </div>
@@ -564,7 +409,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   </div>
                 ))}
                 {aiLines.length === 0 && (
-                  <span className="text-slate-600">Waiting for input…</span>
+                  <span className="text-slate-600">{t("liveDemo.waitingForInput")}</span>
                 )}
               </div>
               {isGenerating && (
@@ -573,14 +418,14 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                     onClick={handleSkipAnimation}
                     className="text-xs text-slate-400 hover:text-slate-300 underline transition-colors"
                   >
-                    Skip animation
+                    {t("liveDemo.skipAnimation")}
                   </button>
                 </div>
               )}
               {generationDone && (
                 <div className="mt-4 p-3 bg-green-500/10 border border-green-500/30 rounded-xl flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-                  <p className="text-xs text-green-400">Proposal generated in 47 seconds. PDF ready to download.</p>
+                  <p className="text-xs text-green-400">{t("liveDemo.proposalGeneratedMsg")}</p>
                 </div>
               )}
             </div>
@@ -597,7 +442,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
                     <CheckCircle className="w-4 h-4 text-green-600" />
                   </div>
-                  <span className="text-sm font-semibold text-green-700">Proposal Ready</span>
+                  <span className="text-sm font-semibold text-green-700">{t("liveDemo.proposalReady")}</span>
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-1">{DEMO_DATA.trade} Proposal</h3>
                 <p className="text-sm text-muted-foreground">{DEMO_DATA.clientName} · {DEMO_DATA.address}</p>
@@ -605,16 +450,16 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
 
               <div className="space-y-3 mb-6">
                 <div className="p-3 bg-slate-50 rounded-xl border border-border">
-                  <p className="text-xs text-muted-foreground">Total Value</p>
+                  <p className="text-xs text-muted-foreground">{t("liveDemo.totalValue")}</p>
                   <p className="text-2xl font-bold text-foreground">{DEMO_DATA.total}</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div className="p-3 bg-slate-50 rounded-xl border border-border">
-                    <p className="text-xs text-muted-foreground">Generated in</p>
+                    <p className="text-xs text-muted-foreground">{t("liveDemo.generatedIn")}</p>
                     <p className="text-lg font-bold text-foreground">{DEMO_DATA.generatedIn}</p>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl border border-border">
-                    <p className="text-xs text-muted-foreground">Proposal date</p>
+                    <p className="text-xs text-muted-foreground">{t("liveDemo.proposalDate")}</p>
                     <p className="text-sm font-bold text-foreground">Jun 10, 2024</p>
                   </div>
                 </div>
@@ -629,7 +474,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   aria-label="Open sample proposal PDF in new tab"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  Open Full PDF Sample
+                  {t("liveDemo.openFullPDF")}
                 </a>
                 <a
                   href={DEMO_PDF_URL}
@@ -639,7 +484,7 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   aria-label="Download sample proposal PDF"
                 >
                   <Download className="w-4 h-4" />
-                  Download PDF
+                  {t("liveDemo.downloadPDF")}
                 </a>
                 <button
                   onClick={() => {
@@ -649,13 +494,13 @@ function InteractiveWalkthrough({ onCTA }: { onCTA: () => void }) {
                   className="flex items-center justify-center gap-2 w-full h-11 bg-orange-500 text-white rounded-lg font-semibold text-sm hover:bg-orange-600 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 shadow-md shadow-orange-500/20"
                 >
                   <Send className="w-4 h-4" />
-                  Create Your Own — Free
+                  {t("liveDemo.createYourOwn")}
                 </button>
               </div>
 
               <div className="mt-6 p-3 bg-blue-50 border border-blue-100 rounded-xl">
-                <p className="text-xs text-blue-700 font-semibold mb-1">This is a real sample</p>
-                <p className="text-xs text-blue-600">The PDF above was generated by ProposAI. Click "Open Full PDF Sample" to see the actual output.</p>
+                <p className="text-xs text-blue-700 font-semibold mb-1">{t("liveDemo.realSampleTitle")}</p>
+                <p className="text-xs text-blue-600">{t("liveDemo.realSampleDesc")}</p>
               </div>
             </div>
 
@@ -727,6 +572,7 @@ export default function Home() {
       document.title = "ProposAI";
     };
   }, []);
+
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
 
   const checkoutMutation = trpc.billing.createCheckout.useMutation({
@@ -767,6 +613,84 @@ export default function Home() {
       window.location.href = getLoginUrl();
     }
   };
+
+  const TRADES = [
+    { icon: Wrench, label: "HVAC", color: "bg-blue-50 text-blue-700 border border-blue-100" },
+    { icon: Droplets, label: t("trades.plumbing"), color: "bg-cyan-50 text-cyan-700 border border-cyan-100" },
+    { icon: Bolt, label: t("trades.electrical"), color: "bg-yellow-50 text-yellow-700 border border-yellow-100" },
+    { icon: BarChart3, label: t("trades.roofing"), color: "bg-orange-50 text-orange-700 border border-orange-100" },
+  ];
+
+  const STATS = [
+    { value: "60s", label: t("stats.time"), icon: Timer },
+    { value: "65%", label: t("stats.closeRate"), icon: TrendingUp },
+    { value: "3+", label: t("stats.hoursSaved"), icon: Clock },
+    { value: "4", label: t("stats.trades"), icon: Layers },
+  ];
+
+  const FEATURES = [
+    { icon: Zap, title: t("features.items.ai.title"), desc: t("features.items.ai.desc"), color: "bg-orange-50 text-orange-600" },
+    { icon: FileText, title: t("features.items.pdf.title"), desc: t("features.items.pdf.desc"), color: "bg-blue-50 text-blue-600" },
+    { icon: Layers, title: t("features.items.templates.title"), desc: t("features.items.templates.desc"), color: "bg-purple-50 text-purple-600" },
+    { icon: Sparkles, title: t("features.items.revise.title"), desc: t("features.items.revise.desc"), color: "bg-green-50 text-green-600" },
+    { icon: Shield, title: t("features.items.profile.title"), desc: t("features.items.profile.desc"), color: "bg-indigo-50 text-indigo-600" },
+    { icon: TrendingUp, title: t("features.items.win.title"), desc: t("features.items.win.desc"), color: "bg-rose-50 text-rose-600" },
+  ];
+
+  const PLANS = [
+    {
+      name: t("pricing.free.name"),
+      planId: "free",
+      price: t("pricing.free.price"),
+      period: t("pricing.free.period"),
+      proposals: t("pricing.free.proposals"),
+      features: t("pricing.free.features", { returnObjects: true }) as string[],
+      cta: t("pricing.free.cta"),
+      highlight: false,
+      badge: null,
+    },
+    {
+      name: t("pricing.starter.name"),
+      planId: "starter",
+      price: t("pricing.starter.price"),
+      period: t("pricing.starter.period"),
+      proposals: t("pricing.starter.proposals"),
+      features: t("pricing.starter.features", { returnObjects: true }) as string[],
+      cta: t("pricing.starter.cta"),
+      highlight: false,
+      badge: t("pricing.starter.badge"),
+    },
+    {
+      name: t("pricing.pro.name"),
+      planId: "pro",
+      price: t("pricing.pro.price"),
+      period: t("pricing.pro.period"),
+      proposals: t("pricing.pro.proposals"),
+      features: t("pricing.pro.features", { returnObjects: true }) as string[],
+      cta: t("pricing.pro.cta"),
+      highlight: true,
+      badge: t("pricing.pro.badge"),
+    },
+  ];
+
+  const FAQS = [
+    { q: t("faq.items.q1"), a: t("faq.items.a1") },
+    { q: t("faq.items.q2"), a: t("faq.items.a2") },
+    { q: t("faq.items.q3"), a: t("faq.items.a3") },
+    { q: t("faq.items.q4"), a: t("faq.items.a4") },
+    { q: t("faq.items.q5"), a: t("faq.items.a5") },
+    { q: t("faq.items.q6"), a: t("faq.items.a6") },
+  ];
+
+  const COMPARISON = [
+    { feature: t("comparison.row1Feature"), manual: t("comparison.row1Manual"), proposai: t("comparison.row1Proposai") },
+    { feature: t("comparison.row2Feature"), manual: t("comparison.row2Manual"), proposai: t("comparison.row2Proposai") },
+    { feature: t("comparison.row3Feature"), manual: t("comparison.row3Manual"), proposai: t("comparison.row3Proposai") },
+    { feature: t("comparison.row4Feature"), manual: t("comparison.row4Manual"), proposai: t("comparison.row4Proposai") },
+    { feature: t("comparison.row5Feature"), manual: t("comparison.row5Manual"), proposai: t("comparison.row5Proposai") },
+    { feature: t("comparison.row6Feature"), manual: t("comparison.row6Manual"), proposai: t("comparison.row6Proposai") },
+    { feature: t("comparison.row7Feature"), manual: t("comparison.row7Manual"), proposai: t("comparison.row7Proposai") },
+  ];
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -816,27 +740,27 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <Badge className="mb-6 bg-orange-500/20 text-orange-300 border-orange-500/30 hover:bg-orange-500/20 text-xs font-semibold tracking-wide uppercase">
-                <Zap className="w-3 h-3 mr-1.5" /> AI Proposals in 60 Seconds
+                <Zap className="w-3 h-3 mr-1.5" /> {t("hero.badge")}
               </Badge>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-[1.1] mb-6 tracking-tight">
-                Stop Losing Jobs to<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">Faster Contractors.</span>
+                {t("hero.title1")}<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-orange-300">{t("hero.title2")}</span>
               </h1>
               <p className="text-lg text-slate-300 mb-8 max-w-lg leading-relaxed">
-                ProposAI generates professional, branded proposals for HVAC, plumbing, electrical, and roofing contractors in under 60 seconds — so you respond first and win more jobs.
+                {t("hero.subtitle")}
               </p>
               <div className="flex flex-col sm:flex-row gap-3 mb-6">
                 <Button size="lg" onClick={handleCTA} className="text-base px-8 h-12 bg-orange-500 hover:bg-orange-600 text-white border-0 shadow-lg shadow-orange-500/30">
-                  Start Free — No Credit Card <ArrowRight className="w-5 h-5 ml-2" />
+                  {t("hero.ctaPrimary")} <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
                 <Button size="lg" variant="outline" asChild className="text-base h-12 px-6 border-white/20 text-white hover:bg-white/10 bg-transparent">
-                  <a href="#walkthrough">See a Live Demo</a>
+                  <a href="#walkthrough">{t("hero.ctaSecondary")}</a>
                 </Button>
               </div>
               <div className="flex items-center gap-5 text-sm text-slate-400">
-                <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> 3 free proposals/month</span>
-                <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> No credit card</span>
-                <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> Cancel anytime</span>
+                <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> {t("hero.trust1")}</span>
+                <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> {t("hero.trust2")}</span>
+                <span className="flex items-center gap-1.5"><CheckCircle className="w-4 h-4 text-green-400" /> {t("hero.trust3")}</span>
               </div>
             </div>
 
@@ -858,30 +782,30 @@ export default function Home() {
                         </div>
                         <div>
                           <p className="text-white font-bold text-xs">ProposAI</p>
-                          <p className="text-slate-400 text-xs">Proposal Generated</p>
+                          <p className="text-slate-400 text-xs">{t("hero.cardGenerated")}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-1 px-2 py-1 bg-green-500/20 rounded-full">
                         <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                        <span className="text-green-400 text-xs font-medium">Ready</span>
+                        <span className="text-green-400 text-xs font-medium">{t("hero.cardReady")}</span>
                       </div>
                     </div>
                     <div className="bg-white/10 rounded-xl px-4 py-3">
-                      <p className="text-white font-bold text-sm">HVAC System Replacement</p>
-                      <p className="text-slate-300 text-xs mt-0.5">Mr. John Smith · 123 Main St, Austin TX</p>
+                      <p className="text-white font-bold text-sm">{t("hero.cardTitle")}</p>
+                      <p className="text-slate-300 text-xs mt-0.5">{t("hero.cardClient")}</p>
                     </div>
                   </div>
-                  {/* Cost breakdown */}
+                  {/* Card body */}
                   <div className="px-5 py-4 bg-white">
-                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">Cost Breakdown</p>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">{t("hero.cardCostBreakdown")}</p>
                     {[
-                      { label: "Equipment & Materials", amount: "$5,200", pct: 61, color: "bg-blue-500" },
-                      { label: "Labor & Installation", amount: "$2,100", pct: 25, color: "bg-orange-500" },
-                      { label: "Permits & Inspection", amount: "$1,200", pct: 14, color: "bg-slate-400" },
-                    ].map(({ label, amount, pct, color }) => (
-                      <div key={label} className="mb-3">
+                      { labelKey: "hero.cardEquipment", amount: "$5,200", pct: 61, color: "bg-blue-500" },
+                      { labelKey: "hero.cardLabor", amount: "$2,100", pct: 25, color: "bg-orange-500" },
+                      { labelKey: "hero.cardPermits", amount: "$1,200", pct: 14, color: "bg-slate-400" },
+                    ].map(({ labelKey, amount, pct, color }) => (
+                      <div key={labelKey} className="mb-3">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs text-slate-600">{label}</span>
+                          <span className="text-xs text-slate-600">{t(labelKey)}</span>
                           <span className="text-xs font-bold text-slate-800">{amount}</span>
                         </div>
                         <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
@@ -890,7 +814,7 @@ export default function Home() {
                       </div>
                     ))}
                     <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-                      <span className="text-sm font-bold text-slate-700">Total Estimate</span>
+                      <span className="text-sm font-bold text-slate-700">{t("hero.cardTotal")}</span>
                       <span className="text-xl font-extrabold text-primary">$8,500</span>
                     </div>
                   </div>
@@ -910,8 +834,8 @@ export default function Home() {
                     <Zap className="w-4 h-4 text-orange-500" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-foreground">Generated in 47s</p>
-                    <p className="text-xs text-muted-foreground">HVAC proposal ready</p>
+                    <p className="text-xs font-bold text-foreground">{t("hero.cardGeneratedIn")}</p>
+                    <p className="text-xs text-muted-foreground">{t("hero.cardProposalReady")}</p>
                   </div>
                 </div>
                 {/* Floating badge: client viewed */}
@@ -920,8 +844,8 @@ export default function Home() {
                     <CheckCircle className="w-4 h-4 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-foreground">Proposal Opened</p>
-                    <p className="text-xs text-muted-foreground">Client viewed 2 min ago</p>
+                    <p className="text-xs font-bold text-foreground">{t("hero.cardOpened")}</p>
+                    <p className="text-xs text-muted-foreground">{t("hero.cardViewedAgo")}</p>
                   </div>
                 </div>
               </div>
@@ -934,7 +858,7 @@ export default function Home() {
       <section className="bg-white border-b border-border py-6">
         <div className="container">
           <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
-            <p className="text-sm text-muted-foreground font-medium">Built for trade contractors across</p>
+            <p className="text-sm text-muted-foreground font-medium">{t("socialProof.builtFor")}</p>
             {TRADES.map(({ icon: Icon, label, color }) => (
               <div key={label} className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm ${color}`}>
                 <Icon className="w-4 h-4" />
@@ -967,14 +891,14 @@ export default function Home() {
         <div className="container">
           <div className="text-center mb-14">
             <Badge className="mb-4 bg-blue-50 text-blue-700 border-blue-100">
-              <Play className="w-3 h-3 mr-1.5" /> Live Demo
+              <Play className="w-3 h-3 mr-1.5" /> {t("liveDemo.badge")}
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">See exactly how it works</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{t("liveDemo.title")}</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              This is the real thing — fill in the form, watch the AI generate, then open the actual PDF output. No smoke and mirrors.
+              {t("liveDemo.subtitle")}
             </p>
           </div>
-          <InteractiveWalkthrough onCTA={handleCTA} />
+          <InteractiveWalkthrough onCTA={handleCTA} t={t} />
         </div>
       </section>
 
@@ -982,34 +906,34 @@ export default function Home() {
       <section id="how-it-works" className="py-24 bg-slate-50">
         <div className="container">
           <div className="text-center mb-16">
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">How It Works</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">From job site to proposal in 3 steps</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">No learning curve. No complicated setup. Just describe the job and let the AI do the work.</p>
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">{t("howItWorks.badge")}</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{t("howItWorks.title")}</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{t("howItWorks.subtitle")}</p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 max-w-4xl mx-auto">
             {[
-              { step: "01", title: "Describe the Job", desc: "Enter the trade type, job scope, materials, and your estimated cost. Takes less than a minute.", icon: Smartphone, color: "text-orange-500", bg: "bg-orange-50" },
-              { step: "02", title: "AI Writes the Proposal", desc: "Our AI generates a complete, professional proposal in seconds — with itemized costs, scope of work, and your branding.", icon: Zap, color: "text-blue-500", bg: "bg-blue-50" },
-              { step: "03", title: "Send & Track", desc: "Email the proposal directly to your client. Get notified the moment they open it so you can follow up at the perfect time.", icon: Eye, color: "text-green-500", bg: "bg-green-50" },
-            ].map(({ step, title, desc, icon: Icon, color, bg }, idx) => (
-              <div key={step} className="relative text-center">
-                <div className="hidden md:block absolute top-8 left-[calc(50%+2.5rem)] w-[calc(100%-5rem)] h-px bg-border" />
+              { stepKey: "howItWorks.step1", titleKey: "howItWorks.step1Title", descKey: "howItWorks.step1Desc", icon: Smartphone, color: "text-orange-500", bg: "bg-orange-50" },
+              { stepKey: "howItWorks.step2", titleKey: "howItWorks.step2Title", descKey: "howItWorks.step2Desc", icon: Zap, color: "text-blue-500", bg: "bg-blue-50" },
+              { stepKey: "howItWorks.step3", titleKey: "howItWorks.step3Title", descKey: "howItWorks.step3Desc", icon: Eye, color: "text-green-500", bg: "bg-green-50" },
+            ].map(({ stepKey, titleKey, descKey, icon: Icon, color, bg }, idx) => (
+              <div key={stepKey} className="relative text-center">
+                {idx < 2 && <div className="hidden md:block absolute top-8 left-[calc(50%+2.5rem)] w-[calc(100%-5rem)] h-px bg-border" />}
                 <div className={`w-16 h-16 ${bg} rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm relative z-10`}>
                   <Icon className={`w-8 h-8 ${color}`} />
                 </div>
                 <div className="inline-block bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full mb-3">
-                  Step {step}
+                  {t(stepKey)}
                 </div>
-                <h3 className="font-bold text-foreground text-lg mb-2">{title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{desc}</p>
+                <h3 className="font-bold text-foreground text-lg mb-2">{t(titleKey)}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{t(descKey)}</p>
               </div>
             ))}
           </div>
 
           <div className="text-center mt-12">
             <Button size="lg" onClick={handleCTA} className="px-8 h-12 bg-primary hover:bg-primary/90">
-              Try It Free Now <ArrowRight className="w-5 h-5 ml-2" />
+              {t("howItWorks.tryItFree")} <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
         </div>
@@ -1019,15 +943,15 @@ export default function Home() {
       <section className="py-24 bg-slate-900">
         <div className="container">
           <div className="text-center mb-14">
-            <Badge className="mb-4 bg-white/10 text-white border-white/20">The Difference</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">The old way vs. the ProposAI way</h2>
-            <p className="text-slate-400 text-lg max-w-xl mx-auto">Every hour you spend writing proposals is an hour you're not on the job site.</p>
+            <Badge className="mb-4 bg-white/10 text-white border-white/20">{t("comparison.badge")}</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t("comparison.title")}</h2>
+            <p className="text-slate-400 text-lg max-w-xl mx-auto">{t("comparison.subtitle")}</p>
           </div>
           <div className="max-w-3xl mx-auto overflow-hidden rounded-2xl border border-white/10">
             <div className="grid grid-cols-3 bg-white/5 border-b border-white/10">
-              <div className="p-4 text-sm font-semibold text-slate-400 uppercase tracking-wide">Feature</div>
-              <div className="p-4 text-sm font-semibold text-red-400 uppercase tracking-wide text-center">Manual / Old Way</div>
-              <div className="p-4 text-sm font-semibold text-green-400 uppercase tracking-wide text-center">ProposAI</div>
+              <div className="p-4 text-sm font-semibold text-slate-400 uppercase tracking-wide">{t("comparison.colFeature")}</div>
+              <div className="p-4 text-sm font-semibold text-red-400 uppercase tracking-wide text-center">{t("comparison.colManual")}</div>
+              <div className="p-4 text-sm font-semibold text-green-400 uppercase tracking-wide text-center">{t("comparison.colProposai")}</div>
             </div>
             {COMPARISON.map(({ feature, manual, proposai }, i) => (
               <div key={feature} className={`grid grid-cols-3 border-b border-white/5 ${i % 2 === 0 ? "bg-white/5" : "bg-transparent"}`}>
@@ -1048,9 +972,9 @@ export default function Home() {
       <section id="features" className="py-24 bg-background">
         <div className="container">
           <div className="text-center mb-14">
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">Features</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Everything you need to close more jobs</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">One tool that handles the entire proposal process — from AI generation to client delivery and tracking.</p>
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">{t("features.badge")}</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{t("features.title")}</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{t("features.subtitle")}</p>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURES.map(({ icon: Icon, title, desc, color }) => (
@@ -1070,9 +994,9 @@ export default function Home() {
       <section id="pricing" className="py-24 bg-slate-50">
         <div className="container">
           <div className="text-center mb-14">
-            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">Pricing</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Simple, transparent pricing</h2>
-            <p className="text-muted-foreground text-lg">One winning proposal pays for the tool 10x over.</p>
+            <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">{t("pricing.badge")}</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{t("pricing.title")}</h2>
+            <p className="text-muted-foreground text-lg">{t("pricing.subtitle")}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {PLANS.map(({ name, planId, price, period, proposals, features, cta, highlight, badge }) => {
@@ -1093,7 +1017,7 @@ export default function Home() {
                     <p className={`text-sm mt-1 font-medium ${highlight ? "text-white/80" : "text-muted-foreground"}`}>{proposals}</p>
                   </div>
                   <ul className="space-y-3 mb-8 flex-1">
-                    {features.map((f) => (
+                    {Array.isArray(features) && features.map((f) => (
                       <li key={f} className="flex items-center gap-2.5 text-sm">
                         <CheckCircle className={`w-4 h-4 flex-shrink-0 ${highlight ? "text-white" : "text-primary"}`} />
                         <span className={highlight ? "text-white" : "text-foreground"}>{f}</span>
@@ -1107,9 +1031,9 @@ export default function Home() {
                     className={`w-full h-11 font-semibold ${highlight ? "bg-white text-primary hover:bg-white/90" : ""}`}
                   >
                     {isLoadingThis ? (
-                      <span className="flex items-center gap-2"><span className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" /> Redirecting...</span>
+                      <span className="flex items-center gap-2"><span className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" /> {t("pricing.redirecting")}</span>
                     ) : (
-                      <>{!isAuthenticated && planId !== "free" ? "Sign in & " : ""}{cta} <ChevronRight className="w-4 h-4 ml-1" /></>
+                      <>{!isAuthenticated && planId !== "free" ? t("pricing.signInAnd") : ""}{cta} <ChevronRight className="w-4 h-4 ml-1" /></>
                     )}
                   </Button>
                 </div>
@@ -1124,8 +1048,8 @@ export default function Home() {
               className="w-24 h-24 object-contain"
             />
             <div className="text-center sm:text-left">
-              <p className="font-bold text-foreground text-lg">14-Day Value Guarantee</p>
-              <p className="text-muted-foreground text-sm max-w-xs">Use ProposAI for 14 days and win just one extra job — the tool pays for itself many times over. We're that confident.</p>
+              <p className="font-bold text-foreground text-lg">{t("pricing.guaranteeTitle")}</p>
+              <p className="text-muted-foreground text-sm max-w-xs">{t("pricing.guaranteeDesc")}</p>
             </div>
           </div>
         </div>
@@ -1135,9 +1059,9 @@ export default function Home() {
       <section className="py-24 bg-white">
         <div className="container">
           <div className="text-center mb-14">
-            <Badge className="mb-4 bg-purple-50 text-purple-700 border-purple-100">Powered by Anthropic</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Best-in-class AI for every plan</h2>
-            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">ProposAI runs on Anthropic's Claude — the AI model trusted by professionals for its polished writing, careful reasoning, and persuasive tone.</p>
+            <Badge className="mb-4 bg-purple-50 text-purple-700 border-purple-100">{t("aiModels.badge")}</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{t("aiModels.title")}</h2>
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">{t("aiModels.subtitle")}</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {[
@@ -1145,20 +1069,20 @@ export default function Home() {
                 flag: "🇺🇸",
                 name: "Claude Sonnet 4.6",
                 provider: "Anthropic",
-                badge: "All Plans — Free",
+                badge: t("aiModels.sonnetBadge"),
                 badgeColor: "bg-blue-100 text-blue-700",
-                desc: "Fast, capable, and available to every user. Writes polished, professional proposals with excellent structure and persuasive language. Perfect for daily use.",
-                tags: ["All plans", "Fast", "Professional"],
+                desc: t("aiModels.sonnetDesc"),
+                tags: t("aiModels.sonnetTags", { returnObjects: true }) as string[],
                 highlight: false,
               },
               {
                 flag: "🇺🇸",
                 name: "Claude Opus 4.6",
                 provider: "Anthropic",
-                badge: "Starter & Pro",
+                badge: t("aiModels.opusBadge"),
                 badgeColor: "bg-purple-100 text-purple-700",
-                desc: "Anthropic's most powerful model. Deeply reasoned, highly persuasive proposals that stand out from the competition. Ideal for complex, high-value jobs where winning matters most.",
-                tags: ["Paid plans", "Maximum quality", "Complex jobs"],
+                desc: t("aiModels.opusDesc"),
+                tags: t("aiModels.opusTags", { returnObjects: true }) as string[],
                 highlight: true,
               },
             ].map(({ flag, name, provider, badge, badgeColor, desc, tags, highlight }) => (
@@ -1167,7 +1091,7 @@ export default function Home() {
               }`}>
                 {highlight && (
                   <div className="absolute -top-3 left-6 text-xs font-bold px-3 py-1 rounded-full bg-purple-600 text-white">
-                    Premium Quality
+                    {t("aiModels.opusPremium")}
                   </div>
                 )}
                 <div className="flex items-start justify-between mb-3">
@@ -1182,16 +1106,16 @@ export default function Home() {
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3">{desc}</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {tags.map(t => (
-                    <span key={t} className={`text-xs border px-2 py-0.5 rounded-full ${
+                  {Array.isArray(tags) && tags.map(tag => (
+                    <span key={tag} className={`text-xs border px-2 py-0.5 rounded-full ${
                       highlight ? "bg-purple-100 border-purple-200 text-purple-700" : "bg-white border-border text-muted-foreground"
-                    }`}>{t}</span>
+                    }`}>{tag}</span>
                   ))}
                 </div>
               </div>
             ))}
           </div>
-          <p className="text-center text-sm text-muted-foreground mt-8">Switch models anytime in Settings. Claude Opus 4.6 unlocks automatically when you upgrade.</p>
+          <p className="text-center text-sm text-muted-foreground mt-8">{t("aiModels.switchNote")}</p>
         </div>
       </section>
 
@@ -1199,9 +1123,9 @@ export default function Home() {
       <section id="faq" className="py-24 bg-slate-50">
         <div className="container max-w-3xl">
           <div className="text-center mb-14">
-            <Badge className="mb-4 bg-slate-100 text-slate-700 border-slate-200">FAQ</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Frequently asked questions</h2>
-            <p className="text-muted-foreground text-lg">Everything you need to know before getting started.</p>
+            <Badge className="mb-4 bg-slate-100 text-slate-700 border-slate-200">{t("faq.badge")}</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{t("faq.title")}</h2>
+            <p className="text-muted-foreground text-lg">{t("faq.subtitle")}</p>
           </div>
           <div className="space-y-3">
             {FAQS.map(({ q, a }) => (
@@ -1218,19 +1142,19 @@ export default function Home() {
           <div className="w-16 h-16 bg-orange-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <Zap className="w-8 h-8 text-orange-400" />
           </div>
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Ready to win more jobs?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">{t("cta.title")}</h2>
           <p className="text-slate-300 text-lg mb-8 leading-relaxed">
-            Generate professional proposals in seconds, not hours. Start free — no credit card required.
+            {t("cta.subtitle")}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Button size="lg" onClick={handleCTA} className="text-base px-10 h-12 bg-orange-500 hover:bg-orange-600 border-0 shadow-lg shadow-orange-500/30">
-              Start Free Today <ArrowRight className="w-5 h-5 ml-2" />
+              {t("cta.primary")} <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
             <Button size="lg" variant="outline" asChild className="text-base h-12 px-8 border-white/20 text-white hover:bg-white/10 bg-transparent">
-              <a href="#walkthrough">See Live Demo</a>
+              <a href="#walkthrough">{t("cta.secondary")}</a>
             </Button>
           </div>
-          <p className="text-slate-500 text-sm mt-5">3 free proposals every month. Upgrade when you're ready.</p>
+          <p className="text-slate-500 text-sm mt-5">{t("cta.footnote")}</p>
         </div>
       </section>
 

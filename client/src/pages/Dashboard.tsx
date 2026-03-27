@@ -1,4 +1,5 @@
 import { useAuth } from "@/_core/hooks/useAuth";
+import { useTranslation } from "react-i18next";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
+import React from "react";
 import { OnboardingModal } from "@/components/OnboardingModal";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -22,12 +24,19 @@ import {
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const STATUS_CONFIG = {
-  draft: { label: "Draft", color: "bg-gray-100 text-gray-700", icon: Clock },
-  sent: { label: "Sent", color: "bg-blue-100 text-blue-700", icon: Mail },
-  viewed: { label: "Viewed", color: "bg-green-100 text-green-700", icon: Eye },
-  accepted: { label: "Accepted", color: "bg-emerald-100 text-emerald-700", icon: CheckCircle },
-  declined: { label: "Declined", color: "bg-red-100 text-red-700", icon: AlertCircle },
+const STATUS_COLORS: Record<string, string> = {
+  draft: "bg-gray-100 text-gray-700",
+  sent: "bg-blue-100 text-blue-700",
+  viewed: "bg-green-100 text-green-700",
+  accepted: "bg-emerald-100 text-emerald-700",
+  declined: "bg-red-100 text-red-700",
+};
+const STATUS_ICONS: Record<string, React.ElementType> = {
+  draft: Clock,
+  sent: Mail,
+  viewed: Eye,
+  accepted: CheckCircle,
+  declined: AlertCircle,
 };
 
 const TRADE_LABELS: Record<string, string> = {
@@ -39,6 +48,7 @@ const TRADE_LABELS: Record<string, string> = {
 };
 
 export default function Dashboard() {
+  const { t } = useTranslation();
   const { user, isAuthenticated, loading: authLoading, logout } = useAuth();
   const [, navigate] = useLocation();
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -61,7 +71,7 @@ export default function Dashboard() {
     }
   }, [profile]);
   const deleteMutation = trpc.proposals.delete.useMutation({
-    onSuccess: () => { toast.success("Proposal deleted"); refetch(); setDeleteId(null); },
+    onSuccess: () => { toast.success(t("common.deleted")); refetch(); setDeleteId(null); },
     onError: (e) => toast.error(e.message),
   });
   const updateProfileMutation = trpc.profile.update.useMutation();
@@ -81,7 +91,7 @@ export default function Dashboard() {
 
   const handleBulkExport = async () => {
     try {
-      toast.loading("Exporting proposals...");
+      toast.loading(t("common.loading"));
       const result = await exportQuery.refetch();
       if (result.data) {
         const link = document.createElement("a");
@@ -90,7 +100,7 @@ export default function Dashboard() {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        toast.success("Proposals exported successfully");
+        toast.success(t("common.success"));
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Export failed");
@@ -135,31 +145,31 @@ export default function Dashboard() {
             onClick={() => navigate("/dashboard")}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground text-sm font-medium"
           >
-            <BarChart3 className="w-4 h-4" /> Dashboard
+            <BarChart3 className="w-4 h-4" /> {t("dashboard.title")}
           </button>
           <button
             onClick={() => navigate("/proposals/new")}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
           >
-            <Plus className="w-4 h-4" /> New Proposal
+            <Plus className="w-4 h-4" /> {t("dashboard.newProposal")}
           </button>
           <button
             onClick={() => navigate("/import")}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
           >
-            <Upload className="w-4 h-4" /> Import Proposals
+            <Upload className="w-4 h-4" /> {t("dashboard.importProposals")}
           </button>
           <button
             onClick={() => navigate("/settings")}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
           >
-            <Settings className="w-4 h-4" /> Settings
+            <Settings className="w-4 h-4" /> {t("dashboard.settings")}
           </button>
           <button
             onClick={() => navigate("/")}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
           >
-            <Home className="w-4 h-4" /> Home
+            <Home className="w-4 h-4" /> {t("dashboard.home")}
           </button>
         </nav>
 
@@ -167,14 +177,14 @@ export default function Dashboard() {
         <div className="p-4 border-t border-sidebar-border">
           <div className="bg-sidebar-accent rounded-lg p-3 mb-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-sidebar-foreground/70 uppercase tracking-wide">Plan</span>
+              <span className="text-xs text-sidebar-foreground/70 uppercase tracking-wide">{t("dashboard.plan")}</span>
               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${planColors[plan as keyof typeof planColors]}`}>
                 {plan}
               </span>
             </div>
             {limit !== null && limit !== undefined ? (
               <>
-                <div className="text-xs text-sidebar-foreground/70 mb-1">{used} / {limit} proposals this month</div>
+                <div className="text-xs text-sidebar-foreground/70 mb-1">{t("dashboard.proposalsThisMonth", { used, limit })}</div>
                 <div className="h-1.5 bg-sidebar-border rounded-full overflow-hidden">
                   <div
                     className="h-full bg-primary rounded-full transition-all"
@@ -183,14 +193,14 @@ export default function Dashboard() {
                 </div>
               </>
             ) : (
-              <div className="text-xs text-sidebar-foreground/70">Unlimited proposals</div>
+              <div className="text-xs text-sidebar-foreground/70">{t("dashboard.unlimitedProposals")}</div>
             )}
             {plan !== "pro" && (
               <button
                 onClick={() => navigate("/pricing")}
                 className="mt-2 w-full text-xs text-primary font-medium hover:underline text-left"
               >
-                Upgrade plan &rarr;
+                {t("dashboard.upgradePlan")}
               </button>
             )}
           </div>
@@ -200,8 +210,8 @@ export default function Dashboard() {
             className="w-full bg-sidebar-accent rounded-lg p-3 mb-3 text-left hover:opacity-80 transition-opacity"
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-sidebar-foreground/70 uppercase tracking-wide">AI Model</span>
-              <span className="text-xs text-primary font-medium">Change &rarr;</span>
+              <span className="text-xs text-sidebar-foreground/70 uppercase tracking-wide">{t("dashboard.aiModel")}</span>
+              <span className="text-xs text-primary font-medium">{t("dashboard.changeSetting")}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-sm">🇺🇸</span>
@@ -229,19 +239,19 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h1>
             <p className="text-muted-foreground text-sm mt-0.5">
-              Welcome back, {user?.name?.split(" ")[0] || "Contractor"}
+              {t("dashboard.welcomeBack", { name: user?.name?.split(" ")[0] || t("common.contractor") })}
             </p>
           </div>
           <div className="flex gap-2">
             {proposals && proposals.length > 0 && (
               <Button onClick={handleBulkExport} variant="outline" className="gap-2">
-                <Download className="w-4 h-4" /> Export All
+                <Download className="w-4 h-4" /> {t("dashboard.exportAll")}
               </Button>
             )}
             <Button onClick={() => navigate("/templates")} variant="outline" className="gap-2">
-              <FileText className="w-4 h-4" /> My Templates
+              <FileText className="w-4 h-4" /> {t("dashboard.myTemplates")}
             </Button>
             <Button onClick={() => navigate("/proposals/new")} className="gap-2">
               <Plus className="w-4 h-4" /> New Proposal
@@ -257,12 +267,12 @@ export default function Dashboard() {
                 <Upload className="w-5 h-5 text-blue-600" />
               </div>
               <div className="flex-1 text-left">
-                <h3 className="font-semibold text-blue-900 mb-1">Have past proposals? Import them!</h3>
+                <h3 className="font-semibold text-blue-900 mb-1">{t("dashboard.importBannerTitle")}</h3>
                 <p className="text-sm text-blue-800 mb-3">
-                  Upload your previous proposals (PDF, Word, or text files) and our AI will extract client info, pricing, and scope to create reusable templates.
+                  {t("dashboard.importBannerDesc")}
                 </p>
                 <Button onClick={() => navigate("/import")} size="sm" className="bg-blue-600 hover:bg-blue-700">
-                  <Upload className="w-4 h-4 mr-2" /> Import Proposals Now
+                  <Upload className="w-4 h-4 mr-2" /> {t("dashboard.importNow")}
                 </Button>
               </div>
             </div>
@@ -278,36 +288,36 @@ export default function Dashboard() {
 
         {/* Response Analytics */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Proposal Performance</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t("dashboard.proposalPerformance")}</h2>
           <ResponseAnalyticsWidget />
         </div>
 
         {/* Feedback Analytics */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Client Feedback</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t("dashboard.clientFeedback")}</h2>
           <FeedbackAnalyticsWidget />
         </div>
 
         {/* Recommendations */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4">Improvement Recommendations</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-4">{t("dashboard.improvementRecs")}</h2>
           <RecommendationsWidget />
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <div className="bg-card border border-border rounded-xl p-5">
-            <p className="text-sm text-muted-foreground mb-1">Total Proposals</p>
+            <p className="text-sm text-muted-foreground mb-1">{t("dashboard.totalProposals")}</p>
             <p className="text-3xl font-bold text-foreground">{proposals?.length || 0}</p>
           </div>
           <div className="bg-card border border-border rounded-xl p-5">
-            <p className="text-sm text-muted-foreground mb-1">Sent This Month</p>
+            <p className="text-sm text-muted-foreground mb-1">{t("dashboard.sentThisMonth")}</p>
             <p className="text-3xl font-bold text-foreground">
               {proposals?.filter(p => p.status !== "draft").length || 0}
             </p>
           </div>
           <div className="bg-card border border-border rounded-xl p-5">
-            <p className="text-sm text-muted-foreground mb-1">Viewed by Clients</p>
+            <p className="text-sm text-muted-foreground mb-1">{t("dashboard.viewedByClients")}</p>
             <p className="text-3xl font-bold text-primary">
               {proposals?.filter(p => p.status === "viewed" || p.status === "accepted").length || 0}
             </p>
@@ -317,8 +327,8 @@ export default function Dashboard() {
         {/* Proposals Table */}
         <div className="bg-card border border-border rounded-xl overflow-hidden">
           <div className="p-5 border-b border-border flex items-center justify-between">
-            <h2 className="font-semibold text-foreground">All Proposals</h2>
-            <span className="text-sm text-muted-foreground">{proposals?.length || 0} total</span>
+            <h2 className="font-semibold text-foreground">{t("dashboard.allProposals")}</h2>
+            <span className="text-sm text-muted-foreground">{proposals?.length || 0} {t("dashboard.total")}</span>
           </div>
 
           {isLoading ? (
@@ -330,17 +340,17 @@ export default function Dashboard() {
               <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
                 <FileText className="w-7 h-7 text-muted-foreground" />
               </div>
-              <h3 className="font-semibold text-foreground mb-1">No proposals yet</h3>
-              <p className="text-muted-foreground text-sm mb-6">Get started in two ways:</p>
+              <h3 className="font-semibold text-foreground mb-1">{t("dashboard.noProposals")}</h3>
+              <p className="text-muted-foreground text-sm mb-6">{t("dashboard.getStarted")}</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Button onClick={() => navigate("/templates")} size="sm">
-                  <FileText className="w-4 h-4 mr-1" /> My Templates
+                  <FileText className="w-4 h-4 mr-1" /> {t("dashboard.myTemplates")}
                 </Button>
                 <Button onClick={() => navigate("/proposals/new")} variant="outline" size="sm">
-                  <Plus className="w-4 h-4 mr-1" /> Create with AI
+                  <Plus className="w-4 h-4 mr-1" /> {t("dashboard.createWithAI")}
                 </Button>
                 <Button onClick={() => navigate("/import")} variant="outline" size="sm">
-                  <Upload className="w-4 h-4 mr-1" /> Import Past Proposals
+                  <Upload className="w-4 h-4 mr-1" /> {t("dashboard.importPast")}
                 </Button>
               </div>
             </div>
@@ -349,18 +359,19 @@ export default function Dashboard() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
-                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">Proposal</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">Trade</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">Client</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">Status</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">Date</th>
-                    <th className="text-right text-xs font-medium text-muted-foreground px-5 py-3">Actions</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">{t("dashboard.colProposal")}</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">{t("dashboard.colTrade")}</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">{t("dashboard.colClient")}</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">{t("dashboard.colStatus")}</th>
+                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">{t("dashboard.colDate")}</th>
+                    <th className="text-right text-xs font-medium text-muted-foreground px-5 py-3">{t("dashboard.colActions")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {proposals?.map((p) => {
-                    const statusCfg = STATUS_CONFIG[p.status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.draft;
-                    const StatusIcon = statusCfg.icon;
+                    const statusColor = STATUS_COLORS[p.status] || STATUS_COLORS.draft;
+                    const StatusIcon = STATUS_ICONS[p.status] || STATUS_ICONS.draft;
+                    const statusLabel = t(`dashboard.status${p.status.charAt(0).toUpperCase() + p.status.slice(1)}` as any) || p.status;
                     return (
                       <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                         <td className="px-5 py-3.5">
@@ -375,9 +386,9 @@ export default function Dashboard() {
                           {p.clientEmail && <p className="text-xs text-muted-foreground">{p.clientEmail}</p>}
                         </td>
                         <td className="px-5 py-3.5">
-                          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${statusCfg.color}`}>
+                          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${statusColor}`}>
                             <StatusIcon className="w-3 h-3" />
-                            {statusCfg.label}
+                            {statusLabel}
                           </span>
                         </td>
                         <td className="px-5 py-3.5">
@@ -419,16 +430,16 @@ export default function Dashboard() {
       <AlertDialog open={deleteId !== null} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Proposal?</AlertDialogTitle>
-            <AlertDialogDescription>This action cannot be undone. The proposal will be permanently deleted.</AlertDialogDescription>
+            <AlertDialogTitle>{t("dashboard.deleteTitle")}</AlertDialogTitle>
+            <AlertDialogDescription>{t("dashboard.deleteDesc")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-white hover:bg-destructive/90"
               onClick={() => deleteId && deleteMutation.mutate({ id: deleteId })}
             >
-              Delete
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
