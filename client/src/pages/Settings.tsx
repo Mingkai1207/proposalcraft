@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SuggestInput, SuggestTextarea } from "@/components/ui/suggest-input";
 import { useLocation } from "wouter";
-import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import { ArrowLeft, Upload, User, Building, FileText, Save, Bot, Mail } from "lucide-react";
 
@@ -96,7 +95,7 @@ export default function Settings() {
   if (authLoading || isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   }
-  if (!isAuthenticated) { window.location.href = getLoginUrl(); return null; }
+  if (!isAuthenticated) { navigate("/login"); return null; }
 
   const update = (field: string, value: string) => setForm(f => ({ ...f, [field]: value }));
 

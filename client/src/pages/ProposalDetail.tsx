@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { SuggestInput, SuggestTextarea } from "@/components/ui/suggest-input";
 import { Badge } from "@/components/ui/badge";
 import { useLocation, useParams } from "wouter";
-import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
 import { VersionHistory } from "@/components/VersionHistory";
@@ -229,7 +228,7 @@ export default function ProposalDetail() {
   if (authLoading || isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
-  if (!isAuthenticated) { window.location.href = getLoginUrl(); return null; }
+  if (!isAuthenticated) { navigate("/login"); return null; }
   if (!proposal) {
     return (
       <div className="min-h-screen flex items-center justify-center">

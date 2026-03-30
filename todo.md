@@ -744,3 +744,19 @@
 - [x] Wire t() calls to Dashboard page (sidebar, table headers, status labels, empty states)
 - [x] Wire t() calls to Footer component
 - [x] Add i18n coverage tests (server/i18n.test.ts) — 10 tests passing
+
+## Native Email/Password Auth (Replace Manus OAuth)
+- [x] Audit current Manus OAuth flow (server/_core/oauth.ts, context.ts, routers.ts auth section)
+- [x] Add password_hash column to users table (DB migration)
+- [x] Implement register tRPC mutation (email, password, name → bcrypt hash → insert user → set session cookie)
+- [x] Implement login tRPC mutation (email + password → bcrypt compare → set session cookie)
+- [x] Implement logout tRPC mutation (clear session cookie)
+- [x] Update auth context to use new session (remove Manus OAuth token validation)
+- [x] Build /login page with email/password form and ProposAI branding
+- [x] Build /register page with name/email/password form and ProposAI branding
+- [x] Remove Manus OAuth redirect from all CTAs and nav buttons
+- [x] Update useAuth() hook and getLoginUrl() to point to /login
+- [x] Protect dashboard routes: redirect to /login if not authenticated
+- [x] Remove all Manus OAuth references from frontend (const.ts, App.tsx, etc.)
+- [x] Write 10 vitest tests for native auth (bcrypt, validation, openId generation) — all passing
+- [x] Save checkpoint and push to GitHub

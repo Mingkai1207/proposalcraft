@@ -31,7 +31,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 
 const ALL_TRADE_TYPES = [
   "hvac", "plumbing", "electrical", "roofing", "general",
@@ -288,7 +287,7 @@ export function Templates() {
   }
 
   if (!isAuthenticated) {
-    window.location.href = getLoginUrl();
+    navigate("/login");
     return null;
   }
 

@@ -3,7 +3,6 @@ import Footer from "@/components/Footer";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { getLoginUrl } from "@/const";
 import { CheckCircle, ArrowLeft, Zap, Crown, ExternalLink, Lock, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
@@ -144,7 +143,7 @@ export default function Pricing() {
 
   const handleUpgrade = (planId: string) => {
     if (!isAuthenticated) {
-      window.location.href = getLoginUrl();
+      navigate("/login");
       return;
     }
     if (planId !== "starter" && planId !== "pro") return;

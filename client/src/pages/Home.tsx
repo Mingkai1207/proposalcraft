@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { getLoginUrl } from "@/const";
 import { useLocation } from "wouter";
 import Footer from "@/components/Footer";
 import { useState, useEffect, useRef } from "react";
@@ -594,12 +593,12 @@ export default function Home() {
       if (isAuthenticated) {
         navigate("/dashboard");
       } else {
-        window.location.href = getLoginUrl();
+        navigate("/register");
       }
       return;
     }
     if (!isAuthenticated) {
-      window.location.href = getLoginUrl();
+      navigate("/login");
       return;
     }
     setLoadingPlan(planId);
@@ -610,7 +609,7 @@ export default function Home() {
     if (isAuthenticated) {
       navigate("/dashboard");
     } else {
-      window.location.href = getLoginUrl();
+      navigate("/register");
     }
   };
 
@@ -717,7 +716,7 @@ export default function Home() {
               </Button>
             ) : (
               <>
-                <Button variant="ghost" size="sm" onClick={() => { window.location.href = getLoginUrl(); }} className="hidden sm:flex">
+                <Button variant="ghost" size="sm" onClick={() => navigate("/login")} className="hidden sm:flex">
                   {t("nav.signIn")}
                 </Button>
                 <Button size="sm" onClick={handleCTA} className="shadow-sm">

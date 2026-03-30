@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { SuggestInput, SuggestTextarea } from "@/components/ui/suggest-input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useLocation } from "wouter";
-import { getLoginUrl } from "@/const";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import {
@@ -244,7 +243,7 @@ export default function NewProposal() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
   if (!isAuthenticated) {
-    window.location.href = getLoginUrl();
+    navigate("/login");
     return null;
   }
 

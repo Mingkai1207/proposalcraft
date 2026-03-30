@@ -4,7 +4,6 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
-import { getLoginUrl } from "@/const";
 import { PendingProposalsWidget } from "@/components/PendingProposalsWidget";
 import { ResponseAnalyticsWidget } from "@/components/ResponseAnalyticsWidget";
 import { FeedbackAnalyticsWidget } from "@/components/FeedbackAnalyticsWidget";
@@ -116,7 +115,7 @@ export default function Dashboard() {
   }
 
   if (!isAuthenticated) {
-    window.location.href = getLoginUrl();
+    navigate("/login");
     return null;
   }
 
