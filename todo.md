@@ -760,3 +760,8 @@
 - [x] Remove all Manus OAuth references from frontend (const.ts, App.tsx, etc.)
 - [x] Write 10 vitest tests for native auth (bcrypt, validation, openId generation) — all passing
 - [x] Save checkpoint and push to GitHub
+
+## Auth Bug Fixes
+- [x] Fix "No procedure found on path auth.login" — wire nativeAuth router into main appRouter
+- [x] Show clear error message "No account found with this email. Please create one free." when login email doesn't exist (with inline link to /register)
+- [x] Show clear error message "Incorrect password. Please try again." for wrong password

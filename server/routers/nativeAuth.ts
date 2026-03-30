@@ -20,7 +20,8 @@ function generateNativeOpenId(email: string): string {
   return `native_${email.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now()}`;
 }
 
-export const nativeAuthRouter = router({
+// Export individual procedures so they can be composed into any router
+export const nativeAuthProcedures = {
   /**
    * Register a new user with email + password.
    * Creates the user record and sets a session cookie.
@@ -114,13 +115,18 @@ export const nativeAuthRouter = router({
         .where(eq(users.email, input.email.toLowerCase()))
         .limit(1);
 
-      // Generic error to prevent email enumeration
+      // Specific error when email not found — helps the user understand they need to register
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "No account found with this email. Please create one free.",
+        });
+      }
+
       const invalidError = new TRPCError({
         code: "UNAUTHORIZED",
-        message: "Invalid email or password.",
+        message: "Incorrect password. Please try again.",
       });
-
-      if (!user) throw invalidError;
       if (!user.passwordHash) {
         // User registered via OAuth — no password set
         throw new TRPCError({
@@ -152,4 +158,4 @@ export const nativeAuthRouter = router({
 
       return { success: true, user: { id: user.id, name: user.name, email: user.email } };
     }),
-});
+};

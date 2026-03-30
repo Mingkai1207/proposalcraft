@@ -14,6 +14,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showRegisterLink, setShowRegisterLink] = useState(false);
 
   const utils = trpc.useUtils();
 
@@ -24,6 +25,7 @@ export default function Login() {
     },
     onError: (err) => {
       setError(err.message || "Login failed. Please try again.");
+      setShowRegisterLink(err.message?.includes("No account found") ?? false);
     },
   });
 
@@ -65,7 +67,16 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
                 <Alert className="border-red-500/50 bg-red-500/10">
-                  <AlertDescription className="text-red-400 text-sm">{error}</AlertDescription>
+                  <AlertDescription className="text-red-400 text-sm">
+                    {error}
+                    {showRegisterLink && (
+                      <span className="block mt-1">
+                        <Link href="/register" className="text-amber-400 hover:text-amber-300 underline font-medium">
+                          Create a free account →
+                        </Link>
+                      </span>
+                    )}
+                  </AlertDescription>
                 </Alert>
               )}
 

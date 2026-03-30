@@ -14,7 +14,7 @@ import { versionsRouter } from "./routers/versions";
 import { feedbackRouter } from "./routers/feedback";
 import { recommendationsRouter } from "./routers/recommendations";
 import { importRouter } from "./routers/import";
-import { nativeAuthRouter } from "./routers/nativeAuth";
+import { nativeAuthProcedures } from "./routers/nativeAuth";
 
 export const appRouter = router({
   system: systemRouter,
@@ -25,8 +25,7 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
-    register: nativeAuthRouter.register,
-    login: nativeAuthRouter.login,
+    ...nativeAuthProcedures,
   }),
   proposals: proposalRouter,
   profile: profileRouter,
