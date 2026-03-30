@@ -88,7 +88,7 @@ class SDKServer {
 
   constructor(client: AxiosInstance = createOAuthHttpClient()) {
     this.client = client;
-    this.oauthService = new OAuthService(this.client);
+    this.oauthService = new OAuthService(this.client as any);
   }
 
   private deriveLoginMethod(
@@ -171,7 +171,7 @@ class SDKServer {
     return this.signSession(
       {
         openId,
-        appId: ENV.appId,
+        appId: "proposalcraft",
         name: options.name || "",
       },
       options
