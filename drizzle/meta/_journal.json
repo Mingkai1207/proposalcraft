@@ -127,6 +127,13 @@
       "when": 1774830482841,
       "tag": "0017_stale_phalanx",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1774840650057,
+      "tag": "0018_tearful_prima",
+      "breakpoints": true
     }
   ]
 }

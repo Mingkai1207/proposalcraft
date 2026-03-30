@@ -15,6 +15,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showRegisterLink, setShowRegisterLink] = useState(false);
+  const [showResendLink, setShowResendLink] = useState(false);
 
   const utils = trpc.useUtils();
 
@@ -26,6 +27,7 @@ export default function Login() {
     onError: (err) => {
       setError(err.message || "Login failed. Please try again.");
       setShowRegisterLink(err.message?.includes("No account found") ?? false);
+      setShowResendLink(err.message?.includes("verify your email") ?? false);
     },
   });
 
@@ -73,6 +75,16 @@ export default function Login() {
                       <span className="block mt-1">
                         <Link href="/register" className="text-amber-400 hover:text-amber-300 underline font-medium">
                           Create a free account →
+                        </Link>
+                      </span>
+                    )}
+                    {showResendLink && (
+                      <span className="block mt-1">
+                        <Link
+                          href={`/check-your-email?email=${encodeURIComponent(email)}`}
+                          className="text-amber-400 hover:text-amber-300 underline font-medium"
+                        >
+                          Resend verification email →
                         </Link>
                       </span>
                     )}

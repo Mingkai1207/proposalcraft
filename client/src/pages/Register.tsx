@@ -20,9 +20,9 @@ export default function Register() {
   const utils = trpc.useUtils();
 
   const registerMutation = trpc.auth.register.useMutation({
-    onSuccess: async () => {
-      await utils.auth.me.invalidate();
-      navigate("/dashboard");
+    onSuccess: () => {
+      // Redirect to check-your-email page (don't log in yet — email must be verified first)
+      navigate(`/check-your-email?email=${encodeURIComponent(email)}`);
     },
     onError: (err) => {
       setError(err.message || "Registration failed. Please try again.");
@@ -40,7 +40,7 @@ export default function Register() {
       setError("Password must be at least 8 characters.");
       return;
     }
-    registerMutation.mutate({ name, email, password });
+    registerMutation.mutate({ name, email, password, origin: window.location.origin });
   };
 
   const passwordStrength = password.length === 0 ? null : password.length < 8 ? "weak" : password.length < 12 ? "good" : "strong";

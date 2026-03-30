@@ -20,6 +20,8 @@ import NewProposalFromTemplate from "./pages/NewProposalFromTemplate";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyEmail from "./pages/VerifyEmail";
+import CheckYourEmail from "./pages/CheckYourEmail";
 
 function Router() {
   return (
@@ -27,6 +29,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/login" component={Login} />
       <Route path="/register" component={Register} />
+      <Route path="/verify-email" component={VerifyEmail} />
+      <Route path="/check-your-email" component={CheckYourEmail} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/proposals/new" component={NewProposal} />
       <Route path="/proposals/from-template" component={NewProposalFromTemplate} />

@@ -765,3 +765,18 @@
 - [x] Fix "No procedure found on path auth.login" — wire nativeAuth router into main appRouter
 - [x] Show clear error message "No account found with this email. Please create one free." when login email doesn't exist (with inline link to /register)
 - [x] Show clear error message "Incorrect password. Please try again." for wrong password
+
+## Email Verification on Registration
+- [x] Add emailVerified (boolean), verificationToken (varchar), verificationTokenExpiresAt (bigint) columns to users table
+- [x] Apply DB migration for new columns
+- [x] Generate a secure 64-char hex token on register, stored with 24h expiry
+- [x] Send branded HTML verification email (dev: logs to console, prod: nodemailer SMTP)
+- [x] Add verifyEmail tRPC mutation: validates token, marks emailVerified=true, clears token, sets session cookie
+- [x] Add resendVerification tRPC mutation: generates new token, sends new email
+- [x] Build /verify-email page: loading → success (auto-redirect to dashboard) / error states
+- [x] Block unverified users from login with FORBIDDEN error + inline resend link
+- [x] Build /check-your-email page with resend button and inbox tips
+- [x] Register /verify-email and /check-your-email routes in App.tsx
+- [x] Update Register.tsx to redirect to /check-your-email after registration
+- [x] Update Login.tsx to show resend link when unverified error occurs
+- [x] All 55 tests passing

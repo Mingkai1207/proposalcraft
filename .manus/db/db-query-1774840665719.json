@@ -1,0 +1,9 @@
+{
+  "query": "ALTER TABLE `users` ADD `emailVerified` boolean DEFAULT false NOT NULL;\nALTER TABLE `users` ADD `verificationToken` varchar(128);\nALTER TABLE `users` ADD `verificationTokenExpiresAt` bigint;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user FeC7Hhjo94vzeQP.root --database TxoyTEEFMfksnn9C3wscL4 --execute ALTER TABLE `users` ADD `emailVerified` boolean DEFAULT false NOT NULL;\nALTER TABLE `users` ADD `verificationToken` varchar(128);\nALTER TABLE `users` ADD `verificationTokenExpiresAt` bigint;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2661
+}
