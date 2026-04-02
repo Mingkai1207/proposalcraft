@@ -120,10 +120,8 @@ export async function incrementProposalUsage(userId: number) {
   }
 }
 
-export function getPlanLimit(plan: string): number {
-  if (plan === "pro") return Infinity;
-  if (plan === "starter") return 20;
-  return 3; // free
+export function getPlanLimit(_plan: string): number {
+  return Infinity; // TEMP: all plans unlimited during promotional period
 }
 
 // ─── Proposals ────────────────────────────────────────────────────────────────

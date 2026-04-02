@@ -25,7 +25,7 @@ export default function Settings() {
   });
   const [preferredModel, setPreferredModel] = useState("claude-sonnet-4-6-thinking");
   const { data: subscription } = trpc.subscription.get.useQuery(undefined, { enabled: isAuthenticated });
-  const isPaidUser = subscription?.plan === "starter" || subscription?.plan === "pro";
+  const isPaidUser = true; // TEMP: all models unlocked during promotional period
   const [smtpForm, setSmtpForm] = useState({
     smtpHost: "", smtpPort: 587, smtpUsername: "", smtpPassword: "",
     smtpFromEmail: "", smtpFromName: "",
@@ -49,7 +49,7 @@ export default function Settings() {
       name: "Claude Opus 4.6",
       provider: "Anthropic",
       flag: "🇺🇸",
-      badge: "Paid Only",
+      badge: "All Plans",
       badgeColor: "bg-purple-100 text-purple-700",
       desc: "Anthropic's most powerful model. The highest-quality proposal writing available — deeply reasoned, highly persuasive, and tailored to win complex jobs.",
       bestFor: "English · Maximum quality · Starter & Pro",
@@ -204,7 +204,7 @@ export default function Settings() {
             <Bot className="w-4 h-4 text-primary" />
             <h2 className="font-semibold text-foreground">AI Model</h2>
           </div>
-          <p className="text-sm text-muted-foreground mb-4">Choose which AI model writes your proposals. Claude Opus 4.6 is available on paid plans for maximum quality.</p>
+          <p className="text-sm text-muted-foreground mb-4">Choose which AI model writes your proposals. All models are available to all users during our promotional period.</p>
           <div className="grid grid-cols-1 gap-3">
             {AI_MODELS.map(m => {
               const isLocked = m.requiresPaid && !isPaidUser;

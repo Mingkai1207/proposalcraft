@@ -168,20 +168,11 @@ ${profile?.defaultTerms ? `Terms & Conditions: ${profile.defaultTerms}` : "Inclu
 
 Write a complete, ready-to-send proposal. Use professional formatting with clear section headers.`;
 
-      // Model gating:
-      // - All users: Claude Sonnet 4.6 (claude-sonnet-4-6-thinking) — default
-      // - Paid users (starter/pro): Claude Opus 4.6 (claude-opus-4-6) — premium option
+      // TEMP: all models available to all users during promotional period
       const SONNET_MODEL = "claude-sonnet-4-6-thinking";
       const OPUS_MODEL = "claude-opus-4-6";
       const requestedModel = profile?.preferredModel || SONNET_MODEL;
-      let model: string;
-      if (requestedModel === OPUS_MODEL && sub.plan === "free") {
-        model = SONNET_MODEL; // Free plan: silently downgrade Opus → Sonnet
-      } else if (requestedModel === OPUS_MODEL) {
-        model = OPUS_MODEL; // Paid plan: allow Opus
-      } else {
-        model = SONNET_MODEL; // Default for all other values
-      }
+      const model = requestedModel === OPUS_MODEL ? OPUS_MODEL : SONNET_MODEL;
 
       const response = await invokeLLM({
         messages: [
@@ -216,12 +207,8 @@ Write a complete, ready-to-send proposal. Use professional formatting with clear
       // Create tracking token
       const trackingToken = nanoid(32);
 
-      // Save proposal to DB
-      // Append watermark text for free-plan proposals (admin users are exempt)
-      const isFree = sub.plan === "free" && !isAdmin;
-      const watermarkedContent = isFree
-        ? `${generatedContent}\n\n---\n*This proposal was generated with ProposAI Free. Upgrade to remove this watermark and unlock email delivery, tracking, and custom branding.*`
-        : generatedContent;
+      // TEMP: no watermark during promotional period
+      const watermarkedContent = generatedContent;
 
       const proposal = await createProposal({
         userId: ctx.user.id,

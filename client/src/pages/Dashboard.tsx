@@ -194,14 +194,7 @@ export default function Dashboard() {
             ) : (
               <div className="text-xs text-sidebar-foreground/70">{t("dashboard.unlimitedProposals")}</div>
             )}
-            {plan !== "pro" && (
-              <button
-                onClick={() => navigate("/pricing")}
-                className="mt-2 w-full text-xs text-primary font-medium hover:underline text-left"
-              >
-                {t("dashboard.upgradePlan")}
-              </button>
-            )}
+            {/* Upgrade button hidden during promotional period */}
           </div>
           {/* Current AI model & language indicator */}
           <button

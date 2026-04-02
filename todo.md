@@ -780,3 +780,15 @@
 - [x] Update Register.tsx to redirect to /check-your-email after registration
 - [x] Update Login.tsx to show resend link when unverified error occurs
 - [x] All 55 tests passing
+
+## Temporary Free Access (All Features Unlocked)
+- [x] Disable backend plan enforcement — getPlanLimit() returns Infinity for all users
+- [x] Remove proposal generation limit (free: 3/mo cap removed)
+- [x] Remove premium AI model gate — all users can use Claude Opus 4.6
+- [x] Remove watermark on free-tier PDFs
+- [x] Hide upgrade banner in ProposalDetail.tsx for free users
+- [x] Unlock AI revision for all users in ProposalDetail.tsx
+- [x] Settings: Claude Opus 4.6 badge updated to "All Plans", model unlocked for all
+- [x] Dashboard: upgrade button hidden from sidebar
+- [x] Fixed DashboardLayout.tsx TS error (navigate → window.location.href)
+- [x] All 55 tests passing
