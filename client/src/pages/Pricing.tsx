@@ -1,19 +1,17 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import Footer from "@/components/Footer";
-import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
-import { CheckCircle, ArrowLeft, Zap, Crown, ExternalLink, Lock, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { useEffect, useState } from "react";
+import { CheckCircle, ArrowLeft, Zap, Crown, Gift } from "lucide-react";
 
 const PLANS = [
   {
     id: "free",
-    name: "Free",
-    price: "$0",
+    name: "Starter",
+    originalPrice: "$0",
+    promoPrice: "FREE",
     period: "/month",
-    proposals: "3 proposals/month",
+    proposals: "Unlimited proposals",
     badge: null,
     features: [
       "AI proposal generation",
@@ -23,26 +21,19 @@ const PLANS = [
       "Save proposals as templates",
       "Upload your own template documents",
     ],
-    locked: [
-      "Word (.docx) export",
-      "Google Doc export",
-      "Revise with AI chatbot",
-      "Custom logo & branding",
-      "Multi-language proposals",
-    ],
-    cta: "Current Plan",
     highlight: false,
     icon: null,
   },
   {
     id: "starter",
-    name: "Starter",
-    price: "$5.99",
+    name: "Professional",
+    originalPrice: "$5.99",
+    promoPrice: "FREE",
     period: "/month",
-    proposals: "20 proposals/month",
+    proposals: "Unlimited proposals",
     badge: "Most Popular",
     features: [
-      "Everything in Free — no watermark",
+      "Everything in Starter",
       "Word (.docx) export",
       "Google Doc export",
       "Revise with AI chatbot",
@@ -51,31 +42,24 @@ const PLANS = [
       "Multi-language proposals (EN, ZH, ES, FR)",
       "Template-based generation (follow your format)",
     ],
-    locked: [
-      "Bulk export all proposals as ZIP",
-      "Analytics dashboard (open rate, win rate)",
-      "Priority support",
-    ],
-    cta: "Upgrade to Starter",
     highlight: false,
     icon: Zap,
   },
   {
     id: "pro",
-    name: "Pro",
-    price: "$9.99",
+    name: "Business",
+    originalPrice: "$9.99",
+    promoPrice: "FREE",
     period: "/month",
     proposals: "Unlimited proposals",
     badge: "Best Value",
     features: [
-      "Everything in Starter",
+      "Everything in Professional",
       "Unlimited proposal generation",
       "Bulk export all proposals as ZIP",
       "Analytics dashboard — win rate & revenue tracked",
       "Priority support (response within 4 hours)",
     ],
-    locked: [],
-    cta: "Upgrade to Pro",
     highlight: true,
     icon: Crown,
   },
@@ -84,72 +68,6 @@ const PLANS = [
 export default function Pricing() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [, navigate] = useLocation();
-  const utils = trpc.useUtils();
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
-
-  const { data: subscription, refetch: refetchSub } = trpc.subscription.get.useQuery(undefined, {
-    enabled: isAuthenticated,
-  });
-
-  const portalMutation = trpc.billing.createPortal.useMutation({
-    onSuccess: (data) => {
-      if (data.url) window.open(data.url, "_blank");
-    },
-    onError: (e) => toast.error(e.message),
-  });
-
-  const checkoutMutation = trpc.billing.createCheckout.useMutation({
-    onSuccess: (data) => {
-      if (data.url) {
-        toast.success("Redirecting to PayPal checkout...");
-        window.location.href = data.url;
-      }
-    },
-    onError: (e) => {
-      toast.error(e.message || "Failed to start checkout. Please try again.");
-      setLoadingPlan(null);
-    },
-  });
-
-  const currentPlan = subscription?.plan || "free";
-
-  // Handle return from PayPal with subscription_id in URL
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const upgraded = params.get("upgraded");
-    const plan = params.get("plan");
-    const subscriptionId = params.get("subscription_id");
-
-    if (upgraded === "1" && plan && subscriptionId) {
-      // Activate the subscription via the backend
-      activateSubscriptionMutation.mutate({ subscriptionId, plan: plan as "starter" | "pro" });
-    }
-  }, []);
-
-  const activateSubscriptionMutation = trpc.billing.activateSubscription.useMutation({
-    onSuccess: () => {
-      toast.success("🎉 Subscription activated! Welcome to your new plan.");
-      refetchSub();
-      utils.subscription.get.invalidate();
-      // Clean up URL params
-      window.history.replaceState({}, "", "/pricing");
-    },
-    onError: (e) => {
-      // Webhook may have already activated it — just refetch
-      refetchSub();
-      utils.subscription.get.invalidate();
-    },
-  });
-
-  const handleUpgrade = (planId: string) => {
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
-    if (planId !== "starter" && planId !== "pro") return;
-    setLoadingPlan(planId);
-    checkoutMutation.mutate({ plan: planId as "starter" | "pro" });
-  };
 
   if (authLoading) {
     return (
@@ -172,24 +90,30 @@ export default function Pricing() {
         <h1 className="font-semibold text-foreground">Plans & Pricing</h1>
       </div>
 
+      {/* Promotional banner */}
+      <div className="bg-primary text-white text-center py-3 px-4">
+        <div className="flex items-center justify-center gap-2 text-sm font-medium">
+          <Gift className="w-4 h-4 flex-shrink-0" />
+          <span>
+            🎉 <strong>Launch Promotion:</strong> All features are completely free during our launch period — no credit card required, no hidden fees.
+          </span>
+        </div>
+      </div>
+
       <div className="max-w-5xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-foreground mb-3">Simple, transparent pricing</h2>
-          <p className="text-muted-foreground text-lg">One winning proposal pays for the tool 10x over.</p>
-          {isAuthenticated && (
-            <div className="mt-4 inline-flex items-center gap-2 bg-primary/10 text-primary px-4 py-2 rounded-full text-sm font-medium">
-              <CheckCircle className="w-4 h-4" />
-              You are on the <span className="capitalize font-bold ml-1">{currentPlan}</span> plan
-            </div>
-          )}
+          <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-sm font-semibold mb-4">
+            <Gift className="w-4 h-4" />
+            Free During Launch
+          </div>
+          <h2 className="text-3xl font-bold text-foreground mb-3">Everything is free right now</h2>
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            We're in our launch period — all plans and all features are available at no cost. No payment info needed. Just sign up and start winning more jobs.
+          </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 items-start">
-          {PLANS.map(({ id, name, price, period, proposals, features, locked, badge, cta, highlight, icon: Icon }) => {
-            const isCurrent = currentPlan === id;
-            const isPaid = id === "starter" || id === "pro";
-            const isLoading = loadingPlan === id && checkoutMutation.isPending;
-
+          {PLANS.map(({ id, name, originalPrice, promoPrice, period, proposals, features, badge, highlight, icon: Icon }) => {
             return (
               <div
                 key={id}
@@ -215,95 +139,62 @@ export default function Pricing() {
                       {name}
                     </p>
                   </div>
-                  <div className="flex items-end gap-1">
-                    <span className={`text-4xl font-bold ${highlight ? "text-white" : "text-foreground"}`}>{price}</span>
-                    <span className={`text-sm mb-1 ${highlight ? "text-white/70" : "text-muted-foreground"}`}>{period}</span>
+                  <div className="flex items-end gap-2">
+                    <span className={`text-4xl font-bold ${highlight ? "text-white" : "text-green-600"}`}>{promoPrice}</span>
+                    {originalPrice !== "$0" && (
+                      <span className={`text-lg mb-1 line-through ${highlight ? "text-white/40" : "text-muted-foreground/50"}`}>{originalPrice}{period}</span>
+                    )}
                   </div>
                   <p className={`text-sm mt-1 font-medium ${highlight ? "text-white/80" : "text-primary"}`}>{proposals}</p>
                 </div>
 
-                <ul className="space-y-2.5 mb-4 flex-1">
+                <ul className="space-y-2.5 mb-6 flex-1">
                   {features.map((f) => (
                     <li key={f} className="flex items-start gap-2.5 text-sm">
                       <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${highlight ? "text-white" : "text-primary"}`} />
                       <span className={highlight ? "text-white" : "text-foreground"}>{f}</span>
                     </li>
                   ))}
-                  {locked && locked.length > 0 && (
-                    <>
-                      <li className={`text-xs font-semibold uppercase tracking-wide mt-3 mb-1 ${highlight ? "text-white/50" : "text-muted-foreground/60"}`}>Not included:</li>
-                      {locked.map((f) => (
-                        <li key={f} className="flex items-start gap-2.5 text-sm">
-                          <Lock className={`w-3.5 h-3.5 flex-shrink-0 mt-0.5 ${highlight ? "text-white/30" : "text-muted-foreground/40"}`} />
-                          <span className={`line-through ${highlight ? "text-white/40" : "text-muted-foreground/50"}`}>{f}</span>
-                        </li>
-                      ))}
-                    </>
-                  )}
                 </ul>
 
                 {/* CTA */}
-                {isCurrent ? (
+                {isAuthenticated ? (
                   <Button
-                    disabled
+                    onClick={() => navigate("/dashboard")}
                     variant={highlight ? "secondary" : "default"}
-                    className={`w-full mt-4 opacity-60 cursor-not-allowed ${highlight ? "bg-white text-primary" : ""}`}
+                    className={`w-full ${highlight ? "bg-white text-primary hover:bg-white/90" : ""}`}
                   >
-                    ✓ Current Plan
-                  </Button>
-                ) : isPaid ? (
-                  <Button
-                    onClick={() => handleUpgrade(id)}
-                    disabled={isLoading || checkoutMutation.isPending}
-                    variant={highlight ? "secondary" : "default"}
-                    className={`w-full mt-4 ${highlight ? "bg-white text-primary hover:bg-white/90" : ""}`}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Redirecting to PayPal...
-                      </>
-                    ) : (
-                      <>
-                        {!isAuthenticated ? "Sign in to " : ""}{cta}
-                      </>
-                    )}
+                    Go to Dashboard
                   </Button>
                 ) : (
-                  <Button disabled variant="outline" className="w-full mt-4 opacity-60 cursor-not-allowed">
-                    {cta}
+                  <Button
+                    onClick={() => navigate("/register")}
+                    variant={highlight ? "secondary" : "default"}
+                    className={`w-full ${highlight ? "bg-white text-primary hover:bg-white/90" : ""}`}
+                  >
+                    Get Started Free
                   </Button>
                 )}
 
-                {isPaid && !isCurrent && (
-                  <p className={`text-xs text-center mt-2 ${highlight ? "text-white/60" : "text-muted-foreground"}`}>
-                    Secure checkout via PayPal
-                  </p>
-                )}
+                <p className={`text-xs text-center mt-2 ${highlight ? "text-white/60" : "text-muted-foreground"}`}>
+                  No credit card required
+                </p>
               </div>
             );
           })}
         </div>
 
-        {isAuthenticated && currentPlan !== "free" && (
-          <div className="mt-6 text-center">
-            <Button
-              variant="outline"
-              onClick={() => portalMutation.mutate()}
-              disabled={portalMutation.isPending}
-            >
-              <ExternalLink className="w-4 h-4 mr-1" />
-              {portalMutation.isPending ? "Loading..." : "Manage Subscription (PayPal)"}
-            </Button>
-          </div>
-        )}
+        {/* FAQ note */}
+        <div className="mt-8 bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+          <h3 className="font-semibold text-green-800 mb-2">Why is everything free?</h3>
+          <p className="text-green-700 text-sm">
+            We're in our public launch phase and want contractors to experience the full power of ProposAI before we introduce paid plans. Enjoy unlimited access to all features — no strings attached.
+          </p>
+        </div>
 
-        <div className="mt-8 bg-card border border-border rounded-xl p-6 text-center">
-          <h3 className="font-semibold text-foreground mb-2">Need a custom plan?</h3>
-          <p className="text-muted-foreground text-sm mb-4">For large teams or enterprise use, contact us for custom pricing.</p>
-          <Button variant="outline" onClick={() => toast.info("Contact us at hello@proposai.org")}>
-            Contact Sales
-          </Button>
+        <div className="mt-6 bg-card border border-border rounded-xl p-6 text-center">
+          <h3 className="font-semibold text-foreground mb-2">Questions?</h3>
+          <p className="text-muted-foreground text-sm">We're happy to help. Reach us at <a href="mailto:hello@proposai.org" className="text-primary hover:underline">hello@proposai.org</a></p>
         </div>
       </div>
       <Footer />

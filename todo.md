@@ -792,3 +792,14 @@
 - [x] Dashboard: upgrade button hidden from sidebar
 - [x] Fixed DashboardLayout.tsx TS error (navigate → window.location.href)
 - [x] All 55 tests passing
+
+## Promotional Pricing UI Updates
+- [x] Update Pricing page plan cards to show "FREE during launch" instead of $29/$59 prices
+- [x] Replace "Upgrade" buttons with "Get Started Free" buttons that go to /register
+- [x] Add promotional banner to pricing page explaining all features are free
+- [x] Update hero trust badges ("3 free proposals/month" → "All features free", "No credit card" stays, "Cancel anytime" → "Free during launch")
+- [x] Home.tsx: handlePlanClick redirects to /register or /dashboard (no checkout)
+- [x] Home.tsx: promotional banner added above plan cards
+- [x] Home.tsx: comparison table row7 updated to "Free during launch 🎉"
+- [x] i18n.ts: Chinese translations updated for all pricing/trust badge changes
+- [x] All 55 tests passing

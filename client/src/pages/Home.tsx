@@ -588,21 +588,13 @@ export default function Home() {
     },
   });
 
-  const handlePlanClick = (planId: string) => {
-    if (planId === "free") {
-      if (isAuthenticated) {
-        navigate("/dashboard");
-      } else {
-        navigate("/register");
-      }
-      return;
+  const handlePlanClick = (_planId: string) => {
+    // All plans are free during the promotional period — no checkout needed
+    if (isAuthenticated) {
+      navigate("/dashboard");
+    } else {
+      navigate("/register");
     }
-    if (!isAuthenticated) {
-      navigate("/login");
-      return;
-    }
-    setLoadingPlan(planId);
-    checkoutMutation.mutate({ plan: planId as "starter" | "pro" });
   };
 
   const handleCTA = () => {
@@ -992,10 +984,15 @@ export default function Home() {
       {/* ── Pricing ── */}
       <section id="pricing" className="py-24 bg-slate-50">
         <div className="container">
-          <div className="text-center mb-14">
+          <div className="text-center mb-10">
             <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">{t("pricing.badge")}</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">{t("pricing.title")}</h2>
             <p className="text-muted-foreground text-lg">{t("pricing.subtitle")}</p>
+          </div>
+          {/* Promotional banner */}
+          <div className="flex items-center justify-center gap-2 mb-10 px-5 py-3 rounded-2xl bg-green-50 border border-green-200 max-w-xl mx-auto">
+            <span className="text-xl">&#127881;</span>
+            <p className="text-green-800 font-semibold text-sm">{t("pricing.promoBanner")}</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {PLANS.map(({ name, planId, price, period, proposals, features, cta, highlight, badge }) => {
