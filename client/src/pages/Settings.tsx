@@ -8,14 +8,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { SuggestInput, SuggestTextarea } from "@/components/ui/suggest-input";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, User, Building, FileText, Save, Bot, Mail } from "lucide-react";
+import { ArrowLeft, Upload, User, Building, FileText, Save, Bot, Mail, AlertCircle } from "lucide-react";
 
 export default function Settings() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [, navigate] = useLocation();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const { data: profile, isLoading, refetch } = trpc.profile.get.useQuery(undefined, {
+  const { data: profile, isLoading, isError: profileError, refetch } = trpc.profile.get.useQuery(undefined, {
     enabled: isAuthenticated,
   });
 
@@ -103,6 +103,17 @@ export default function Settings() {
     return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   }
   if (!isAuthenticated) return null;
+  if (profileError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
+          <p className="text-muted-foreground mb-4">Failed to load settings</p>
+          <Button onClick={() => refetch()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   const update = (field: string, value: string) => setForm(f => ({ ...f, [field]: value }));
 
