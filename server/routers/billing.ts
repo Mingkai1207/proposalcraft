@@ -84,7 +84,7 @@ export const billingRouter = router({
   // Activate subscription after PayPal redirect (called from success page)
   activateSubscription: protectedProcedure
     .input(z.object({
-      subscriptionId: z.string(),
+      subscriptionId: z.string().min(1).max(50),
       plan: z.enum(["starter", "pro"]),
     }))
     .mutation(async ({ ctx, input }) => {

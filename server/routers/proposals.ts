@@ -66,18 +66,18 @@ export const proposalRouter = router({
   generate: protectedProcedure
     .input(
       z.object({
-        title: z.string().min(1),
+        title: z.string().min(1).max(200),
         tradeType: z.enum(ALL_TRADE_TYPES),
-        clientName: z.string().optional(),
-        clientEmail: z.string().email().optional().or(z.literal("")),
-        clientAddress: z.string().optional(),
+        clientName: z.string().max(200).optional(),
+        clientEmail: z.string().email().max(320).optional().or(z.literal("")),
+        clientAddress: z.string().max(500).optional(),
         jobScope: z.string().min(10).max(5000),
         materials: z.string().max(2000).optional(),
         laborCost: z.string().optional(),
         materialsCost: z.string().optional(),
         totalCost: z.string().optional(),
-        language: z.string().optional(),
-        expiryDays: z.number().min(1).default(30),
+        language: z.string().max(50).optional(),
+        expiryDays: z.number().min(1).max(365).default(30),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -285,9 +285,9 @@ Write a complete, ready-to-send proposal. Use professional formatting with clear
     .input(
       z.object({
         id: z.number(),
-        clientEmail: z.string().email(),
-        clientName: z.string().optional(),
-        message: z.string().optional(),
+        clientEmail: z.string().email().max(320),
+        clientName: z.string().max(200).optional(),
+        message: z.string().max(2000).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -859,26 +859,26 @@ ${portalLink ? `<p>Direct link: <a href="${portalLink}" style="color:#e8630a;">$
     .input(
       z.object({
         // Proposal identity
-        title: z.string().min(1),
+        title: z.string().min(1).max(200),
         tradeType: z.enum(ALL_TRADE_TYPES),
         // Client info
-        clientName: z.string().optional(),
-        clientEmail: z.string().email().optional().or(z.literal("")),
-        clientAddress: z.string().optional(),
+        clientName: z.string().max(200).optional(),
+        clientEmail: z.string().email().max(320).optional().or(z.literal("")),
+        clientAddress: z.string().max(500).optional(),
         // Project details
         jobScope: z.string().min(10).max(5000),
         materials: z.string().max(2000).optional(),
         laborCost: z.string().optional(),
         materialsCost: z.string().optional(),
         totalCost: z.string().optional(),
-        estimatedDays: z.string().optional(),
-        startDate: z.string().optional(),
+        estimatedDays: z.string().max(100).optional(),
+        startDate: z.string().max(50).optional(),
         paymentTerms: z.string().max(1000).optional(),
         specialNotes: z.string().max(2000).optional(),
-        language: z.string().optional(),
-        expiryDays: z.number().min(1).default(30),
-        colorScheme: z.string().optional(),
-        tone: z.string().optional(),
+        language: z.string().max(50).optional(),
+        expiryDays: z.number().min(1).max(365).default(30),
+        colorScheme: z.string().max(50).optional(),
+        tone: z.string().max(50).optional(),
 
       })
     )
@@ -1416,16 +1416,16 @@ Your job:
     .input(
       z.object({
         templateId: z.number(),
-        approvedSummary: z.string().min(10),
-        title: z.string().min(1),
+        approvedSummary: z.string().min(10).max(10000),
+        title: z.string().min(1).max(200),
         tradeType: z.enum(ALL_TRADE_TYPES),
-        clientName: z.string().optional(),
-        clientEmail: z.string().email().optional().or(z.literal("")),
-        clientAddress: z.string().optional(),
+        clientName: z.string().max(200).optional(),
+        clientEmail: z.string().email().max(320).optional().or(z.literal("")),
+        clientAddress: z.string().max(500).optional(),
         jobScope: z.string().min(1).max(5000),
         totalCost: z.string().optional(),
-        estimatedDays: z.string().optional(),
-        expiryDays: z.number().default(30),
+        estimatedDays: z.string().max(100).optional(),
+        expiryDays: z.number().min(1).max(365).default(30),
         /** If provided, update this existing draft instead of creating a new proposal */
         proposalId: z.number().optional(),
       })
