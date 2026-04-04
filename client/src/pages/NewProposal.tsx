@@ -208,6 +208,11 @@ export default function NewProposal() {
     tone: "professional",
   });
 
+  // Redirect to login if not authenticated (useEffect avoids setState-during-render warning)
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) navigate("/login");
+  }, [authLoading, isAuthenticated]);
+
   // Auto-fill profile data
   const { data: profile } = trpc.profile.get.useQuery(undefined, { enabled: isAuthenticated });
 
@@ -243,7 +248,6 @@ export default function NewProposal() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
   if (!isAuthenticated) {
-    navigate("/login");
     return null;
   }
 
