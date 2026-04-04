@@ -223,6 +223,9 @@ importers:
       postgres:
         specifier: ^3.4.5
         version: 3.4.8
+      puppeteer:
+        specifier: ^24.40.0
+        version: 24.40.0(typescript@5.9.3)
       react:
         specifier: ^19.2.1
         version: 19.2.1
@@ -326,9 +329,6 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.6.2
-      puppeteer:
-        specifier: ^24.40.0
-        version: 24.40.0(typescript@5.9.3)
       tailwindcss:
         specifier: ^4.1.14
         version: 4.1.14
