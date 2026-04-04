@@ -85,9 +85,10 @@ export const billingRouter = router({
         return { url: approvalLink.href };
       } catch (err: any) {
         if (err instanceof TRPCError) throw err;
+        console.error("[Billing] createCheckout error:", err?.message || err);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: err?.message || "Failed to create checkout session.",
+          message: "Failed to create checkout session. Please try again.",
         });
       }
     }),
@@ -137,7 +138,8 @@ export const billingRouter = router({
         return { success: true };
       } catch (err: any) {
         if (err instanceof TRPCError) throw err;
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: err?.message || "Failed to activate subscription." });
+        console.error("[Billing] activateSubscription error:", err?.message || err);
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to activate subscription. Please try again." });
       }
     }),
 
