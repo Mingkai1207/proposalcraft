@@ -374,16 +374,18 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
             fromName: profile.smtpFromName || businessName,
           }
         : undefined;
-      try {
-        await sendEmail({
-          to: input.clientEmail,
-          subject: `Proposal from ${businessName}: ${proposal.title}`,
-          html: emailHtml,
-          smtpOverride,
-        });
-      } catch (err) {
+      await sendEmail({
+        to: input.clientEmail,
+        subject: `Proposal from ${businessName}: ${proposal.title}`,
+        html: emailHtml,
+        smtpOverride,
+      }).catch((err) => {
         console.error("[Email] Failed to send:", err);
-      }
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to send email. Please check your SMTP settings and try again.",
+        });
+      });
 
       // Record email event
       await createEmailEvent({ proposalId: proposal.id, eventType: "sent" });
@@ -504,17 +506,19 @@ ${portalLink ? `<p>Direct link: <a href="${portalLink}" style="color:#e8630a;">$
             fromName: profile.smtpFromName || businessName,
           }
         : undefined;
-      try {
-        if (proposal.clientEmail) {
-          await sendEmail({
-            to: proposal.clientEmail,
-            subject: `Follow-up: ${proposal.title}`,
-            html: followUpHtml,
-            smtpOverride: followUpSmtpOverride,
+      if (proposal.clientEmail) {
+        await sendEmail({
+          to: proposal.clientEmail,
+          subject: `Follow-up: ${proposal.title}`,
+          html: followUpHtml,
+          smtpOverride: followUpSmtpOverride,
+        }).catch((err) => {
+          console.error("[Email] Failed to send follow-up:", err);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Failed to send follow-up email. Please check your SMTP settings.",
           });
-        }
-      } catch (err) {
-        console.error("[Email] Failed to send follow-up:", err);
+        });
       }
 
       // Record follow-up sent time
