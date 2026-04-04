@@ -23,6 +23,7 @@ import { proposalTemplates, proposals as proposalsTable } from "../../drizzle/sc
 import { getDb } from "../db";
 import { ENV } from "../_core/env";
 import { generateProposalPdf, type ProposalPdfData } from "../utils/proposalPdfExport";
+import { snapshotProposalVersion } from "./versions";
 
 const ALL_TRADE_TYPES = ["hvac", "plumbing", "electrical", "roofing", "general", "painting", "flooring", "landscaping", "carpentry", "concrete", "masonry", "insulation", "drywall", "windows", "solar"] as const;
 
@@ -259,6 +260,10 @@ Write a complete, ready-to-send proposal. Use professional formatting with clear
       const proposal = await getProposalById(id);
       if (!proposal || proposal.userId !== ctx.user.id) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
+      }
+      // Snapshot before overwriting content so it's restorable
+      if (data.generatedContent !== undefined) {
+        await snapshotProposalVersion(id, ctx.user.id).catch(() => {});
       }
       return updateProposal(id, ctx.user.id, data);
     }),
@@ -1733,6 +1738,9 @@ Your job:
         const rawContent = response.choices[0]?.message?.content;
         updatedContent = typeof rawContent === "string" ? rawContent : currentContent;
       }
+
+      // Snapshot the current content before overwriting (enables restore)
+      await snapshotProposalVersion(input.id, ctx.user.id).catch(() => {});
 
       // Save the updated content to the database
       await updateProposal(input.id, ctx.user.id, { generatedContent: updatedContent });

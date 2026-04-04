@@ -5,6 +5,47 @@ import { eq } from "drizzle-orm";
 import { getDb } from "../db";
 import { TRPCError } from "@trpc/server";
 
+/**
+ * Save a snapshot of a proposal's current content as a new version.
+ * Called automatically before AI revisions and manual saves so users can restore.
+ * Ownership must be verified by the caller before invoking this function.
+ */
+export async function snapshotProposalVersion(
+  proposalId: number,
+  userId: number
+): Promise<void> {
+  const db = await getDb();
+  if (!db) return; // Non-fatal: silently skip if DB unavailable
+
+  const rows = await db.select().from(proposals).where(eq(proposals.id, proposalId)).limit(1);
+  const proposal = rows[0];
+  if (!proposal || proposal.userId !== userId) return;
+
+  // Only snapshot if there is content worth preserving
+  const content = proposal.generatedContent || proposal.pdfUrl || "";
+  if (!content.trim()) return;
+
+  const versions = await db
+    .select({ id: proposalVersions.id })
+    .from(proposalVersions)
+    .where(eq(proposalVersions.proposalId, proposalId));
+  const nextVersion = versions.length + 1;
+
+  await db.insert(proposalVersions).values({
+    proposalId,
+    versionNumber: nextVersion,
+    title: proposal.title,
+    content,
+    clientName: proposal.clientName || undefined,
+    clientEmail: proposal.clientEmail || undefined,
+    jobScope: proposal.jobScope || undefined,
+    materials: proposal.materials || undefined,
+    laborCost: proposal.laborCost || undefined,
+    materialsCost: proposal.materialsCost || undefined,
+    totalCost: proposal.totalCost || undefined,
+  });
+}
+
 export const versionsRouter = router({
   // Get all versions of a proposal
   listVersions: protectedProcedure
