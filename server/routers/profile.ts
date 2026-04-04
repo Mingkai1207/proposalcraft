@@ -19,23 +19,23 @@ export const profileRouter = router({
   update: protectedProcedure
     .input(
       z.object({
-        businessName: z.string().optional(),
-        ownerName: z.string().optional(),
-        phone: z.string().optional(),
+        businessName: z.string().max(200).optional(),
+        ownerName: z.string().max(200).optional(),
+        phone: z.string().max(30).optional(),
         email: z.string().email().optional().or(z.literal("")),
-        address: z.string().optional(),
-        licenseNumber: z.string().optional(),
-        website: z.string().optional(),
-        defaultTerms: z.string().optional(),
-        logoUrl: z.string().optional(),
-        preferredModel: z.string().optional(),
-        smtpHost: z.string().optional(),
-        smtpPort: z.number().optional(),
-        smtpUsername: z.string().optional(),
-        smtpPassword: z.string().optional(),
-        smtpFromEmail: z.string().optional(),
-        smtpFromName: z.string().optional(),
-        followUpTemplate: z.string().optional(),
+        address: z.string().max(500).optional(),
+        licenseNumber: z.string().max(100).optional(),
+        website: z.string().url().max(500).optional().or(z.literal("")),
+        defaultTerms: z.string().max(5000).optional(),
+        logoUrl: z.string().url().max(2000).optional(),
+        preferredModel: z.string().max(100).optional(),
+        smtpHost: z.string().max(255).optional(),
+        smtpPort: z.number().int().min(1).max(65535).optional(),
+        smtpUsername: z.string().max(255).optional(),
+        smtpPassword: z.string().max(500).optional(),
+        smtpFromEmail: z.string().email().max(320).optional().or(z.literal("")),
+        smtpFromName: z.string().max(100).optional(),
+        followUpTemplate: z.string().max(5000).optional(),
         onboardingCompleted: z.boolean().optional(),
       })
     )
@@ -53,14 +53,16 @@ export const profileRouter = router({
   uploadLogo: protectedProcedure
     .input(
       z.object({
-        base64: z.string(),
-        mimeType: z.string().default("image/png"),
+        base64: z.string().max(5_500_000), // ~4MB image max (base64 overhead ~33%)
+        mimeType: z.enum(["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"]).default("image/png"),
       })
     )
     .mutation(async ({ ctx, input }) => {
       // Decode base64 and upload to S3
       const buffer = Buffer.from(input.base64.replace(/^data:[^;]+;base64,/, ""), "base64");
-      const ext = input.mimeType.split("/")[1] || "png";
+      // Use a fixed extension map to prevent path traversal
+      const extMap: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/jpg": "jpg", "image/webp": "webp", "image/gif": "gif" };
+      const ext = extMap[input.mimeType] ?? "png";
       const key = `logos/${ctx.user.id}-${nanoid(8)}.${ext}`;
       const { url } = await storagePut(key, buffer, input.mimeType);
 

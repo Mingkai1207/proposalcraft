@@ -103,7 +103,7 @@ export const exportRouter = router({
 
   // Protected: Export specific proposals as ZIP
   exportProposals: protectedProcedure
-    .input(z.object({ proposalIds: z.array(z.number()) }))
+    .input(z.object({ proposalIds: z.array(z.number()).max(500) }))
     .query(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database connection failed" });

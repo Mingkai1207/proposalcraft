@@ -123,7 +123,13 @@ export default function Settings() {
     const reader = new FileReader();
     reader.onload = () => {
       const base64 = reader.result as string;
-      uploadLogoMutation.mutate({ base64, mimeType: file.type });
+      const allowedMimeTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp", "image/gif"] as const;
+      type AllowedMime = typeof allowedMimeTypes[number];
+      if (!allowedMimeTypes.includes(file.type as AllowedMime)) {
+        toast.error("Only PNG, JPEG, WebP, or GIF logos are allowed");
+        return;
+      }
+      uploadLogoMutation.mutate({ base64, mimeType: file.type as AllowedMime });
     };
     reader.readAsDataURL(file);
   };

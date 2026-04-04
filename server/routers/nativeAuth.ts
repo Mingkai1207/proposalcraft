@@ -18,6 +18,21 @@ import { sendEmail, buildVerificationEmail } from "../email";
 const BCRYPT_ROUNDS = 12;
 const VERIFICATION_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+// Trusted origins for email verification links — use env var in production
+const TRUSTED_APP_ORIGIN = process.env.VITE_APP_URL?.replace(/\/$/, "") || "https://proposai.org";
+
+function getSafeOrigin(requestedOrigin?: string): string {
+  if (!requestedOrigin) return TRUSTED_APP_ORIGIN;
+  try {
+    const url = new URL(requestedOrigin);
+    const trusted = new URL(TRUSTED_APP_ORIGIN);
+    // Allow if same host (ignoring protocol for localhost dev)
+    if (url.hostname === trusted.hostname) return requestedOrigin.replace(/\/$/, "");
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return requestedOrigin.replace(/\/$/, "");
+  } catch {}
+  return TRUSTED_APP_ORIGIN;
+}
+
 // If SMTP is not configured, skip email verification entirely — users auto-verify on signup.
 // This prevents a hard block on deployments (e.g. Railway) where SMTP hasn't been set up yet.
 function isSmtpConfigured(): boolean {
@@ -108,7 +123,7 @@ export const nativeAuthProcedures = {
       }
 
       // SMTP is available — send a verification email
-      const origin = input.origin ?? "https://proposai.org";
+      const origin = getSafeOrigin(input.origin);
       const verifyUrl = `${origin}/verify-email?token=${verificationToken}`;
       const { html, text } = buildVerificationEmail({ name: input.name, verifyUrl });
       await sendEmail({
@@ -132,7 +147,7 @@ export const nativeAuthProcedures = {
    * Sets a session cookie on success.
    */
   verifyEmail: publicProcedure
-    .input(z.object({ token: z.string().min(1) }))
+    .input(z.object({ token: z.string().min(1).max(128) }))
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
@@ -221,7 +236,7 @@ export const nativeAuthProcedures = {
         .set({ verificationToken, verificationTokenExpiresAt })
         .where(eq(users.id, user.id));
 
-      const origin = input.origin ?? "https://proposai.org";
+      const origin = getSafeOrigin(input.origin);
       const verifyUrl = `${origin}/verify-email?token=${verificationToken}`;
       const { html, text } = buildVerificationEmail({ name: user.name ?? "there", verifyUrl });
 
