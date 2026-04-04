@@ -34,6 +34,16 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
     },
   });
 
+  const exportPdfMutation = trpc.proposals.exportPdf.useMutation({
+    onSuccess: (data) => {
+      const link = document.createElement("a");
+      link.href = data.url; link.download = data.fileName;
+      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      toast.success("PDF downloaded!");
+    },
+    onError: (err) => toast.error(err.message || "Failed to export PDF"),
+  });
+
 
 
   useEffect(() => {
@@ -74,9 +84,8 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
     });
   };
 
-  const handleExportPdf = async () => {
-    // TODO: Implement PDF export
-    toast.info("PDF export coming soon");
+  const handleExportPdf = () => {
+    exportPdfMutation.mutate({ id: proposalId });
   };
 
   return (
@@ -123,12 +132,12 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
             </Button>
             <Button
               onClick={handleExportPdf}
-              disabled={!proposal}
+              disabled={!proposal || exportPdfMutation.isPending}
               size="sm"
               className="gap-2"
             >
               <Download className="w-4 h-4" />
-              Export PDF
+              {exportPdfMutation.isPending ? "Generating..." : "Export PDF"}
             </Button>
           </div>
         </div>

@@ -58,7 +58,7 @@ export default function ProposalImport() {
     );
 
     importMutation.mutate({ files: fileData as any });
-    setIsExtracting(false);
+    // isExtracting is reset in onError; onSuccess navigates away
   };
 
   return (

@@ -58,11 +58,24 @@ export async function sendAutomaticFollowUps() {
           sentDate: new Date(proposal.sentAt!).toLocaleDateString(),
         });
 
+        // Build SMTP override from contractor profile if configured
+        const smtpOverride = profile.smtpHost && profile.smtpUsername && profile.smtpPassword
+          ? {
+              host: profile.smtpHost,
+              port: profile.smtpPort || 587,
+              username: profile.smtpUsername,
+              password: profile.smtpPassword,
+              fromEmail: profile.smtpFromEmail || "",
+              fromName: profile.smtpFromName || businessName,
+            }
+          : undefined;
+
         // Send via nodemailer
         const sent = await sendEmail({
           to: proposal.clientEmail,
           subject: `Follow-up: ${proposal.title}`,
           html: followUpHtml,
+          smtpOverride,
         });
 
         if (sent) {
