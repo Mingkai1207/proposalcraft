@@ -116,7 +116,8 @@ async function startServer() {
           let parsed: { user_id?: number; plan?: string } = {};
           try { parsed = JSON.parse(customId); } catch {}
           const userId = parsed.user_id ? Number(parsed.user_id) : 0;
-          const plan = (parsed.plan || "starter") as "starter" | "pro";
+          const rawPlan = parsed.plan || "starter";
+          const plan: "starter" | "pro" = (rawPlan === "pro" ? "pro" : "starter");
           if (userId) {
             await updateSubscription(userId, {
               plan,
@@ -172,9 +173,11 @@ async function startServer() {
     res.end(TRACKING_PIXEL);
 
     // Fire-and-forget: record open in the background
+    const token = req.params.token;
+    if (!token || token.length > 128) return; // ignore obviously invalid tokens
     try {
       const { getProposalByToken, updateProposal, createEmailEvent } = await import("../db");
-      const proposal = await getProposalByToken(req.params.token);
+      const proposal = await getProposalByToken(token);
       if (proposal && proposal.status === "sent") {
         await updateProposal(proposal.id, proposal.userId, {
           status: "viewed",

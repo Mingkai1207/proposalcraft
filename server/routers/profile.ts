@@ -40,8 +40,10 @@ export const profileRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // "__configured__" is the sentinel returned by get() — never write it back to the DB
-      const smtpPassword = input.smtpPassword === "__configured__" ? undefined : input.smtpPassword;
+      // "__configured__" is the sentinel returned by get() — never write it back to the DB.
+      // An empty string also means "don't change" — the client never pre-fills the field.
+      const smtpPassword =
+        !input.smtpPassword || input.smtpPassword === "__configured__" ? undefined : input.smtpPassword;
       return upsertContractorProfile({
         userId: ctx.user.id,
         ...input,
