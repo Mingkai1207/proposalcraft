@@ -15,6 +15,7 @@ import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "../_core/llm";
 import { eq } from "drizzle-orm";
 import { parseFileContent, decodeBase64File } from "../utils/fileParser";
+import { ensureSubscription } from "../db";
 
 export const importRouter = router({
   importProposals: protectedProcedure
@@ -32,6 +33,22 @@ export const importRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database connection failed" });
+
+      // Limit LLM calls per import based on plan — each file triggers an Anthropic API call.
+      // Free: 3 files max. Starter/Pro/Admin: 10 files max.
+      const isAdmin = ctx.user.role === "admin";
+      if (!isAdmin) {
+        const sub = await ensureSubscription(ctx.user.id);
+        const freeFileCap = 3;
+        const paidFileCap = 10;
+        const fileCap = (sub?.plan === "starter" || sub?.plan === "pro") ? paidFileCap : freeFileCap;
+        if (input.files.length > fileCap) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `Your ${sub?.plan || "free"} plan allows importing up to ${fileCap} files at once. Please upgrade for more.`,
+          });
+        }
+      }
 
       let templatesCreated = 0;
       const extractedData: any = {};
