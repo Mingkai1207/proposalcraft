@@ -29,6 +29,17 @@ export const feedbackRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Can only submit feedback on declined proposals" });
       }
 
+      // Prevent duplicate feedback submissions for the same proposal
+      const existing = await db
+        .select({ id: clientFeedback.id })
+        .from(clientFeedback)
+        .where(eq(clientFeedback.proposalId, input.proposalId))
+        .limit(1);
+      if (existing.length > 0) {
+        // Silently succeed — client already submitted, no need to error
+        return { success: true };
+      }
+
       // Save feedback
       await db.insert(clientFeedback).values({
         proposalId: input.proposalId,
