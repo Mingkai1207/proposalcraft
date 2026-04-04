@@ -173,3 +173,10 @@ async function startServer() {
 }
 
 startServer().catch(console.error);
+
+// Schedule automatic follow-up emails — runs every hour
+import("../jobs/followUpCron").then(({ sendAutomaticFollowUps }) => {
+  // Run once on startup (catches any missed windows), then every hour
+  sendAutomaticFollowUps().catch(console.error);
+  setInterval(() => sendAutomaticFollowUps().catch(console.error), 60 * 60 * 1000);
+}).catch((err) => console.error("[FollowUp Cron] Failed to load:", err));
