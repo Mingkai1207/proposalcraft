@@ -15,8 +15,11 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const [, navigate] = useLocation();
   const [content, setContent] = useState("");
+  const [savedContent, setSavedContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+
+  const isDirty = content !== savedContent;
 
   const { data: proposal, isLoading } = trpc.proposals.get.useQuery(
     { id: proposalId },
@@ -26,6 +29,7 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
   const updateMutation = trpc.proposals.update.useMutation({
     onSuccess: () => {
       toast.success("Proposal saved successfully");
+      setSavedContent(content);
       setIsSaving(false);
     },
     onError: (err) => {
@@ -49,8 +53,21 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
   useEffect(() => {
     if (proposal?.generatedContent) {
       setContent(proposal.generatedContent);
+      setSavedContent(proposal.generatedContent);
     }
   }, [proposal]);
+
+  // Warn the user if they try to close/reload with unsaved changes
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
 
   if (authLoading || isLoading) {
     return (
@@ -123,12 +140,12 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
             </Button>
             <Button
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || !isDirty}
               size="sm"
               className="gap-2"
             >
               <Save className="w-4 h-4" />
-              {isSaving ? "Saving..." : "Save"}
+              {isSaving ? "Saving..." : isDirty ? "Save*" : "Saved"}
             </Button>
             <Button
               onClick={handleExportPdf}
