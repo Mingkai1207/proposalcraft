@@ -53,9 +53,11 @@ function getTransport(smtpOverride?: SendEmailOptions["smtpOverride"]) {
 
 export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
   const { smtpOverride } = opts;
+  // Strip double-quotes and newlines from fromName to prevent malformed RFC 5322 address header
+  const safeName = smtpOverride?.fromName?.replace(/["'\r\n]/g, "").trim();
   const from = smtpOverride?.fromEmail
-    ? smtpOverride.fromName
-      ? `"${smtpOverride.fromName}" <${smtpOverride.fromEmail}>`
+    ? safeName
+      ? `"${safeName}" <${smtpOverride.fromEmail}>`
       : smtpOverride.fromEmail
     : (process.env.SMTP_FROM ?? "ProposAI <noreply@proposai.org>");
   const transport = getTransport(smtpOverride);
