@@ -811,11 +811,18 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       const depositAmount = input.totalCost ? (parseFloat(input.totalCost) * depositPercent / 100).toFixed(2) : null;
       const balanceAmount = input.totalCost && depositAmount ? (parseFloat(input.totalCost) - parseFloat(depositAmount)).toFixed(2) : null;
 
+      const today = new Date();
+      const proposalDate = today.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+      const expiryDate = new Date(today.getTime() + input.expiryDays * 24 * 60 * 60 * 1000)
+        .toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
       const summaryPrompt = `You are an expert ${tradeName} proposal writer. Using the job details below, write a complete, professional contractor proposal draft with all sections fully filled in. This draft will be reviewed by the contractor before being polished into the final document.
 
 Write each section with real, specific content — not placeholders. Use the exact names, addresses, costs, and dates provided. If a value is not provided, make a reasonable professional inference based on the trade and job scope.
 
 --- JOB DETAILS ---
+Today's Date: ${proposalDate}
+Proposal Valid Through: ${expiryDate}
 Contractor Business: ${businessName}
 ${profile?.ownerName ? `Owner/Contact: ${profile.ownerName}` : ""}
 ${profile?.phone ? `Phone: ${profile.phone}` : ""}
@@ -873,6 +880,7 @@ RULES:
       const { invokeLLM } = await import("../_core/llm");
       const summaryResult = await invokeLLM({
         messages: [{ role: "user", content: summaryPrompt }],
+        maxTokens: 4096,
       });
       const rawSummary = summaryResult.choices[0]?.message?.content;
       const summaryContent = (typeof rawSummary === "string" ? rawSummary : "").trim();
