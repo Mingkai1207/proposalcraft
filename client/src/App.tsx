@@ -23,6 +23,8 @@ import Register from "./pages/Register";
 import VerifyEmail from "./pages/VerifyEmail";
 import CheckYourEmail from "./pages/CheckYourEmail";
 import ProposalImport from "./pages/ProposalImport";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function Router() {
   return (
@@ -32,6 +34,8 @@ function Router() {
       <Route path="/register" component={Register} />
       <Route path="/verify-email" component={VerifyEmail} />
       <Route path="/check-your-email" component={CheckYourEmail} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/proposals/new" component={NewProposal} />
       <Route path="/proposals/from-template" component={NewProposalFromTemplate} />

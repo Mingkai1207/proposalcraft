@@ -378,4 +378,142 @@ export const nativeAuthProcedures = {
 
       return { success: true, user: { id: user.id, name: user.name, email: user.email } };
     }),
+
+  /**
+   * Request a password reset email.
+   * Always returns success to prevent email enumeration.
+   */
+  requestPasswordReset: publicProcedure
+    .input(z.object({
+      email: z.string().email().max(320),
+      origin: z.string().url().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, input.email.toLowerCase()))
+        .limit(1);
+
+      // Always return success to prevent email enumeration
+      if (!user || !user.passwordHash) {
+        return { success: true };
+      }
+
+      const resetToken = generateVerificationToken(); // reuse the same crypto.randomBytes(32) helper
+      const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour
+
+      await db
+        .update(users)
+        .set({ passwordResetToken: resetToken, passwordResetTokenExpiresAt: expiresAt })
+        .where(eq(users.id, user.id));
+
+      const origin = getSafeOrigin(input.origin);
+      const resetUrl = `${origin}/reset-password?token=${resetToken}`;
+
+      const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /><title>Reset your ProposAI password</title></head>
+<body style="margin:0;padding:0;background:#0f172a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0f172a;padding:40px 0;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#1e293b;border-radius:12px;overflow:hidden;border:1px solid #334155;">
+        <tr><td style="padding:32px 40px 24px;border-bottom:1px solid #334155;">
+          <span style="color:#fff;font-size:20px;font-weight:700;">ProposAI</span>
+        </td></tr>
+        <tr><td style="padding:32px 40px;">
+          <h1 style="margin:0 0 16px;color:#f8fafc;font-size:24px;font-weight:700;">Reset your password</h1>
+          <p style="margin:0 0 24px;color:#94a3b8;font-size:15px;line-height:1.6;">
+            We received a request to reset the password for your ProposAI account. Click the button below to choose a new password.
+          </p>
+          <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+            <tr><td style="background:linear-gradient(135deg,#f59e0b,#f97316);border-radius:8px;">
+              <a href="${resetUrl}" style="display:inline-block;padding:14px 32px;color:#fff;font-size:15px;font-weight:600;text-decoration:none;">Reset Password</a>
+            </td></tr>
+          </table>
+          <p style="margin:0 0 8px;color:#64748b;font-size:13px;">Or copy this link: <a href="${resetUrl}" style="color:#f59e0b;">${resetUrl}</a></p>
+          <p style="margin:0;color:#64748b;font-size:13px;">This link expires in <strong style="color:#94a3b8;">1 hour</strong>. If you didn't request a password reset, you can safely ignore this email.</p>
+        </td></tr>
+        <tr><td style="padding:20px 40px;border-top:1px solid #334155;background:#0f172a;">
+          <p style="margin:0;color:#475569;font-size:12px;text-align:center;">© ${new Date().getFullYear()} ProposAI</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+
+      const text = `Reset your ProposAI password\n\nClick the link below to reset your password:\n\n${resetUrl}\n\nThis link expires in 1 hour. If you didn't request this, you can ignore this email.`;
+
+      await sendEmail({
+        to: input.email,
+        subject: "Reset your ProposAI password",
+        html,
+        text,
+      }).catch((err) => {
+        console.error("[PasswordReset] Failed to send email:", err);
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Reset password using a valid reset token.
+   */
+  resetPassword: publicProcedure
+    .input(z.object({
+      token: z.string().min(1).max(128),
+      password: z.string().min(8, "Password must be at least 8 characters").max(72),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.passwordResetToken, input.token))
+        .limit(1);
+
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "This reset link is invalid or has already been used.",
+        });
+      }
+
+      if (!user.passwordResetTokenExpiresAt || Date.now() > user.passwordResetTokenExpiresAt) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "This reset link has expired. Please request a new one.",
+        });
+      }
+
+      const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
+
+      await db
+        .update(users)
+        .set({
+          passwordHash,
+          passwordResetToken: null,
+          passwordResetTokenExpiresAt: null,
+          emailVerified: true, // if they can receive email, their address is verified
+          lastSignedIn: new Date(),
+        })
+        .where(eq(users.id, user.id));
+
+      // Log the user in automatically after password reset
+      const sessionToken = await sdk.createSessionToken(user.openId, {
+        name: user.name || "",
+        expiresInMs: ONE_YEAR_MS,
+      });
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
+      return { success: true };
+    }),
 };

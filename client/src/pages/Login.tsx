@@ -113,12 +113,11 @@ export default function Login() {
                   <Label htmlFor="password" className="text-slate-300 text-sm font-medium">
                     Password
                   </Label>
-                  <a
-                    href="mailto:hello@proposai.org?subject=Password%20Reset%20Request"
-                    className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
-                  >
-                    Forgot password?
-                  </a>
+                  <Link href="/forgot-password">
+                    <span className="text-xs text-amber-400 hover:text-amber-300 transition-colors cursor-pointer">
+                      Forgot password?
+                    </span>
+                  </Link>
                 </div>
                 <div className="relative">
                   <Input
