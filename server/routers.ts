@@ -19,7 +19,13 @@ import { nativeAuthProcedures } from "./routers/nativeAuth";
 export const appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: publicProcedure.query(opts => {
+      const user = opts.ctx.user;
+      if (!user) return null;
+      // Strip password-related fields — never send these to the client
+      const { passwordHash, verificationToken, verificationTokenExpiresAt, passwordResetToken, passwordResetTokenExpiresAt, ...safeUser } = user;
+      return safeUser;
+    }),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
