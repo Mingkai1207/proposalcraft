@@ -270,7 +270,7 @@ function EditTemplateDialog({ template, onSuccess }: { template: any; onSuccess:
 export function Templates() {
   const [, navigate] = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { data: templates, isLoading, refetch } = trpc.templates.list.useQuery(
+  const { data: templates, isLoading, isError: templatesError, refetch } = trpc.templates.list.useQuery(
     undefined, { enabled: isAuthenticated }
   );
   const deleteMutation = trpc.templates.delete.useMutation({
@@ -325,6 +325,11 @@ export function Templates() {
         {isLoading ? (
           <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
             <Loader2 className="w-5 h-5 animate-spin" /> Loading templates...
+          </div>
+        ) : templatesError ? (
+          <div className="text-center py-16 space-y-4">
+            <p className="text-destructive text-sm">Failed to load templates.</p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
           </div>
         ) : !templates || templates.length === 0 ? (
           // Empty state
