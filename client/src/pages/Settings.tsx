@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { SuggestInput, SuggestTextarea } from "@/components/ui/suggest-input";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, User, Building, FileText, Save, Bot, Mail, AlertCircle } from "lucide-react";
+import { ArrowLeft, Upload, User, Building, FileText, Save, Bot, Mail, AlertCircle, Trash2 } from "lucide-react";
 
 export default function Settings() {
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -32,6 +32,8 @@ export default function Settings() {
   });
   const [smtpPasswordConfigured, setSmtpPasswordConfigured] = useState(false);
   const [followUpTemplate, setFollowUpTemplate] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
 
   const AI_MODELS = [
     {
@@ -96,6 +98,11 @@ export default function Settings() {
 
   const uploadLogoMutation = trpc.profile.uploadLogo.useMutation({
     onSuccess: () => { toast.success("Logo uploaded"); refetch(); },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const deleteAccountMutation = trpc.auth.deleteAccount.useMutation({
+    onSuccess: () => { navigate("/"); },
     onError: (e) => toast.error(e.message),
   });
 
@@ -355,6 +362,60 @@ export default function Settings() {
         <Button onClick={handleSave} disabled={updateMutation.isPending} className="w-full">
           {updateMutation.isPending ? "Saving..." : <><Save className="w-4 h-4 mr-1" /> Save All Changes</>}
         </Button>
+
+        {/* Danger Zone */}
+        <div className="border border-destructive/30 rounded-lg p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Trash2 className="w-5 h-5 text-destructive" />
+            <h3 className="font-semibold text-destructive">Danger Zone</h3>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Permanently delete your account and all associated data. This action cannot be undone.
+          </p>
+          {!showDeleteConfirm ? (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              Delete Account
+            </Button>
+          ) : (
+            <div className="space-y-3 border border-destructive/30 rounded-lg p-4 bg-destructive/5">
+              <p className="text-sm font-medium text-destructive">
+                This will permanently delete all your proposals, templates, profile, and account data.
+              </p>
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Confirm with your password</Label>
+                <input
+                  type="password"
+                  placeholder="Enter your password"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="w-full border border-input rounded-md px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-destructive/50"
+                  maxLength={128}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={deleteAccountMutation.isPending || !deletePassword}
+                  onClick={() => deleteAccountMutation.mutate({ password: deletePassword })}
+                >
+                  {deleteAccountMutation.isPending ? "Deleting…" : "Yes, delete my account"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => { setShowDeleteConfirm(false); setDeletePassword(""); }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

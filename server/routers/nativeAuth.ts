@@ -6,13 +6,13 @@ import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { TRPCError } from "@trpc/server";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { z } from "zod";
-import { users } from "../../drizzle/schema";
+import { users, proposals, proposalTemplates, subscriptions, contractorProfiles, emailEvents, shareTokens } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { getSessionCookieOptions } from "../_core/cookies";
 import { sdk } from "../_core/sdk";
-import { publicProcedure } from "../_core/trpc";
+import { publicProcedure, protectedProcedure } from "../_core/trpc";
 import { sendEmail, buildVerificationEmail } from "../email";
 
 const BCRYPT_ROUNDS = 12;
@@ -513,6 +513,71 @@ export const nativeAuthProcedures = {
       });
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
+      return { success: true };
+    }),
+
+  /**
+   * Delete account — permanently removes all user data.
+   * Requires password confirmation to prevent accidental or unauthorized deletion.
+   */
+  deleteAccount: protectedProcedure
+    .input(z.object({
+      password: z.string().min(1).max(128),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // Re-fetch user to get current passwordHash
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(eq(users.id, ctx.user.id))
+        .limit(1);
+
+      if (!user) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "User not found" });
+      }
+
+      if (!user.passwordHash) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Password confirmation is required to delete your account.",
+        });
+      }
+
+      const passwordValid = await bcrypt.compare(input.password, user.passwordHash);
+      if (!passwordValid) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Incorrect password. Account deletion cancelled.",
+        });
+      }
+
+      // Get all proposal IDs belonging to this user
+      const userProposals = await db
+        .select({ id: proposals.id })
+        .from(proposals)
+        .where(eq(proposals.userId, ctx.user.id));
+      const proposalIds = userProposals.map(p => p.id);
+
+      // Delete child records that don't cascade automatically
+      if (proposalIds.length > 0) {
+        await db.delete(emailEvents).where(inArray(emailEvents.proposalId, proposalIds));
+        await db.delete(shareTokens).where(inArray(shareTokens.proposalId, proposalIds));
+      }
+
+      // Delete main user data (proposals cascade to clientFeedback and proposalVersions)
+      await db.delete(proposalTemplates).where(eq(proposalTemplates.userId, ctx.user.id));
+      await db.delete(proposals).where(eq(proposals.userId, ctx.user.id));
+      await db.delete(subscriptions).where(eq(subscriptions.userId, ctx.user.id));
+      await db.delete(contractorProfiles).where(eq(contractorProfiles.userId, ctx.user.id));
+      await db.delete(users).where(eq(users.id, ctx.user.id));
+
+      // Clear session cookie
+      const cookieOptions = getSessionCookieOptions(ctx.req);
+      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
 
       return { success: true };
     }),
