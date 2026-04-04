@@ -2,6 +2,15 @@ import { TRPCError } from "@trpc/server";
 import { sendEmail } from "../email";
 import { ENV } from "./env";
 
+function escHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export type NotificationPayload = {
   title: string;
   content: string;
@@ -70,8 +79,8 @@ export async function notifyOwner(
 <html>
 <head><meta charset="utf-8"></head>
 <body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;">
-  <h2 style="color:#1a1a2e;">${title}</h2>
-  <div style="white-space:pre-wrap;line-height:1.6;">${content}</div>
+  <h2 style="color:#1a1a2e;">${escHtml(title)}</h2>
+  <div style="white-space:pre-wrap;line-height:1.6;">${escHtml(content)}</div>
   <hr style="margin-top:32px;border:none;border-top:1px solid #e0e0e0;" />
   <p style="color:#888;font-size:12px;">Sent by ProposAI</p>
 </body>
