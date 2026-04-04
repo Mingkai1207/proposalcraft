@@ -662,7 +662,7 @@ const resources = {
         subtitle: "在几秒钟内生成专业报价单，而不是几小时。免费开始——无需信用卡。",
         primary: "立即免费开始",
         secondary: "查看实时演示",
-        footnote: "每月3份免费报价单。准备好了再升级。",
+        footnote: "展示期内所有功能完全免费。无需信用卡。",
       },
       // Footer
       footer: {

@@ -410,9 +410,22 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
 
       const profile = await getContractorProfile(ctx.user.id);
       const businessName = profile?.businessName || ctx.user.name || "Your Contractor";
+      const sentDate = new Date(proposal.sentAt!).toLocaleDateString();
 
-      // Build follow-up email
-      const followUpHtml = `
+      // Use custom follow-up template if the contractor configured one
+      let followUpHtml: string;
+      if (profile?.followUpTemplate?.trim()) {
+        // Apply placeholder substitutions to the custom template
+        const customText = profile.followUpTemplate
+          .replace(/\{clientName\}/g, proposal.clientName || "there")
+          .replace(/\{proposalTitle\}/g, proposal.title)
+          .replace(/\{businessName\}/g, businessName)
+          .replace(/\{sentDate\}/g, sentDate);
+        // Wrap plain text in simple HTML
+        followUpHtml = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;"><div style="white-space:pre-wrap;line-height:1.6;">${customText}</div><hr style="margin-top:32px;border:none;border-top:1px solid #e0e0e0;"/><p style="color:#888;font-size:12px;">Sent via <a href="https://proposai.org" style="color:#e8630a;text-decoration:none">ProposAI</a></p></body></html>`;
+      } else {
+        // Default follow-up template
+        followUpHtml = `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><style>
@@ -433,11 +446,12 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
 <p style="margin-top: 24px;">Best regards,<br/><strong>${businessName}</strong></p>
 </div>
 <div class="footer">
-<p>This is a follow-up to your proposal sent on ${new Date(proposal.sentAt!).toLocaleDateString()}.</p>
+<p>This is a follow-up to your proposal sent on ${sentDate}.</p>
 </div>
 </body>
 </html>
-      `;
+        `;
+      }
 
       // Send follow-up via nodemailer
       try {
