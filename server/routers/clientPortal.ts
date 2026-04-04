@@ -8,6 +8,15 @@ import { nanoid } from "nanoid";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../email";
 
+function escHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function isProposalExpired(proposal: { sentAt: Date | null; expiryDays: number | null }): boolean {
   if (!proposal.sentAt || !proposal.expiryDays) return false;
   const expiresAt = new Date(proposal.sentAt).getTime() + proposal.expiryDays * 24 * 60 * 60 * 1000;
@@ -116,9 +125,9 @@ export const clientPortalRouter = router({
             subject: `Proposal Accepted: ${proposal.title}`,
             html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;">
 <h2 style="color:#16a34a;">🎉 Proposal Accepted!</h2>
-<p>Great news${contractor.name ? `, ${contractor.name.split(" ")[0]}` : ""}!</p>
-<p><strong>${clientLabel}</strong> has accepted your proposal <strong>"${proposal.title}"</strong>.</p>
-${proposal.totalCost ? `<p>Project value: <strong>$${proposal.totalCost}</strong></p>` : ""}
+<p>Great news${contractor.name ? `, ${escHtml(contractor.name.split(" ")[0])}` : ""}!</p>
+<p><strong>${escHtml(clientLabel)}</strong> has accepted your proposal <strong>"${escHtml(proposal.title)}"</strong>.</p>
+${proposal.totalCost ? `<p>Project value: <strong>$${escHtml(proposal.totalCost)}</strong></p>` : ""}
 <p>Log in to ProposAI to view the full details and next steps.</p>
 <hr style="margin:24px 0;border:none;border-top:1px solid #e0e0e0;"/>
 <p style="color:#888;font-size:12px;">Sent by ProposAI</p>
@@ -185,8 +194,8 @@ ${proposal.totalCost ? `<p>Project value: <strong>$${proposal.totalCost}</strong
             subject: `Proposal Declined: ${proposal.title}`,
             html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;">
 <h2 style="color:#dc2626;">Proposal Declined</h2>
-<p>Hi${contractor.name ? ` ${contractor.name.split(" ")[0]}` : ""},</p>
-<p><strong>${clientLabel}</strong> has declined your proposal <strong>"${proposal.title}"</strong>.</p>
+<p>Hi${contractor.name ? ` ${escHtml(contractor.name.split(" ")[0])}` : ""},</p>
+<p><strong>${escHtml(clientLabel)}</strong> has declined your proposal <strong>"${escHtml(proposal.title)}"</strong>.</p>
 <p>You may want to follow up with the client to understand their concerns or provide a revised proposal.</p>
 <p>Log in to ProposAI to view the proposal details.</p>
 <hr style="margin:24px 0;border:none;border-top:1px solid #e0e0e0;"/>

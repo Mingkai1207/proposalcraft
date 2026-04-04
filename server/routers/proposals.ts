@@ -27,6 +27,16 @@ import { snapshotProposalVersion } from "./versions";
 
 const ALL_TRADE_TYPES = ["hvac", "plumbing", "electrical", "roofing", "general", "painting", "flooring", "landscaping", "carpentry", "concrete", "masonry", "insulation", "drywall", "windows", "solar"] as const;
 
+/** Escape user-supplied strings before embedding in HTML email templates */
+function escHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 const TRADE_TEMPLATES: Record<string, string> = {
   hvac: "HVAC (Heating, Ventilation & Air Conditioning)",
   plumbing: "Plumbing",
@@ -338,23 +348,23 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
 </style></head>
 <body>
 <div class="header">
-  <h2 style="margin:0">${businessName}</h2>
+  <h2 style="margin:0">${escHtml(businessName)}</h2>
   <p style="margin:4px 0 0;opacity:0.8">Professional Proposal</p>
 </div>
 <div class="content">
-  <p>Dear ${input.clientName || "Valued Client"},</p>
-  <p>${input.message || `Thank you for considering ${businessName} for your project. I've prepared a detailed proposal for your review.`}</p>
-  <p class="meta"><strong>Proposal:</strong> ${proposal.title}</p>
-  ${proposal.totalCost ? `<p class="meta"><strong>Estimated investment:</strong> $${proposal.totalCost}</p>` : ""}
-  ${summaryText ? `<div class="summary-box">${summaryText}</div>` : ""}
+  <p>Dear ${escHtml(input.clientName || "Valued Client")},</p>
+  <p>${input.message ? escHtml(input.message) : `Thank you for considering ${escHtml(businessName)} for your project. I've prepared a detailed proposal for your review.`}</p>
+  <p class="meta"><strong>Proposal:</strong> ${escHtml(proposal.title)}</p>
+  ${proposal.totalCost ? `<p class="meta"><strong>Estimated investment:</strong> $${escHtml(proposal.totalCost)}</p>` : ""}
+  ${summaryText ? `<div class="summary-box">${escHtml(summaryText)}</div>` : ""}
   <p style="text-align:center;margin:28px 0 16px">
     <a href="${portalLink}" class="cta">View Full Proposal &amp; Respond</a>
   </p>
   <p style="font-size:13px;color:#777;text-align:center">Click the button above to view the complete proposal, accept, or decline.</p>
   <p>We look forward to working with you. Please don't hesitate to reach out with any questions.</p>
-  <p>Best regards,<br><strong>${businessName}</strong></p>
-  ${profile?.phone ? `<p>📞 ${profile.phone}</p>` : ""}
-  ${profile?.email ? `<p>✉️ ${profile.email}</p>` : ""}
+  <p>Best regards,<br><strong>${escHtml(businessName)}</strong></p>
+  ${profile?.phone ? `<p>📞 ${escHtml(profile.phone)}</p>` : ""}
+  ${profile?.email ? `<p>✉️ ${escHtml(profile.email)}</p>` : ""}
 </div>
 <div class="footer">
   <p>This proposal was sent via <a href="https://proposai.org" style="color:#e8630a;text-decoration:none">ProposAI</a></p>
@@ -452,12 +462,12 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       // Use custom follow-up template if the contractor configured one
       let followUpHtml: string;
       if (profile?.followUpTemplate?.trim()) {
-        // Apply placeholder substitutions to the custom template
-        const customText = profile.followUpTemplate
-          .replace(/\{clientName\}/g, proposal.clientName || "there")
-          .replace(/\{proposalTitle\}/g, proposal.title)
-          .replace(/\{businessName\}/g, businessName)
-          .replace(/\{sentDate\}/g, sentDate);
+        // Apply placeholder substitutions to the custom template — escape all user values
+        const customText = escHtml(profile.followUpTemplate)
+          .replace(/\{clientName\}/g, escHtml(proposal.clientName || "there"))
+          .replace(/\{proposalTitle\}/g, escHtml(proposal.title))
+          .replace(/\{businessName\}/g, escHtml(businessName))
+          .replace(/\{sentDate\}/g, escHtml(sentDate));
         const portalSection = portalLink
           ? `<p style="margin-top:24px;"><a href="${portalLink}" style="background:#e8630a;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">View Proposal</a></p><p style="font-size:12px;color:#888;">Or copy this link: ${portalLink}</p>`
           : "";
@@ -477,17 +487,17 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
 </style></head>
 <body>
 <div class="header">
-<h2 style="margin: 0;">Quick reminder: ${proposal.title}</h2>
+<h2 style="margin: 0;">Quick reminder: ${escHtml(proposal.title)}</h2>
 </div>
 <div class="content">
-<p>Hi ${proposal.clientName || "there"},</p>
-<p>I wanted to follow up on the proposal I sent you for <strong>${proposal.title}</strong>. I haven't heard back yet, and I wanted to make sure you received it and had a chance to review it.</p>
+<p>Hi ${escHtml(proposal.clientName || "there")},</p>
+<p>I wanted to follow up on the proposal I sent you for <strong>${escHtml(proposal.title)}</strong>. I haven't heard back yet, and I wanted to make sure you received it and had a chance to review it.</p>
 ${portalLink ? `<a href="${portalLink}" class="cta">View &amp; Respond to Proposal</a>` : ""}
 <p>If you have any questions or would like to discuss the proposal further, I'm happy to help. Feel free to reach out anytime.</p>
-<p style="margin-top: 24px;">Best regards,<br/><strong>${businessName}</strong></p>
+<p style="margin-top: 24px;">Best regards,<br/><strong>${escHtml(businessName)}</strong></p>
 </div>
 <div class="footer">
-<p>This is a follow-up to your proposal sent on ${sentDate}.</p>
+<p>This is a follow-up to your proposal sent on ${escHtml(sentDate)}.</p>
 ${portalLink ? `<p>Direct link: <a href="${portalLink}" style="color:#e8630a;">${portalLink}</a></p>` : ""}
 </div>
 </body>
@@ -1020,7 +1030,7 @@ RULES:
       z.object({
         proposalId: z.number(),
         /** The user-edited summary from Step 2 */
-        approvedSummary: z.string().min(10),
+        approvedSummary: z.string().min(10).max(10000),
       })
     )
     .mutation(async ({ ctx, input }) => {
