@@ -178,6 +178,9 @@ async function startServer() {
     try {
       const { getProposalByToken, updateProposal, createEmailEvent } = await import("../db");
       const proposal = await getProposalByToken(token);
+      // Truncate user-agent to prevent large strings from bloating the DB
+      const rawUa = req.headers["user-agent"] || null;
+      const userAgent = rawUa ? rawUa.slice(0, 512) : null;
       if (proposal && proposal.status === "sent") {
         await updateProposal(proposal.id, proposal.userId, {
           status: "viewed",
@@ -187,7 +190,7 @@ async function startServer() {
           proposalId: proposal.id,
           eventType: "opened",
           ipAddress: req.ip || req.socket?.remoteAddress || null,
-          userAgent: req.headers["user-agent"] || null,
+          userAgent,
         });
       } else if (proposal?.followUpSentAt && !proposal.followUpOpenedAt) {
         await updateProposal(proposal.id, proposal.userId, {
@@ -197,7 +200,7 @@ async function startServer() {
           proposalId: proposal.id,
           eventType: "follow_up_opened",
           ipAddress: req.ip || req.socket?.remoteAddress || null,
-          userAgent: req.headers["user-agent"] || null,
+          userAgent,
         });
       }
     } catch (err) {

@@ -1084,6 +1084,16 @@ export async function renderTemplatePdf(input: TemplatePdfInput): Promise<Buffer
 
   try {
     const page = await browser.newPage();
+    // Block network requests — user-provided section content could include external URLs
+    await page.setRequestInterception(true);
+    page.on("request", (req) => {
+      const url = req.url();
+      if (url.startsWith("data:") || url.startsWith("about:")) {
+        req.continue();
+      } else {
+        req.abort();
+      }
+    });
     await page.setContent(html, { waitUntil: "networkidle0", timeout: 30000 });
 
     const pdf = await page.pdf({

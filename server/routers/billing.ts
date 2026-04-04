@@ -33,7 +33,18 @@ export const billingRouter = router({
         });
       }
 
-      const origin = (ctx.req.headers.origin as string) || "https://proposai.org";
+      // Use the trusted app URL for PayPal redirect URLs, not the client-supplied Origin header.
+      // In development, fall back to the request origin if it's localhost.
+      const TRUSTED_ORIGIN = process.env.VITE_APP_URL?.replace(/\/$/, "") || "https://proposai.org";
+      const reqOrigin = (ctx.req.headers.origin as string) || "";
+      let origin = TRUSTED_ORIGIN;
+      try {
+        const reqUrl = new URL(reqOrigin);
+        if (reqUrl.hostname === "localhost" || reqUrl.hostname === "127.0.0.1") {
+          origin = reqOrigin.replace(/\/$/, "");
+        }
+      } catch {}
+
 
       try {
         const token = await getPayPalToken();
@@ -97,21 +108,27 @@ export const billingRouter = router({
         if (sub.status !== "ACTIVE" && sub.status !== "APPROVED") {
           throw new TRPCError({ code: "BAD_REQUEST", message: "Subscription is not active yet." });
         }
-        // Verify the subscription belongs to the authenticated user by checking custom_id
-        // (custom_id is set to JSON.stringify({ user_id, plan }) when the subscription is created)
+        // Verify the subscription belongs to the authenticated user and extract the plan
+        // from custom_id (set server-side during checkout — not trusted from client URL params).
+        // This prevents a user from subscribing to "starter" but passing plan=pro in the URL.
+        let activatePlan: "starter" | "pro" = input.plan; // fallback if custom_id absent
         if (sub.custom_id) {
           try {
-            const parsed = JSON.parse(sub.custom_id) as { user_id?: number };
+            const parsed = JSON.parse(sub.custom_id) as { user_id?: number; plan?: string };
             if (parsed.user_id && parsed.user_id !== ctx.user.id) {
               throw new TRPCError({ code: "FORBIDDEN", message: "Subscription does not belong to this account." });
             }
+            // Use the plan from custom_id (authoritative), not from the client-supplied input
+            if (parsed.plan === "starter" || parsed.plan === "pro") {
+              activatePlan = parsed.plan;
+            }
           } catch (parseErr) {
             if (parseErr instanceof TRPCError) throw parseErr;
-            // custom_id format unexpected — proceed with caution
+            // custom_id format unexpected — proceed with caution, use input.plan as fallback
           }
         }
         await updateSubscription(ctx.user.id, {
-          plan: input.plan,
+          plan: activatePlan,
           stripeCustomerId: null,
           stripeSubscriptionId: input.subscriptionId,
         });

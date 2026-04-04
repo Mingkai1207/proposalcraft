@@ -99,10 +99,16 @@ Return ONLY valid JSON, no markdown or extra text.`;
           
           const extracted = JSON.parse(jsonStr);
 
+          // Helper to safely extract a string with a max length from the LLM response
+          const safeStr = (val: unknown, max: number): string | undefined => {
+            if (typeof val !== "string" || !val.trim()) return undefined;
+            return val.slice(0, max);
+          };
+
           // Aggregate business info from all proposals
-          if (extracted.businessName) allExtractedInfo.businessName = extracted.businessName;
-          if (extracted.businessPhone) allExtractedInfo.businessPhone = extracted.businessPhone;
-          if (extracted.businessAddress) allExtractedInfo.businessAddress = extracted.businessAddress;
+          if (extracted.businessName) allExtractedInfo.businessName = safeStr(extracted.businessName, 200) || allExtractedInfo.businessName;
+          if (extracted.businessPhone) allExtractedInfo.businessPhone = safeStr(extracted.businessPhone, 50) || allExtractedInfo.businessPhone;
+          if (extracted.businessAddress) allExtractedInfo.businessAddress = safeStr(extracted.businessAddress, 500) || allExtractedInfo.businessAddress;
 
           // Create template from extracted data
           if (extracted.proposalTitle) {
@@ -110,17 +116,17 @@ Return ONLY valid JSON, no markdown or extra text.`;
               .insert(proposalTemplates)
               .values({
                 userId: ctx.user.id,
-                name: extracted.proposalTitle,
+                name: safeStr(extracted.proposalTitle, 200) || "Imported Proposal",
                 tradeType: sanitizeTradeType(extracted.tradeType),
-                description: `Imported from ${file.name}`,
+                description: `Imported from ${file.name.slice(0, 255)}`,
                 content: text.substring(0, 2000), // Store first 2000 chars as content
-                clientName: extracted.clientName,
-                clientAddress: extracted.clientAddress,
-                jobScope: extracted.jobScope,
-                materials: extracted.materials,
-                laborCost: extracted.laborCost,
-                materialsCost: extracted.materialsCost,
-                totalCost: extracted.totalCost,
+                clientName: safeStr(extracted.clientName, 200),
+                clientAddress: safeStr(extracted.clientAddress, 500),
+                jobScope: safeStr(extracted.jobScope, 5000),
+                materials: safeStr(extracted.materials, 2000),
+                laborCost: typeof extracted.laborCost === "number" ? extracted.laborCost : undefined,
+                materialsCost: typeof extracted.materialsCost === "number" ? extracted.materialsCost : undefined,
+                totalCost: typeof extracted.totalCost === "number" ? extracted.totalCost : undefined,
                 language: "english",
               })
               .$returningId();

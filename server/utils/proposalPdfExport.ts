@@ -114,12 +114,17 @@ export function buildProposalHtml(data: ProposalPdfData): string {
 
 /**
  * Sanitize Claude-generated HTML before PDF rendering.
- * Strips known problematic CSS patterns that break Puppeteer layout.
+ * Strips known problematic CSS patterns that break Puppeteer layout,
+ * and removes script tags / event handlers to prevent SSRF/XSS during rendering.
  */
 function sanitizeHtmlForPdf(html: string): string {
+  // Strip all <script> tags — prevents JS from making server-side SSRF requests
+  let sanitized = html.replace(/<script[\s\S]*?<\/script>/gi, "");
+  // Strip inline event handlers (onclick, onload, onerror, etc.)
+  sanitized = sanitized.replace(/\s+on[a-z]+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, "");
   // Remove h1::before / h2::before / h3::before pseudo-element rules that displace headers
   // Matches: h1::before, h2::before, h3::before { ... }
-  let sanitized = html.replace(
+  sanitized = sanitized.replace(
     /h[1-6]::before\s*,?\s*h[1-6]::before\s*,?\s*h[1-6]::before\s*\{[^}]*\}/gi,
     "/* removed ::before page-break hack */"
   );
@@ -150,6 +155,18 @@ export async function generatePdfFromHtml(html: string): Promise<Buffer> {
 
   try {
     const page = await browser.newPage();
+    // Block all network requests to prevent SSRF: user-controlled HTML could embed
+    // <img src="http://169.254.169.254/..."> or fetch() calls that hit internal services.
+    // Only data: and about: URIs (inline images/fonts) are allowed.
+    await page.setRequestInterception(true);
+    page.on("request", (req) => {
+      const url = req.url();
+      if (url.startsWith("data:") || url.startsWith("about:")) {
+        req.continue();
+      } else {
+        req.abort();
+      }
+    });
     // Set viewport to match expected content width
     await page.setViewport({ width: 800, height: 1200 });
     await page.setContent(sanitizedHtml, { waitUntil: "networkidle0" });
@@ -180,6 +197,16 @@ export async function generateProposalPdf(data: ProposalPdfData): Promise<Buffer
 
   try {
     const page = await browser.newPage();
+    // Block network requests — markdown images could contain external URLs
+    await page.setRequestInterception(true);
+    page.on("request", (req) => {
+      const url = req.url();
+      if (url.startsWith("data:") || url.startsWith("about:")) {
+        req.continue();
+      } else {
+        req.abort();
+      }
+    });
     await page.setContent(html, { waitUntil: "networkidle0" });
     await new Promise((r) => setTimeout(r, 2500));
 

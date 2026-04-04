@@ -4,6 +4,15 @@ import { eq, and, isNull, lt } from "drizzle-orm";
 import { sendEmail } from "../email";
 import { ENV } from "../_core/env";
 
+function escHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 /**
  * Automatic follow-up cron job
  * Sends follow-up emails to clients who haven't opened their proposals after 48 hours
@@ -132,16 +141,19 @@ function buildFollowUpEmail(
   }
 ): string {
   let html = template
-    .replace(/{clientName}/g, vars.clientName)
-    .replace(/{proposalTitle}/g, vars.proposalTitle)
-    .replace(/{businessName}/g, vars.businessName)
-    .replace(/{sentDate}/g, vars.sentDate);
+    .replace(/{clientName}/g, escHtml(vars.clientName))
+    .replace(/{proposalTitle}/g, escHtml(vars.proposalTitle))
+    .replace(/{businessName}/g, escHtml(vars.businessName))
+    .replace(/{sentDate}/g, escHtml(vars.sentDate));
 
-  const ctaSection = vars.portalLink
-    ? `<p style="margin:20px 0;"><a href="${vars.portalLink}" style="background:#e8630a;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">View &amp; Respond to Proposal</a></p>`
+  // Portal link is constructed from trusted ENV.appUrl + random token — safe to embed as href,
+  // but escape for display text just in case.
+  const safeLink = vars.portalLink ? vars.portalLink.replace(/"/g, "&quot;") : null;
+  const ctaSection = safeLink
+    ? `<p style="margin:20px 0;"><a href="${safeLink}" style="background:#e8630a;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">View &amp; Respond to Proposal</a></p>`
     : "";
-  const footerLink = vars.portalLink
-    ? `<p>Direct link: <a href="${vars.portalLink}" style="color:#e8630a;">${vars.portalLink}</a></p>`
+  const footerLink = safeLink
+    ? `<p>Direct link: <a href="${safeLink}" style="color:#e8630a;">${escHtml(vars.portalLink!)}</a></p>`
     : "";
 
   return `
@@ -155,14 +167,14 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
 </style></head>
 <body>
 <div class="header">
-<h2 style="margin: 0;">Follow-up: ${vars.proposalTitle}</h2>
+<h2 style="margin: 0;">Follow-up: ${escHtml(vars.proposalTitle)}</h2>
 </div>
 <div class="content">
 ${html}
 ${ctaSection}
 </div>
 <div class="footer">
-<p>Sent by ${vars.businessName} via ProposAI</p>
+<p>Sent by ${escHtml(vars.businessName)} via ProposAI</p>
 ${footerLink}
 </div>
 </body>
