@@ -287,7 +287,7 @@ const resources = {
         subtitle: "Generate professional proposals in seconds, not hours. Start free — no credit card required.",
         primary: "Start Free Today",
         secondary: "See Live Demo",
-        footnote: "3 free proposals every month. Upgrade when you're ready.",
+        footnote: "All features free during our launch. No credit card required.",
       },
       // Footer
       footer: {

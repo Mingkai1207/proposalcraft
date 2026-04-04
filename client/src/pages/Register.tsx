@@ -74,7 +74,7 @@ export default function Register() {
 
         {/* Trust badges */}
         <div className="flex items-center justify-center gap-4 mb-6">
-          {["3 free proposals/month", "No credit card", "Cancel anytime"].map((badge) => (
+          {["All features free", "No credit card", "Cancel anytime"].map((badge) => (
             <div key={badge} className="flex items-center gap-1 text-xs text-slate-400">
               <CheckCircle2 className="w-3 h-3 text-amber-500 flex-shrink-0" />
               <span>{badge}</span>

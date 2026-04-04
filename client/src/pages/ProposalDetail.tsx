@@ -104,7 +104,15 @@ export default function ProposalDetail() {
   });
 
   const shareLinkMutation = trpc.proposals.createShareLink.useMutation({
-    onSuccess: (data) => { navigator.clipboard.writeText(data.shareUrl); toast.success("Share link copied!"); },
+    onSuccess: async (data) => {
+      try {
+        await navigator.clipboard.writeText(data.shareUrl);
+        toast.success("Share link copied!");
+      } catch {
+        // Clipboard API unavailable — show URL so user can copy manually
+        window.prompt("Copy share link:", data.shareUrl);
+      }
+    },
     onError: (e) => toast.error(e.message),
   });
 

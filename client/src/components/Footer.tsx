@@ -47,8 +47,8 @@ export default function Footer() {
         <div className="mt-4 pt-4 border-t border-border/50 text-center text-xs text-muted-foreground">
           {t("footer.tagline")}
           &nbsp;&middot;&nbsp;
-          <a href="https://proposai.org/pricing" className="underline hover:text-foreground">
-            View plans from $5.99/month
+          <a href="/pricing" className="underline hover:text-foreground">
+            Free during launch 🎉
           </a>
         </div>
       </div>
