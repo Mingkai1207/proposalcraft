@@ -22,6 +22,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import VerifyEmail from "./pages/VerifyEmail";
 import CheckYourEmail from "./pages/CheckYourEmail";
+import ProposalImport from "./pages/ProposalImport";
 
 function Router() {
   return (
@@ -34,6 +35,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/proposals/new" component={NewProposal} />
       <Route path="/proposals/from-template" component={NewProposalFromTemplate} />
+      <Route path="/import" component={ProposalImport} />
       <Route path="/proposals/:id/edit" component={(props: any) => <ProposalEditor proposalId={parseInt(props.params.id)} />} />
       <Route path="/proposals/:id" component={ProposalDetail} />
       <Route path="/settings" component={Settings} />

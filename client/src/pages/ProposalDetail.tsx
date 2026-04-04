@@ -22,6 +22,10 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
 import { AIChatBox } from "@/components/AIChatBox";
 import type { Message } from "@/components/AIChatBox";
 
@@ -274,37 +278,10 @@ export default function ProposalDetail() {
         </div>
 
         {/* Action buttons */}
-        <div className="flex items-center gap-1.5 flex-wrap">
+        <div className="flex items-center gap-1.5">
           {!editing ? (
             <>
-              {/* Edit */}
-              <Button variant="outline" size="sm" onClick={() => { setEditContent(proposal.generatedContent || ""); setEditing(true); }}>
-                <Edit2 className="w-3.5 h-3.5 mr-1" /> Edit
-              </Button>
-
-              {/* Revise with AI — Starter/Pro only */}
-              {isPaidPlan ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
-                  onClick={() => setReviseOpen(true)}
-                >
-                  <MessageSquare className="w-3.5 h-3.5 mr-1" /> Revise with AI
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-muted-foreground border-dashed"
-                  onClick={() => navigate("/pricing")}
-                  title="Upgrade to Starter or Pro to use AI revision"
-                >
-                  <Lock className="w-3.5 h-3.5 mr-1" /> Revise with AI
-                </Button>
-              )}
-
-              {/* PDF — available to all */}
+              {/* Primary: always visible */}
               <Button
                 variant="default"
                 size="sm"
@@ -319,55 +296,63 @@ export default function ProposalDetail() {
                 )}
               </Button>
 
-              {/* Word — Starter/Pro only */}
-              {isPaidPlan ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={exportWordMutation.isPending}
-                  onClick={handleDownloadWord}
-                >
-                  {exportWordMutation.isPending ? (
-                    <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Word...</>
-                  ) : (
-                    <><FileText className="w-3.5 h-3.5 mr-1" /> Word</>
-                  )}
-                </Button>
-              ) : (
-                <Button variant="outline" size="sm" className="text-muted-foreground border-dashed" onClick={() => navigate("/pricing")}>
-                  <Lock className="w-3.5 h-3.5 mr-1" /> Word
-                </Button>
-              )}
-
-              {/* Google Docs — Starter/Pro only */}
-              {isPaidPlan ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={exportGoogleDocsMutation.isPending}
-                  onClick={handleOpenGoogleDocs}
-                >
-                  {exportGoogleDocsMutation.isPending ? (
-                    <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Docs...</>
-                  ) : (
-                    <><Globe className="w-3.5 h-3.5 mr-1" /> Google Docs</>
-                  )}
-                </Button>
-              ) : (
-                <Button variant="outline" size="sm" className="text-muted-foreground border-dashed" onClick={() => navigate("/pricing")}>
-                  <Lock className="w-3.5 h-3.5 mr-1" /> Google Docs
-                </Button>
-              )}
-
-              {/* Send to client */}
               <Button size="sm" onClick={() => { setSendEmail(proposal.clientEmail || ""); setSendName(proposal.clientName || ""); setSendOpen(true); }}>
                 <Send className="w-3.5 h-3.5 mr-1" /> Send
               </Button>
 
-              {/* Share link */}
-              <Button variant="outline" size="sm" onClick={() => shareLinkMutation.mutate({ id: proposal.id })} disabled={shareLinkMutation.isPending}>
-                <Share2 className="w-3.5 h-3.5 mr-1" /> Share
-              </Button>
+              {/* Secondary: visible on md+, collapsed in dropdown on mobile */}
+              <div className="hidden md:flex items-center gap-1.5">
+                <Button variant="outline" size="sm" onClick={() => { setEditContent(proposal.generatedContent || ""); setEditing(true); }}>
+                  <Edit2 className="w-3.5 h-3.5 mr-1" /> Edit
+                </Button>
+                {isPaidPlan ? (
+                  <Button variant="outline" size="sm" className="bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100" onClick={() => setReviseOpen(true)}>
+                    <MessageSquare className="w-3.5 h-3.5 mr-1" /> Revise
+                  </Button>
+                ) : null}
+                {isPaidPlan ? (
+                  <Button variant="outline" size="sm" disabled={exportWordMutation.isPending} onClick={handleDownloadWord}>
+                    {exportWordMutation.isPending ? <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Word...</> : <><FileText className="w-3.5 h-3.5 mr-1" /> Word</>}
+                  </Button>
+                ) : null}
+                <Button variant="outline" size="sm" onClick={() => shareLinkMutation.mutate({ id: proposal.id })} disabled={shareLinkMutation.isPending}>
+                  <Share2 className="w-3.5 h-3.5 mr-1" /> Share
+                </Button>
+              </div>
+
+              {/* Overflow dropdown — mobile only */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="md:hidden" aria-label="More actions">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem onClick={() => { setEditContent(proposal.generatedContent || ""); setEditing(true); }}>
+                    <Edit2 className="w-3.5 h-3.5 mr-2" /> Edit
+                  </DropdownMenuItem>
+                  {isPaidPlan && (
+                    <DropdownMenuItem onClick={() => setReviseOpen(true)}>
+                      <MessageSquare className="w-3.5 h-3.5 mr-2" /> Revise with AI
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  {isPaidPlan && (
+                    <DropdownMenuItem onClick={handleDownloadWord} disabled={exportWordMutation.isPending}>
+                      <FileText className="w-3.5 h-3.5 mr-2" /> {exportWordMutation.isPending ? "Generating..." : "Word"}
+                    </DropdownMenuItem>
+                  )}
+                  {isPaidPlan && (
+                    <DropdownMenuItem onClick={handleOpenGoogleDocs} disabled={exportGoogleDocsMutation.isPending}>
+                      <Globe className="w-3.5 h-3.5 mr-2" /> Google Docs
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => shareLinkMutation.mutate({ id: proposal.id })} disabled={shareLinkMutation.isPending}>
+                    <Share2 className="w-3.5 h-3.5 mr-2" /> Share Link
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
