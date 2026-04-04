@@ -282,12 +282,20 @@ export const nativeAuthProcedures = {
         });
       }
 
-      // Block unverified users
+      // Block unverified users — but auto-verify them if SMTP isn't configured
+      // (handles users registered before the auto-verify fix was deployed)
       if (!user.emailVerified) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Please verify your email address before signing in. Check your inbox for the verification link.",
-        });
+        if (!isSmtpConfigured()) {
+          await db
+            .update(users)
+            .set({ emailVerified: true, verificationToken: null, verificationTokenExpiresAt: null })
+            .where(eq(users.id, user.id));
+        } else {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: "Please verify your email address before signing in. Check your inbox for the verification link.",
+          });
+        }
       }
 
       // Update lastSignedIn
