@@ -23,11 +23,16 @@ const VERIFICATION_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 // Key: IP address. Value: { count, windowStart }
 const rateLimitStore = new Map<string, { count: number; windowStart: number }>();
 const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
-const RATE_LIMIT_MAX_LOGIN = 20;    // max 20 login attempts per IP per 15 min
-const RATE_LIMIT_MAX_REGISTER = 10; // max 10 registrations per IP per 15 min
+const RATE_LIMIT_MAX_LOGIN = 20;         // max 20 login attempts per IP per 15 min
+const RATE_LIMIT_MAX_REGISTER = 10;      // max 10 registrations per IP per 15 min
+const RATE_LIMIT_MAX_PASSWORD_RESET = 5; // max 5 reset requests per IP per 15 min
+const RATE_LIMIT_MAX_RESEND = 5;         // max 5 resend-verification requests per IP per 15 min
 
-function checkRateLimit(ip: string, type: "login" | "register"): void {
-  const max = type === "login" ? RATE_LIMIT_MAX_LOGIN : RATE_LIMIT_MAX_REGISTER;
+function checkRateLimit(ip: string, type: "login" | "register" | "passwordReset" | "resend"): void {
+  const max = type === "login" ? RATE_LIMIT_MAX_LOGIN
+    : type === "register" ? RATE_LIMIT_MAX_REGISTER
+    : type === "passwordReset" ? RATE_LIMIT_MAX_PASSWORD_RESET
+    : RATE_LIMIT_MAX_RESEND;
   const key = `${type}:${ip}`;
   const now = Date.now();
   const entry = rateLimitStore.get(key);
@@ -253,9 +258,13 @@ export const nativeAuthProcedures = {
       email: z.string().email(),
       origin: z.string().url().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // Rate limit resend requests to prevent inbox flooding
+      const ip = ctx.req.ip || ctx.req.socket?.remoteAddress || "unknown";
+      checkRateLimit(ip, "resend");
 
       const [user] = await db
         .select()
@@ -388,9 +397,13 @@ export const nativeAuthProcedures = {
       email: z.string().email().max(320),
       origin: z.string().url().optional(),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // Rate limit password reset requests to prevent inbox flooding
+      const ip = ctx.req.ip || ctx.req.socket?.remoteAddress || "unknown";
+      checkRateLimit(ip, "passwordReset");
 
       const [user] = await db
         .select()

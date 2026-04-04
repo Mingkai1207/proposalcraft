@@ -226,7 +226,7 @@ export default function ClientPortal() {
                     title="Proposal Preview"
                     className="w-full border-0"
                     style={{ height: "400px" }}
-                    sandbox="allow-same-origin"
+                    sandbox=""
                   />
                 </div>
               ) : (

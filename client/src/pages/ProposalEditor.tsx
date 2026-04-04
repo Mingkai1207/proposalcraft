@@ -184,7 +184,7 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
               title="Proposal Preview"
               className="w-full border-0"
               style={{ height: "600px" }}
-              sandbox="allow-same-origin"
+              sandbox=""
             />
           </div>
         ) : (
