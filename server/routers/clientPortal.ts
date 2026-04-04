@@ -1,6 +1,6 @@
 import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
-import { proposals } from "../../drizzle/schema";
+import { proposals, contractorProfiles } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
 import { TRPCError } from "@trpc/server";
@@ -25,7 +25,19 @@ export const clientPortalRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
       }
 
-      return proposal;
+      // Fetch contractor name for display (non-fatal if missing)
+      let contractorName: string | null = null;
+      try {
+        const profileRows = await db
+          .select({ businessName: contractorProfiles.businessName, ownerName: contractorProfiles.ownerName })
+          .from(contractorProfiles)
+          .where(eq(contractorProfiles.userId, proposal.userId))
+          .limit(1);
+        const p = profileRows[0];
+        contractorName = p?.businessName || p?.ownerName || null;
+      } catch {}
+
+      return { ...proposal, contractorName };
     }),
 
   // Public: Accept proposal

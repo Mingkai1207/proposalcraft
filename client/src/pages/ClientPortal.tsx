@@ -149,7 +149,9 @@ export default function ClientPortal() {
       <div className="border-b border-border bg-white px-6 py-4">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl font-bold text-foreground">Proposal Review</h1>
-          <p className="text-muted-foreground mt-1">From {proposal.userId}</p>
+          {(proposal as any).contractorName && (
+            <p className="text-muted-foreground mt-1">From {(proposal as any).contractorName}</p>
+          )}
         </div>
       </div>
 
@@ -201,19 +203,47 @@ export default function ClientPortal() {
               </div>
             </div>
 
-            {/* Right: PDF Preview */}
+            {/* Right: Proposal Preview */}
             <div className="flex flex-col">
               <p className="text-sm text-muted-foreground mb-2">Proposal Document</p>
-              <div className="bg-muted rounded-lg p-4 flex-1 flex items-center justify-center mb-4">
-                <div className="text-center">
-                  <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">PDF Document</p>
+              {proposal.pdfUrl ? (
+                <div className="flex-1 rounded-lg overflow-hidden border border-border mb-4" style={{ minHeight: "400px" }}>
+                  <object
+                    data={proposal.pdfUrl + "#toolbar=0&navpanes=0"}
+                    type="application/pdf"
+                    className="w-full"
+                    style={{ height: "400px" }}
+                  >
+                    <div className="flex flex-col items-center justify-center h-64 bg-muted gap-3">
+                      <FileText className="w-10 h-10 text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">Preview not available.</p>
+                    </div>
+                  </object>
                 </div>
-              </div>
-              <Button onClick={downloadPDF} className="w-full" variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </Button>
+              ) : proposal.generatedContent?.trimStart().toLowerCase().startsWith("<!doctype") ? (
+                <div className="flex-1 rounded-lg overflow-hidden border border-border mb-4">
+                  <iframe
+                    srcDoc={proposal.generatedContent}
+                    title="Proposal Preview"
+                    className="w-full border-0"
+                    style={{ height: "400px" }}
+                    sandbox="allow-same-origin"
+                  />
+                </div>
+              ) : (
+                <div className="bg-muted rounded-lg p-4 flex-1 flex items-center justify-center mb-4">
+                  <div className="text-center">
+                    <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Download to view the full proposal</p>
+                  </div>
+                </div>
+              )}
+              {proposal.pdfUrl && (
+                <Button onClick={downloadPDF} className="w-full" variant="outline">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download PDF
+                </Button>
+              )}
             </div>
           </div>
 
