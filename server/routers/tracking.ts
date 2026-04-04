@@ -12,6 +12,10 @@ export const trackingRouter = router({
       const proposal = await getProposalByToken(input.token);
       if (!proposal) return { success: false };
 
+      // Truncate user-agent to 512 chars to prevent large strings from bloating the DB
+      const rawUa = ctx.req.headers["user-agent"] || null;
+      const userAgent = rawUa ? rawUa.slice(0, 512) : null;
+
       // Only update to "viewed" if not already viewed or further
       if (proposal.status === "sent") {
         await updateProposal(proposal.id, proposal.userId, {
@@ -24,7 +28,7 @@ export const trackingRouter = router({
           proposalId: proposal.id,
           eventType: "opened",
           ipAddress: ctx.req.ip || ctx.req.socket?.remoteAddress || null,
-          userAgent: ctx.req.headers["user-agent"] || null,
+          userAgent,
         });
 
         // Notify the contractor
@@ -43,7 +47,7 @@ export const trackingRouter = router({
           proposalId: proposal.id,
           eventType: "follow_up_opened",
           ipAddress: ctx.req.ip || ctx.req.socket?.remoteAddress || null,
-          userAgent: ctx.req.headers["user-agent"] || null,
+          userAgent,
         });
 
         // Notify the contractor
