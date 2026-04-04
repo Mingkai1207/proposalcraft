@@ -69,6 +69,11 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
     if (!f) return;
+    if (f.size > 10 * 1024 * 1024) {
+      toast.error("File exceeds 10MB limit. Please use a smaller file.");
+      e.target.value = "";
+      return;
+    }
     setFile(f);
     setIsExtracting(true);
 
