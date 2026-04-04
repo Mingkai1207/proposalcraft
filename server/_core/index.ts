@@ -100,6 +100,48 @@ async function startServer() {
     res.json({ received: true });
   });
 
+  // Email open tracking pixel — must be registered before express.json() so it runs early
+  // Returns a 1×1 transparent GIF and asynchronously records the open event.
+  const TRACKING_PIXEL = Buffer.from(
+    "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7",
+    "base64"
+  );
+  app.get("/api/track/:token", async (req, res) => {
+    res.setHeader("Content-Type", "image/gif");
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.end(TRACKING_PIXEL);
+
+    // Fire-and-forget: record open in the background
+    try {
+      const { getProposalByToken, updateProposal, createEmailEvent } = await import("../db");
+      const proposal = await getProposalByToken(req.params.token);
+      if (proposal && proposal.status === "sent") {
+        await updateProposal(proposal.id, proposal.userId, {
+          status: "viewed",
+          viewedAt: new Date(),
+        });
+        await createEmailEvent({
+          proposalId: proposal.id,
+          eventType: "opened",
+          ipAddress: req.ip || req.socket?.remoteAddress || null,
+          userAgent: req.headers["user-agent"] || null,
+        });
+      } else if (proposal?.followUpSentAt && !proposal.followUpOpenedAt) {
+        await updateProposal(proposal.id, proposal.userId, {
+          followUpOpenedAt: new Date(),
+        });
+        await createEmailEvent({
+          proposalId: proposal.id,
+          eventType: "follow_up_opened",
+          ipAddress: req.ip || req.socket?.remoteAddress || null,
+          userAgent: req.headers["user-agent"] || null,
+        });
+      }
+    } catch (err) {
+      console.error("[Track] Error recording open:", err);
+    }
+  });
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
