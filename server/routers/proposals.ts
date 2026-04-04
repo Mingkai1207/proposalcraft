@@ -1724,6 +1724,16 @@ Base font size: 13.5px-14px with line-height: 1.6 for body text.`;
         throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
       }
 
+      // Require Starter or Pro plan — refineProposal uses the Anthropic API for HTML proposals
+      // which is expensive; free users should not have access.
+      const isAdmin = ctx.user.role === "admin";
+      const sub = await ensureSubscription(ctx.user.id);
+      if (!sub) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Subscription error" });
+      const canRefine = isAdmin || sub.plan === "starter" || sub.plan === "pro";
+      if (!canRefine) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "AI refinement is available on Starter and Pro plans." });
+      }
+
       const currentContent = proposal.generatedContent || "";
       const isHtmlProposal = currentContent.trimStart().toLowerCase().startsWith("<!doctype");
 
