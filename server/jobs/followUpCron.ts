@@ -1,6 +1,7 @@
 import { getDb } from "../db";
 import { proposals, contractorProfiles } from "../../drizzle/schema";
 import { eq, and, isNull, lt } from "drizzle-orm";
+import { sendEmail } from "../email";
 
 /**
  * Automatic follow-up cron job
@@ -57,35 +58,23 @@ export async function sendAutomaticFollowUps() {
           sentDate: new Date(proposal.sentAt!).toLocaleDateString(),
         });
 
-        // Send via Forge API
-        const forgeUrl = process.env.BUILT_IN_FORGE_API_URL;
-        const forgeKey = process.env.BUILT_IN_FORGE_API_KEY;
+        // Send via nodemailer
+        const sent = await sendEmail({
+          to: proposal.clientEmail,
+          subject: `Follow-up: ${proposal.title}`,
+          html: followUpHtml,
+        });
 
-        if (forgeUrl && forgeKey) {
-          const response = await fetch(`${forgeUrl}/notification/email`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${forgeKey}`,
-            },
-            body: JSON.stringify({
-              to: proposal.clientEmail,
-              subject: `Follow-up: ${proposal.title}`,
-              html: followUpHtml,
-            }),
-          });
+        if (sent) {
+          // Record follow-up sent time
+          await db
+            .update(proposals)
+            .set({ followUpSentAt: new Date() } as any)
+            .where(eq(proposals.id, proposal.id));
 
-          if (response.ok) {
-            // Record follow-up sent time
-            await db
-              .update(proposals)
-              .set({ followUpSentAt: new Date() } as any)
-              .where(eq(proposals.id, proposal.id));
-
-            console.log(`[FollowUp Cron] Follow-up sent for proposal ${proposal.id}`);
-          } else {
-            console.error(`[FollowUp Cron] Failed to send follow-up for proposal ${proposal.id}: ${response.status}`);
-          }
+          console.log(`[FollowUp Cron] Follow-up sent for proposal ${proposal.id}`);
+        } else {
+          console.error(`[FollowUp Cron] Failed to send follow-up for proposal ${proposal.id}`);
         }
       } catch (err) {
         console.error(`[FollowUp Cron] Error processing proposal ${proposal.id}:`, err);

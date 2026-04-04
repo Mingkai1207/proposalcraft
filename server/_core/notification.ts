@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { sendEmail } from "../email";
 import { ENV } from "./env";
 
 export type NotificationPayload = {
@@ -12,16 +13,6 @@ const CONTENT_MAX_LENGTH = 20000;
 const trimValue = (value: string): string => value.trim();
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === "string" && value.trim().length > 0;
-
-const buildEndpointUrl = (baseUrl: string): string => {
-  const normalizedBase = baseUrl.endsWith("/")
-    ? baseUrl
-    : `${baseUrl}/`;
-  return new URL(
-    "webdevtoken.v1.WebDevService/SendNotification",
-    normalizedBase
-  ).toString();
-};
 
 const validatePayload = (input: NotificationPayload): NotificationPayload => {
   if (!isNonEmptyString(input.title)) {
@@ -58,57 +49,43 @@ const validatePayload = (input: NotificationPayload): NotificationPayload => {
 };
 
 /**
- * Dispatches a project-owner notification through the Manus Notification Service.
- * Returns `true` if the request was accepted, `false` when the upstream service
- * cannot be reached (callers can fall back to email/slack). Validation errors
- * bubble up as TRPC errors so callers can fix the payload.
+ * Sends an owner notification via email.
+ * Returns `true` if the email was accepted, `false` on failure.
+ * Validation errors bubble up as TRPC errors so callers can fix the payload.
  */
 export async function notifyOwner(
   payload: NotificationPayload
 ): Promise<boolean> {
   const { title, content } = validatePayload(payload);
 
-  if (!ENV.forgeApiUrl) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service URL is not configured.",
-    });
+  const ownerEmail = ENV.ownerEmail;
+  if (!ownerEmail) {
+    // No owner email configured — log and continue (non-fatal)
+    console.warn("[Notification] OWNER_EMAIL not set; skipping owner notification.");
+    return false;
   }
 
-  if (!ENV.forgeApiKey) {
-    throw new TRPCError({
-      code: "INTERNAL_SERVER_ERROR",
-      message: "Notification service API key is not configured.",
-    });
-  }
-
-  const endpoint = buildEndpointUrl(ENV.forgeApiUrl);
+  const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;">
+  <h2 style="color:#1a1a2e;">${title}</h2>
+  <div style="white-space:pre-wrap;line-height:1.6;">${content}</div>
+  <hr style="margin-top:32px;border:none;border-top:1px solid #e0e0e0;" />
+  <p style="color:#888;font-size:12px;">Sent by ProposAI</p>
+</body>
+</html>`;
 
   try {
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        authorization: `Bearer ${ENV.forgeApiKey}`,
-        "content-type": "application/json",
-        "connect-protocol-version": "1",
-      },
-      body: JSON.stringify({ title, content }),
+    return await sendEmail({
+      to: ownerEmail,
+      subject: `[ProposAI] ${title}`,
+      html,
+      text: `${title}\n\n${content}`,
     });
-
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      console.warn(
-        `[Notification] Failed to notify owner (${response.status} ${response.statusText})${
-          detail ? `: ${detail}` : ""
-        }`
-      );
-      return false;
-    }
-
-    return true;
   } catch (error) {
-    console.warn("[Notification] Error calling notification service:", error);
+    console.warn("[Notification] Error sending owner notification email:", error);
     return false;
   }
 }

@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { protectedProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
 import { notifyOwner } from "../_core/notification";
+import { sendEmail } from "../email";
 import {
   createProposal,
   getUserProposals,
@@ -292,8 +293,8 @@ Write a complete, ready-to-send proposal. Use professional formatting with clear
 
       const profile = await getContractorProfile(ctx.user.id);
       const businessName = profile?.businessName || ctx.user.name || "Your Contractor";
-      const trackingUrl = `${ENV.oAuthServerUrl?.replace("api.", "") || "https://app.manus.space"}/api/track/${proposal.trackingToken}`;
-      const portalLink = `${ENV.oAuthServerUrl?.replace("api.", "") || "https://app.manus.space"}/client-portal?token=${proposal.trackingToken}`;
+      const trackingUrl = `${ENV.appUrl}/api/track/${proposal.trackingToken}`;
+      const portalLink = `${ENV.appUrl}/client-portal?token=${proposal.trackingToken}`;
 
       // Build email HTML
       const emailHtml = `
@@ -331,26 +332,13 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
 </body>
 </html>`;
 
-      // Use the built-in notification system to send email
-      // We'll use the forge API for email delivery
+      // Send email via nodemailer
       try {
-        const forgeUrl = process.env.BUILT_IN_FORGE_API_URL;
-        const forgeKey = process.env.BUILT_IN_FORGE_API_KEY;
-
-        if (forgeUrl && forgeKey) {
-          await fetch(`${forgeUrl}/notification/email`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${forgeKey}`,
-            },
-            body: JSON.stringify({
-              to: input.clientEmail,
-              subject: `Proposal from ${businessName}: ${proposal.title}`,
-              html: emailHtml,
-            }),
-          });
-        }
+        await sendEmail({
+          to: input.clientEmail,
+          subject: `Proposal from ${businessName}: ${proposal.title}`,
+          html: emailHtml,
+        });
       } catch (err) {
         console.error("[Email] Failed to send:", err);
       }
@@ -383,7 +371,7 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
 
       // Save to database (simplified - in production use proper db helper)
-      const shareUrl = `${ENV.oAuthServerUrl?.replace("api.", "") || "https://proposai.org"}/share/${token}`;
+      const shareUrl = `${ENV.appUrl}/share/${token}`;
       return { token, shareUrl, expiresAt };
     }),
 
@@ -437,23 +425,13 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
 </html>
       `;
 
-      // Send via forge API
+      // Send follow-up via nodemailer
       try {
-        const forgeUrl = process.env.BUILT_IN_FORGE_API_URL;
-        const forgeKey = process.env.BUILT_IN_FORGE_API_KEY;
-
-        if (forgeUrl && forgeKey && proposal.clientEmail) {
-          await fetch(`${forgeUrl}/notification/email`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${forgeKey}`,
-            },
-            body: JSON.stringify({
-              to: proposal.clientEmail,
-              subject: `Follow-up: ${proposal.title}`,
-              html: followUpHtml,
-            }),
+        if (proposal.clientEmail) {
+          await sendEmail({
+            to: proposal.clientEmail,
+            subject: `Follow-up: ${proposal.title}`,
+            html: followUpHtml,
           });
         }
       } catch (err) {
