@@ -294,7 +294,19 @@ Write a complete, ready-to-send proposal. Use professional formatting with clear
       const profile = await getContractorProfile(ctx.user.id);
       const businessName = profile?.businessName || ctx.user.name || "Your Contractor";
       const trackingUrl = `${ENV.appUrl}/api/track/${proposal.trackingToken}`;
-      const portalLink = `${ENV.appUrl}/client-portal?token=${proposal.trackingToken}`;
+
+      // Ensure a clientPortalToken exists so the portal link in the email actually works.
+      // clientPortalToken is separate from trackingToken (tracking is for the open-pixel;
+      // portal token is what the client portal page queries by).
+      let clientPortalToken = proposal.clientPortalToken;
+      if (!clientPortalToken) {
+        clientPortalToken = nanoid(32);
+        const db = await getDb();
+        if (db) {
+          await db.update(proposalsTable).set({ clientPortalToken }).where(eq(proposalsTable.id, proposal.id));
+        }
+      }
+      const portalLink = `${ENV.appUrl}/client-portal?token=${clientPortalToken}`;
 
       // Proposal summary lines (first 3 non-empty lines, stripped of HTML/markdown)
       const summaryText = (proposal.generatedContent || "")
