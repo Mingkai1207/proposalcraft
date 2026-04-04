@@ -6,6 +6,19 @@ import { getDb } from "../db";
 import { TRPCError } from "@trpc/server";
 import JSZip from "jszip";
 
+/**
+ * Wrap a value in CSV double-quotes and escape internal quotes.
+ * Also strips leading formula-injection characters (=, +, -, @, tab, CR)
+ * that spreadsheet applications like Excel/Google Sheets would execute.
+ */
+function csvCell(value: string | number | null | undefined): string {
+  const str = value == null ? "" : String(value);
+  // Strip leading characters that trigger formula execution in spreadsheet apps
+  const safe = str.replace(/^[=+\-@\t\r]+/, "");
+  // Escape double-quotes by doubling them, then wrap the whole field in quotes
+  return `"${safe.replace(/"/g, '""')}"`;
+}
+
 export const exportRouter = router({
   // Protected: Bulk export all proposals as ZIP
   bulkExportProposals: protectedProcedure.query(async ({ ctx }) => {
@@ -42,18 +55,18 @@ export const exportRouter = router({
     ];
 
     const csvRows = userProposals.map((p) => [
-      p.id,
-      `"${p.title?.replace(/"/g, '""') || ""}"`,
-      p.tradeType,
-      `"${p.clientName?.replace(/"/g, '""') || ""}"`,
-      p.clientEmail || "",
-      p.totalCost || "",
-      p.status,
-      p.sentAt ? new Date(p.sentAt).toISOString() : "",
-      p.viewedAt ? new Date(p.viewedAt).toISOString() : "",
-      p.acceptedAt ? new Date(p.acceptedAt).toISOString() : "",
-      p.declinedAt ? new Date(p.declinedAt).toISOString() : "",
-      new Date(p.createdAt).toISOString(),
+      csvCell(p.id),
+      csvCell(p.title),
+      csvCell(p.tradeType),
+      csvCell(p.clientName),
+      csvCell(p.clientEmail),
+      csvCell(p.totalCost),
+      csvCell(p.status),
+      csvCell(p.sentAt ? new Date(p.sentAt).toISOString() : ""),
+      csvCell(p.viewedAt ? new Date(p.viewedAt).toISOString() : ""),
+      csvCell(p.acceptedAt ? new Date(p.acceptedAt).toISOString() : ""),
+      csvCell(p.declinedAt ? new Date(p.declinedAt).toISOString() : ""),
+      csvCell(new Date(p.createdAt).toISOString()),
     ]);
 
     const csvContent = [csvHeaders.join(","), ...csvRows.map((row) => row.join(","))].join("\n");
@@ -142,18 +155,18 @@ export const exportRouter = router({
       ];
 
       const csvRows = selectedProposals.map((p) => [
-        p.id,
-        `"${p.title?.replace(/"/g, '""') || ""}"`,
-        p.tradeType,
-        `"${p.clientName?.replace(/"/g, '""') || ""}"`,
-        p.clientEmail || "",
-        p.totalCost || "",
-        p.status,
-        p.sentAt ? new Date(p.sentAt).toISOString() : "",
-        p.viewedAt ? new Date(p.viewedAt).toISOString() : "",
-        p.acceptedAt ? new Date(p.acceptedAt).toISOString() : "",
-        p.declinedAt ? new Date(p.declinedAt).toISOString() : "",
-        new Date(p.createdAt).toISOString(),
+        csvCell(p.id),
+        csvCell(p.title),
+        csvCell(p.tradeType),
+        csvCell(p.clientName),
+        csvCell(p.clientEmail),
+        csvCell(p.totalCost),
+        csvCell(p.status),
+        csvCell(p.sentAt ? new Date(p.sentAt).toISOString() : ""),
+        csvCell(p.viewedAt ? new Date(p.viewedAt).toISOString() : ""),
+        csvCell(p.acceptedAt ? new Date(p.acceptedAt).toISOString() : ""),
+        csvCell(p.declinedAt ? new Date(p.declinedAt).toISOString() : ""),
+        csvCell(new Date(p.createdAt).toISOString()),
       ]);
 
       const csvContent = [csvHeaders.join(","), ...csvRows.map((row) => row.join(","))].join("\n");

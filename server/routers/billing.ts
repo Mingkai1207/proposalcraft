@@ -95,7 +95,9 @@ export const billingRouter = router({
   // Activate subscription after PayPal redirect (called from success page)
   activateSubscription: protectedProcedure
     .input(z.object({
-      subscriptionId: z.string().min(1).max(50),
+      // PayPal subscription IDs follow the format I-XXXXXXXXXXXX (alphanumeric, 12–20 chars).
+      // Validate format to prevent path traversal in the PayPal API URL.
+      subscriptionId: z.string().regex(/^I-[A-Z0-9]{6,20}$/, "Invalid subscription ID format"),
       plan: z.enum(["starter", "pro"]),
     }))
     .mutation(async ({ ctx, input }) => {

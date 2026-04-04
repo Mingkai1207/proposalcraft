@@ -240,7 +240,7 @@ export const templatesRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Template not found" });
       }
 
-      await db.delete(proposalTemplates).where(eq(proposalTemplates.id, input.id));
+      await db.delete(proposalTemplates).where(and(eq(proposalTemplates.id, input.id), eq(proposalTemplates.userId, ctx.user.id)));
       return { success: true };
     }),
 });
