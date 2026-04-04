@@ -309,10 +309,10 @@ export function Templates() {
                 Save proposals as reusable templates, or upload your own. ProposAI will follow the template's structure when generating new proposals.
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <UploadTemplateDialog onSuccess={refetch} />
               <Button onClick={() => navigate("/proposals/from-template")} className="gap-2">
-                <Sparkles className="w-4 h-4" /> New from Template
+                <Sparkles className="w-4 h-4" /> <span className="hidden sm:inline">New from Template</span><span className="sm:hidden">New</span>
               </Button>
             </div>
           </div>

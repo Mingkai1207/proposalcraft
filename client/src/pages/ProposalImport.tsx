@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
-import { Upload, FileText, CheckCircle, AlertCircle, Loader } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertCircle, Loader, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 
 export default function ProposalImport() {
@@ -62,7 +62,15 @@ export default function ProposalImport() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
+      {/* Top bar */}
+      <div className="border-b border-border bg-white px-6 py-4 flex items-center gap-4">
+        <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Back to dashboard">
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+        <h1 className="font-semibold text-foreground">Import Proposals</h1>
+      </div>
+      <div className="p-6">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground mb-2">Import Your Proposals</h1>
@@ -173,6 +181,7 @@ export default function ProposalImport() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

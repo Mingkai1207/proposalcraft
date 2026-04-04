@@ -314,6 +314,11 @@ export default function ProposalDetail() {
                     {exportWordMutation.isPending ? <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Word...</> : <><FileText className="w-3.5 h-3.5 mr-1" /> Word</>}
                   </Button>
                 ) : null}
+                {isPaidPlan ? (
+                  <Button variant="outline" size="sm" disabled={exportGoogleDocsMutation.isPending} onClick={handleOpenGoogleDocs}>
+                    {exportGoogleDocsMutation.isPending ? <><Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" /> Docs...</> : <><Globe className="w-3.5 h-3.5 mr-1" /> Docs</>}
+                  </Button>
+                ) : null}
                 <Button variant="outline" size="sm" onClick={() => shareLinkMutation.mutate({ id: proposal.id })} disabled={shareLinkMutation.isPending}>
                   <Share2 className="w-3.5 h-3.5 mr-1" /> Share
                 </Button>
