@@ -13,7 +13,7 @@ export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
-  email: varchar("email", { length: 320 }),
+  email: varchar("email", { length: 320 }).unique(),
   passwordHash: varchar("passwordHash", { length: 255 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
   emailVerified: boolean("emailVerified").default(false).notNull(),
@@ -107,7 +107,7 @@ export const proposals = mysqlTable("proposals", {
   declinedAt: timestamp("declinedAt"), // When client declined the proposal
   clientPortalToken: varchar("clientPortalToken", { length: 64 }).unique(), // Unique token for client portal link
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Proposal = typeof proposals.$inferSelect;

@@ -8,6 +8,12 @@ import { nanoid } from "nanoid";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../email";
 
+function isProposalExpired(proposal: { sentAt: Date | null; expiryDays: number | null }): boolean {
+  if (!proposal.sentAt || !proposal.expiryDays) return false;
+  const expiresAt = new Date(proposal.sentAt).getTime() + proposal.expiryDays * 24 * 60 * 60 * 1000;
+  return Date.now() > expiresAt;
+}
+
 export const clientPortalRouter = router({
   // Public: Get proposal by client portal token
   getProposal: publicProcedure
@@ -38,7 +44,28 @@ export const clientPortalRouter = router({
         contractorName = p?.businessName || p?.ownerName || null;
       } catch {}
 
-      return { ...proposal, contractorName };
+      // Only expose fields needed for the client portal — never leak internal IDs or tokens
+      return {
+        id: proposal.id,
+        title: proposal.title,
+        clientName: proposal.clientName,
+        clientEmail: proposal.clientEmail,
+        clientAddress: proposal.clientAddress,
+        tradeType: proposal.tradeType,
+        jobScope: proposal.jobScope,
+        materials: proposal.materials,
+        laborCost: proposal.laborCost,
+        materialsCost: proposal.materialsCost,
+        totalCost: proposal.totalCost,
+        generatedContent: proposal.generatedContent,
+        pdfUrl: proposal.pdfUrl,
+        status: proposal.status,
+        sentAt: proposal.sentAt,
+        expiryDays: proposal.expiryDays,
+        acceptedAt: proposal.acceptedAt,
+        declinedAt: proposal.declinedAt,
+        contractorName,
+      };
     }),
 
   // Public: Accept proposal
@@ -60,6 +87,10 @@ export const clientPortalRouter = router({
 
       if (proposal.acceptedAt || proposal.declinedAt) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Proposal already responded to" });
+      }
+
+      if (isProposalExpired(proposal)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This proposal has expired and can no longer be accepted." });
       }
 
       await db
@@ -125,6 +156,10 @@ ${proposal.totalCost ? `<p>Project value: <strong>$${proposal.totalCost}</strong
 
       if (proposal.acceptedAt || proposal.declinedAt) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Proposal already responded to" });
+      }
+
+      if (isProposalExpired(proposal)) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This proposal has expired." });
       }
 
       await db
