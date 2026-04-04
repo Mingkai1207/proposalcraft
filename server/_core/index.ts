@@ -261,6 +261,17 @@ async function startServer() {
 
 startServer().catch(console.error);
 
+// Log unhandled rejections and exceptions before the process exits.
+// Node.js v15+ exits by default on unhandledRejection; these handlers ensure the
+// error is visible in server logs before the crash so it can be investigated.
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("[FATAL] Unhandled promise rejection:", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("[FATAL] Uncaught exception:", err);
+  process.exit(1);
+});
+
 // Schedule automatic follow-up emails — runs every hour
 import("../jobs/followUpCron").then(({ sendAutomaticFollowUps }) => {
   // Run once on startup (catches any missed windows), then every hour
