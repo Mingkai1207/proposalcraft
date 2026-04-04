@@ -18,6 +18,42 @@ import { sendEmail, buildVerificationEmail } from "../email";
 const BCRYPT_ROUNDS = 12;
 const VERIFICATION_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+// ─── Simple in-memory rate limiter (no external dependencies) ─────────────────
+// Protects login/register endpoints from brute-force attacks.
+// Key: IP address. Value: { count, windowStart }
+const rateLimitStore = new Map<string, { count: number; windowStart: number }>();
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const RATE_LIMIT_MAX_LOGIN = 20;    // max 20 login attempts per IP per 15 min
+const RATE_LIMIT_MAX_REGISTER = 10; // max 10 registrations per IP per 15 min
+
+function checkRateLimit(ip: string, type: "login" | "register"): void {
+  const max = type === "login" ? RATE_LIMIT_MAX_LOGIN : RATE_LIMIT_MAX_REGISTER;
+  const key = `${type}:${ip}`;
+  const now = Date.now();
+  const entry = rateLimitStore.get(key);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    rateLimitStore.set(key, { count: 1, windowStart: now });
+    return;
+  }
+  entry.count++;
+  if (entry.count > max) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: "Too many attempts. Please try again in 15 minutes.",
+    });
+  }
+}
+
+// Periodically clean up expired entries to prevent memory leak
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of rateLimitStore.entries()) {
+    if (now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+      rateLimitStore.delete(key);
+    }
+  }
+}, 5 * 60 * 1000); // clean every 5 minutes
+
 // Trusted origins for email verification links — use env var in production
 const TRUSTED_APP_ORIGIN = process.env.VITE_APP_URL?.replace(/\/$/, "") || "https://proposai.org";
 
@@ -72,6 +108,10 @@ export const nativeAuthProcedures = {
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // Rate limit registration by IP to prevent account creation spam
+      const ip = ctx.req.ip || ctx.req.socket?.remoteAddress || "unknown";
+      checkRateLimit(ip, "register");
 
       // Check if email already exists
       const existing = await db
@@ -267,6 +307,10 @@ export const nativeAuthProcedures = {
     .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // Rate limit login attempts by IP to slow brute-force attacks
+      const ip = ctx.req.ip || ctx.req.socket?.remoteAddress || "unknown";
+      checkRateLimit(ip, "login");
 
       // Find user by email
       const [user] = await db
