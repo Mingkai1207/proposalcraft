@@ -2,6 +2,7 @@ import { getDb } from "../db";
 import { proposals, contractorProfiles } from "../../drizzle/schema";
 import { eq, and, isNull, lt } from "drizzle-orm";
 import { sendEmail } from "../email";
+import { ENV } from "../_core/env";
 
 /**
  * Automatic follow-up cron job
@@ -48,6 +49,9 @@ export async function sendAutomaticFollowUps() {
         }
 
         const businessName = profile.businessName || profile.ownerName || "Your Contractor";
+        const portalLink = proposal.clientPortalToken
+          ? `${ENV.appUrl}/client-portal?token=${proposal.clientPortalToken}`
+          : null;
 
         // Use custom template if available, otherwise use default
         const template = profile.followUpTemplate || getDefaultFollowUpTemplate();
@@ -56,6 +60,7 @@ export async function sendAutomaticFollowUps() {
           proposalTitle: proposal.title,
           businessName,
           sentDate: new Date(proposal.sentAt!).toLocaleDateString(),
+          portalLink,
         });
 
         // Build SMTP override from contractor profile if configured
@@ -123,6 +128,7 @@ function buildFollowUpEmail(
     proposalTitle: string;
     businessName: string;
     sentDate: string;
+    portalLink: string | null;
   }
 ): string {
   let html = template
@@ -130,6 +136,13 @@ function buildFollowUpEmail(
     .replace(/{proposalTitle}/g, vars.proposalTitle)
     .replace(/{businessName}/g, vars.businessName)
     .replace(/{sentDate}/g, vars.sentDate);
+
+  const ctaSection = vars.portalLink
+    ? `<p style="margin:20px 0;"><a href="${vars.portalLink}" style="background:#e8630a;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">View &amp; Respond to Proposal</a></p>`
+    : "";
+  const footerLink = vars.portalLink
+    ? `<p>Direct link: <a href="${vars.portalLink}" style="color:#e8630a;">${vars.portalLink}</a></p>`
+    : "";
 
   return `
 <!DOCTYPE html>
@@ -146,9 +159,11 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
 </div>
 <div class="content">
 ${html}
+${ctaSection}
 </div>
 <div class="footer">
 <p>Sent by ${vars.businessName} via ProposAI</p>
+${footerLink}
 </div>
 </body>
 </html>

@@ -443,6 +443,9 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       const profile = await getContractorProfile(ctx.user.id);
       const businessName = profile?.businessName || ctx.user.name || "Your Contractor";
       const sentDate = new Date(proposal.sentAt!).toLocaleDateString();
+      const portalLink = proposal.clientPortalToken
+        ? `${ENV.appUrl}/client-portal?token=${proposal.clientPortalToken}`
+        : null;
 
       // Use custom follow-up template if the contractor configured one
       let followUpHtml: string;
@@ -453,8 +456,11 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
           .replace(/\{proposalTitle\}/g, proposal.title)
           .replace(/\{businessName\}/g, businessName)
           .replace(/\{sentDate\}/g, sentDate);
+        const portalSection = portalLink
+          ? `<p style="margin-top:24px;"><a href="${portalLink}" style="background:#e8630a;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">View Proposal</a></p><p style="font-size:12px;color:#888;">Or copy this link: ${portalLink}</p>`
+          : "";
         // Wrap plain text in simple HTML
-        followUpHtml = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;"><div style="white-space:pre-wrap;line-height:1.6;">${customText}</div><hr style="margin-top:32px;border:none;border-top:1px solid #e0e0e0;"/><p style="color:#888;font-size:12px;">Sent via <a href="https://proposai.org" style="color:#e8630a;text-decoration:none">ProposAI</a></p></body></html>`;
+        followUpHtml = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;"><div style="white-space:pre-wrap;line-height:1.6;">${customText}</div>${portalSection}<hr style="margin-top:32px;border:none;border-top:1px solid #e0e0e0;"/><p style="color:#888;font-size:12px;">Sent via <a href="https://proposai.org" style="color:#e8630a;text-decoration:none">ProposAI</a></p></body></html>`;
       } else {
         // Default follow-up template
         followUpHtml = `
@@ -474,11 +480,13 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
 <div class="content">
 <p>Hi ${proposal.clientName || "there"},</p>
 <p>I wanted to follow up on the proposal I sent you for <strong>${proposal.title}</strong>. I haven't heard back yet, and I wanted to make sure you received it and had a chance to review it.</p>
+${portalLink ? `<a href="${portalLink}" class="cta">View &amp; Respond to Proposal</a>` : ""}
 <p>If you have any questions or would like to discuss the proposal further, I'm happy to help. Feel free to reach out anytime.</p>
 <p style="margin-top: 24px;">Best regards,<br/><strong>${businessName}</strong></p>
 </div>
 <div class="footer">
 <p>This is a follow-up to your proposal sent on ${sentDate}.</p>
+${portalLink ? `<p>Direct link: <a href="${portalLink}" style="color:#e8630a;">${portalLink}</a></p>` : ""}
 </div>
 </body>
 </html>
