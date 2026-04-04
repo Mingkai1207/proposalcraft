@@ -9,14 +9,15 @@ import { toast } from "sonner";
 
 export function VersionHistory({ proposalId }: { proposalId: number }) {
   const [selectedVersion, setSelectedVersion] = useState<any>(null);
-  const [compareVersion, setCompareVersion] = useState<any>(null);
-  const [showCompare, setShowCompare] = useState(false);
+  const utils = trpc.useUtils();
 
   const { data: versions, isLoading, refetch } = trpc.versions.listVersions.useQuery({ proposalId });
   const restoreMutation = trpc.versions.restoreVersion.useMutation({
     onSuccess: () => {
       toast.success("Version restored successfully");
       refetch();
+      // Invalidate the parent proposal so the detail page refreshes with restored content
+      utils.proposals.get.invalidate({ id: proposalId });
     },
     onError: (err) => {
       toast.error(err.message || "Failed to restore version");
@@ -31,6 +32,7 @@ export function VersionHistory({ proposalId }: { proposalId: number }) {
   const handleRestore = (versionId: number) => {
     if (confirm("Restore this version? Current changes will be overwritten.")) {
       restoreMutation.mutate({ proposalId, versionId });
+      setSelectedVersion(null); // close the view modal if open
     }
   };
 
