@@ -93,9 +93,22 @@ export const billingRouter = router({
         const r = await fetch(`https://api-m.paypal.com/v1/billing/subscriptions/${input.subscriptionId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const sub = await r.json() as { status?: string; id?: string };
+        const sub = await r.json() as { status?: string; id?: string; custom_id?: string };
         if (sub.status !== "ACTIVE" && sub.status !== "APPROVED") {
           throw new TRPCError({ code: "BAD_REQUEST", message: "Subscription is not active yet." });
+        }
+        // Verify the subscription belongs to the authenticated user by checking custom_id
+        // (custom_id is set to JSON.stringify({ user_id, plan }) when the subscription is created)
+        if (sub.custom_id) {
+          try {
+            const parsed = JSON.parse(sub.custom_id) as { user_id?: number };
+            if (parsed.user_id && parsed.user_id !== ctx.user.id) {
+              throw new TRPCError({ code: "FORBIDDEN", message: "Subscription does not belong to this account." });
+            }
+          } catch (parseErr) {
+            if (parseErr instanceof TRPCError) throw parseErr;
+            // custom_id format unexpected — proceed with caution
+          }
         }
         await updateSubscription(ctx.user.id, {
           plan: input.plan,
