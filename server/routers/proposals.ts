@@ -1576,6 +1576,8 @@ Base font size: 13.5px-14px with line-height: 1.6 for body text.`;
       if (input.proposalId) {
         const existing = await getProposalById(input.proposalId);
         if (existing && existing.userId === ctx.user.id) {
+          // Snapshot before overwriting so the user can restore the previous version
+          await snapshotProposalVersion(input.proposalId, ctx.user.id).catch(() => {});
           await updateProposal(input.proposalId, ctx.user.id, {
             generatedContent,
             summaryContent: input.approvedSummary,
