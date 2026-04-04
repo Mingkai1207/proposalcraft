@@ -26,7 +26,8 @@ function isSmtpConfigured(): boolean {
 
 // Generate a unique openId for native users (not from Manus OAuth)
 function generateNativeOpenId(email: string): string {
-  return `native_${email.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now()}`;
+  // Use random bytes instead of Date.now() to avoid collisions under concurrent registrations
+  return `native_${email.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${crypto.randomBytes(8).toString("hex")}`;
 }
 
 // Generate a secure random verification token
@@ -49,7 +50,7 @@ export const nativeAuthProcedures = {
         password: z
           .string()
           .min(8, "Password must be at least 8 characters")
-          .max(128),
+          .max(72, "Password must be 72 characters or fewer"), // bcrypt silently truncates beyond 72 bytes
         origin: z.string().url().optional(), // frontend passes window.location.origin
       })
     )

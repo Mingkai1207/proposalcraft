@@ -146,9 +146,15 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         {isPreviewMode ? (
-          // Preview Mode
-          <div className="bg-card border border-border rounded-lg p-8 prose prose-sm max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: content }} />
+          // Preview Mode — use sandboxed iframe to avoid XSS from raw HTML content
+          <div className="bg-card border border-border rounded-lg overflow-hidden">
+            <iframe
+              srcDoc={content}
+              title="Proposal Preview"
+              className="w-full border-0"
+              style={{ height: "600px" }}
+              sandbox="allow-same-origin"
+            />
           </div>
         ) : (
           // Edit Mode

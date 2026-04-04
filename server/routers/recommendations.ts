@@ -1,7 +1,7 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { proposals, clientFeedback } from "../../drizzle/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { getDb } from "../db";
 import { TRPCError } from "@trpc/server";
 
@@ -38,29 +38,35 @@ export const recommendationsRouter = router({
       }> = [];
 
       // Analyze feedback and generate recommendations
+      // Deduplicate by reason — only push one recommendation per reason type
+      const seenReasons = new Set<string>();
       feedbackRows.forEach(feedback => {
-        if (feedback.reason === "price") {
+        if (feedback.reason === "price" && !seenReasons.has("price")) {
+          seenReasons.add("price");
           recommendations.push({
             title: "Consider Reducing Price",
             description: "The client indicated price was a concern. Review your labor costs and material estimates to see if there's room to reduce the total cost while maintaining profitability.",
             reason: "price",
             priority: "high",
           });
-        } else if (feedback.reason === "scope") {
+        } else if (feedback.reason === "scope" && !seenReasons.has("scope")) {
+          seenReasons.add("scope");
           recommendations.push({
             title: "Clarify Scope of Work",
             description: "The client may have had concerns about what's included. Consider breaking down the scope into smaller, more detailed phases or offering optional add-ons.",
             reason: "scope",
             priority: "high",
           });
-        } else if (feedback.reason === "timeline") {
+        } else if (feedback.reason === "timeline" && !seenReasons.has("timeline")) {
+          seenReasons.add("timeline");
           recommendations.push({
             title: "Adjust Timeline",
             description: "The client needed a faster turnaround. If possible, offer an expedited timeline option or break the project into phases with earlier completion dates.",
             reason: "timeline",
             priority: "high",
           });
-        } else if (feedback.reason === "other" && feedback.comments) {
+        } else if (feedback.reason === "other" && feedback.comments && !seenReasons.has("other")) {
+          seenReasons.add("other");
           recommendations.push({
             title: "Address Client Concerns",
             description: `Client feedback: "${feedback.comments}". Consider reaching out to discuss their specific concerns and how you might address them.`,
@@ -99,10 +105,12 @@ export const recommendationsRouter = router({
         return { recommendations: [] };
       }
 
-      // Get all feedback
-      const allFeedback = await db.select().from(clientFeedback);
+      // Get feedback only for this user's declined proposals (filter at DB level)
       const declinedIds = declinedProposals.map(p => p.id);
-      const relevantFeedback = allFeedback.filter(f => declinedIds.includes(f.proposalId));
+      const relevantFeedback = await db
+        .select()
+        .from(clientFeedback)
+        .where(inArray(clientFeedback.proposalId, declinedIds));
 
       // Count reasons
       const reasonCounts: Record<string, number> = {};

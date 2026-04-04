@@ -46,6 +46,10 @@ export default function Register() {
       setError("Password must be at least 8 characters.");
       return;
     }
+    if (password.length > 72) {
+      setError("Password must be 72 characters or fewer.");
+      return;
+    }
     registerMutation.mutate({ name, email, password, origin: window.location.origin });
   };
 
@@ -141,6 +145,7 @@ export default function Register() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    maxLength={72}
                     autoComplete="new-password"
                     className="bg-slate-800/60 border-slate-600 text-white placeholder:text-slate-500 focus:border-amber-500 focus:ring-amber-500/20 h-11 pr-10"
                   />

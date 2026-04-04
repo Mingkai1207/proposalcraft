@@ -1,7 +1,7 @@
 import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { proposals, clientFeedback } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { getDb } from "../db";
 import { TRPCError } from "@trpc/server";
 
@@ -85,9 +85,11 @@ export const feedbackRouter = router({
         };
       }
 
-      // Get all feedback
-      const allFeedback = await db.select().from(clientFeedback);
-      const relevantFeedback = allFeedback.filter(f => declinedIds.includes(f.proposalId));
+      // Get feedback only for this user's declined proposals (filter at DB level)
+      const relevantFeedback = await db
+        .select()
+        .from(clientFeedback)
+        .where(inArray(clientFeedback.proposalId, declinedIds));
 
       // Calculate analytics
       const reasonBreakdown: Record<string, number> = {};
