@@ -618,7 +618,13 @@ export default function ProposalDetail() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSendOpen(false)}>Cancel</Button>
-            <Button onClick={() => sendMutation.mutate({ id: proposal.id, clientEmail: sendEmail, clientName: sendName || undefined, message: sendMessage || undefined })} disabled={sendMutation.isPending || !sendEmail.trim()}>
+            <Button onClick={() => {
+              if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sendEmail.trim())) {
+                toast.error("Please enter a valid email address");
+                return;
+              }
+              sendMutation.mutate({ id: proposal.id, clientEmail: sendEmail.trim(), clientName: sendName || undefined, message: sendMessage || undefined });
+            }} disabled={sendMutation.isPending || !sendEmail.trim()}>
               {sendMutation.isPending ? "Sending..." : <><Send className="w-4 h-4 mr-1" /> Send Proposal</>}
             </Button>
           </DialogFooter>
