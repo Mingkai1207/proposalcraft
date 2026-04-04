@@ -80,7 +80,7 @@ RUN npm i -g corepack@latest && corepack enable
 COPY package.json pnpm-lock.yaml ./
 COPY patches/ ./patches/
 
-RUN corepack prepare --activate && pnpm install --frozen-lockfile --prod
+RUN corepack prepare --activate && pnpm install --frozen-lockfile
 
 # Copy built output from builder
 COPY --from=builder /app/dist ./dist
