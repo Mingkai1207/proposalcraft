@@ -8,8 +8,10 @@ export const ENV = {
   appUrl: process.env.APP_URL ?? "https://proposai.org",
   // Owner notification email
   ownerEmail: process.env.OWNER_EMAIL ?? "",
-  // LLM — direct Anthropic API (OpenAI-compatible endpoint)
+  // LLM — OpenAI-compatible endpoint (can be Anthropic or any third-party provider)
   anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
+  llmApiUrl: process.env.LLM_API_URL ?? "https://api.anthropic.com/v1/chat/completions",
+  llmModel: process.env.LLM_MODEL ?? "claude-sonnet-4-5",
   // Google Maps
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY ?? "",
   // AWS S3 for file storage

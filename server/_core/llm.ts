@@ -210,8 +210,7 @@ const normalizeToolChoice = (
   return toolChoice;
 };
 
-const resolveApiUrl = () =>
-  "https://api.anthropic.com/v1/chat/completions";
+const resolveApiUrl = () => ENV.llmApiUrl;
 
 const assertApiKey = () => {
   if (!ENV.anthropicApiKey) {
@@ -280,7 +279,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   } = params;
 
   const payload: Record<string, unknown> = {
-    model: model || "claude-sonnet-4-5",
+    model: model || ENV.llmModel,
     messages: messages.map(normalizeMessage),
   };
 
@@ -296,10 +295,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     payload.tool_choice = normalizedToolChoice;
   }
 
-  payload.max_tokens = 32768
-  payload.thinking = {
-    "budget_tokens": 128
-  }
+  payload.max_tokens = 8192;
 
   const normalizedResponseFormat = normalizeResponseFormat({
     responseFormat,
