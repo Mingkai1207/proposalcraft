@@ -16,7 +16,7 @@ import {
   getContractorProfile,
   createEmailEvent,
 } from "../db";
-import { storagePut } from "../storage";
+import { storagePut, storageGet } from "../storage";
 import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
 import { proposalTemplates, proposals as proposalsTable } from "../../drizzle/schema";
@@ -55,6 +55,28 @@ const TRADE_TEMPLATES: Record<string, string> = {
   solar: "Solar Panel Installation",
 };
 
+/** Refresh a stale S3 presigned PDF URL (expires after 7 days). Non-fatal on error. */
+async function refreshPdfUrlIfStale(pdfUrl: string | null): Promise<string | null> {
+  if (!pdfUrl) return null;
+  try {
+    const parsed = new URL(pdfUrl);
+    const dateParam = parsed.searchParams.get("X-Amz-Date");
+    const expiresParam = parsed.searchParams.get("X-Amz-Expires");
+    if (!dateParam || !expiresParam) return pdfUrl;
+    const iso = `${dateParam.slice(0, 4)}-${dateParam.slice(4, 6)}-${dateParam.slice(6, 8)}T${dateParam.slice(9, 11)}:${dateParam.slice(11, 13)}:${dateParam.slice(13, 15)}Z`;
+    const issuedAt = new Date(iso).getTime();
+    if (isNaN(issuedAt)) return pdfUrl;
+    const expiresAt = issuedAt + parseInt(expiresParam, 10) * 1000;
+    if (Date.now() < expiresAt - 24 * 60 * 60 * 1000) return pdfUrl; // Still valid
+    const key = parsed.pathname.replace(/^\/+/, "");
+    if (!key) return pdfUrl;
+    const { url: freshUrl } = await storageGet(key);
+    return freshUrl;
+  } catch {
+    return pdfUrl;
+  }
+}
+
 export const proposalRouter = router({
   // List all proposals for the authenticated user
   list: protectedProcedure.query(async ({ ctx }) => {
@@ -69,7 +91,8 @@ export const proposalRouter = router({
       if (!proposal || proposal.userId !== ctx.user.id) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
       }
-      return proposal;
+      const pdfUrl = await refreshPdfUrlIfStale(proposal.pdfUrl);
+      return { ...proposal, pdfUrl };
     }),
 
   // Generate a new AI proposal
