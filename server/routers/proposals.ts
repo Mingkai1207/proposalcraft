@@ -4,6 +4,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../email";
+import { decryptSmtpPassword } from "../_core/smtpCrypto";
 import {
   createProposal,
   getUserProposals,
@@ -407,7 +408,7 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
             host: profile.smtpHost,
             port: profile.smtpPort || 587,
             username: profile.smtpUsername,
-            password: profile.smtpPassword,
+            password: decryptSmtpPassword(profile.smtpPassword),
             fromEmail: profile.smtpFromEmail || profile.email || "",
             fromName: profile.smtpFromName || businessName,
           }
@@ -543,7 +544,7 @@ ${portalLink ? `<p>Direct link: <a href="${portalLink}" style="color:#e8630a;">$
             host: profile.smtpHost,
             port: profile.smtpPort || 587,
             username: profile.smtpUsername,
-            password: profile.smtpPassword,
+            password: decryptSmtpPassword(profile.smtpPassword),
             fromEmail: profile.smtpFromEmail || profile.email || "",
             fromName: profile.smtpFromName || businessName,
           }

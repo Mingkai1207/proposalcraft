@@ -3,6 +3,7 @@ import { protectedProcedure, router } from "../_core/trpc";
 import { getContractorProfile, upsertContractorProfile } from "../db";
 import { storagePut } from "../storage";
 import { nanoid } from "nanoid";
+import { encryptSmtpPassword } from "../_core/smtpCrypto";
 
 export const profileRouter = router({
   get: protectedProcedure.query(async ({ ctx }) => {
@@ -42,8 +43,11 @@ export const profileRouter = router({
     .mutation(async ({ ctx, input }) => {
       // "__configured__" is the sentinel returned by get() — never write it back to the DB.
       // An empty string also means "don't change" — the client never pre-fills the field.
-      const smtpPassword =
-        !input.smtpPassword || input.smtpPassword === "__configured__" ? undefined : input.smtpPassword;
+      // Encrypt the password at rest before storing; decryptSmtpPassword() handles decryption at use time.
+      const rawPassword = !input.smtpPassword || input.smtpPassword === "__configured__"
+        ? undefined
+        : input.smtpPassword;
+      const smtpPassword = rawPassword ? encryptSmtpPassword(rawPassword) : undefined;
       return upsertContractorProfile({
         userId: ctx.user.id,
         ...input,

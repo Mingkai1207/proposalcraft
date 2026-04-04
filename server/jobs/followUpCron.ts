@@ -3,6 +3,7 @@ import { proposals, contractorProfiles } from "../../drizzle/schema";
 import { eq, and, isNull, lt } from "drizzle-orm";
 import { sendEmail } from "../email";
 import { ENV } from "../_core/env";
+import { decryptSmtpPassword } from "../_core/smtpCrypto";
 
 function escHtml(str: string): string {
   return str
@@ -81,7 +82,7 @@ export async function sendAutomaticFollowUps() {
               host: profile.smtpHost,
               port: profile.smtpPort || 587,
               username: profile.smtpUsername,
-              password: profile.smtpPassword,
+              password: decryptSmtpPassword(profile.smtpPassword),
               fromEmail: profile.smtpFromEmail || "",
               fromName: profile.smtpFromName || businessName,
             }
