@@ -86,6 +86,15 @@ export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
   }
 }
 
+function escHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 /** Renders the verification email HTML */
 export function buildVerificationEmail(opts: {
   name: string;
@@ -124,7 +133,7 @@ export function buildVerificationEmail(opts: {
               <p style="margin:0 0 8px;color:#94a3b8;font-size:14px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Welcome aboard</p>
               <h1 style="margin:0 0 16px;color:#f8fafc;font-size:26px;font-weight:700;line-height:1.3;">Verify your email address</h1>
               <p style="margin:0 0 24px;color:#94a3b8;font-size:15px;line-height:1.6;">
-                Hi ${name}, thanks for signing up! Click the button below to verify your email address and activate your ProposAI account.
+                Hi ${escHtml(name)}, thanks for signing up! Click the button below to verify your email address and activate your ProposAI account.
               </p>
               <table cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
                 <tr>
