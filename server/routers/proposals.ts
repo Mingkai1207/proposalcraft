@@ -462,17 +462,18 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       // Use custom follow-up template if the contractor configured one
       let followUpHtml: string;
       if (profile?.followUpTemplate?.trim()) {
-        // Apply placeholder substitutions to the custom template — escape all user values
-        const customText = escHtml(profile.followUpTemplate)
+        // Apply placeholder substitutions — only escape the substituted values, not the template
+        // itself (contractors may use HTML formatting in their templates)
+        const customText = profile.followUpTemplate
           .replace(/\{clientName\}/g, escHtml(proposal.clientName || "there"))
           .replace(/\{proposalTitle\}/g, escHtml(proposal.title))
           .replace(/\{businessName\}/g, escHtml(businessName))
           .replace(/\{sentDate\}/g, escHtml(sentDate));
-        const portalSection = portalLink
-          ? `<p style="margin-top:24px;"><a href="${portalLink}" style="background:#e8630a;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">View Proposal</a></p><p style="font-size:12px;color:#888;">Or copy this link: ${portalLink}</p>`
+        const safePortalLink = portalLink ? portalLink.replace(/"/g, "&quot;") : null;
+        const portalSection = safePortalLink
+          ? `<p style="margin-top:24px;"><a href="${safePortalLink}" style="background:#e8630a;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;display:inline-block;">View Proposal</a></p><p style="font-size:12px;color:#888;">Or copy this link: <a href="${safePortalLink}" style="color:#e8630a;">${escHtml(portalLink!)}</a></p>`
           : "";
-        // Wrap plain text in simple HTML
-        followUpHtml = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;"><div style="white-space:pre-wrap;line-height:1.6;">${customText}</div>${portalSection}<hr style="margin-top:32px;border:none;border-top:1px solid #e0e0e0;"/><p style="color:#888;font-size:12px;">Sent via <a href="https://proposai.org" style="color:#e8630a;text-decoration:none">ProposAI</a></p></body></html>`;
+        followUpHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;}.content{background:#f9f9f9;padding:24px;border:1px solid #e0e0e0;white-space:pre-wrap;}.footer{color:#888;font-size:12px;padding:16px;text-align:center;}</style></head><body><div class="content">${customText}${portalSection}</div><div class="footer"><p>Sent via <a href="https://proposai.org" style="color:#e8630a;text-decoration:none">ProposAI</a></p></div></body></html>`;
       } else {
         // Default follow-up template
         followUpHtml = `
