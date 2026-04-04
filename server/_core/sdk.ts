@@ -109,17 +109,19 @@ class SDKServer {
       throw ForbiddenError("Invalid session cookie");
     }
 
-    const signedInAt = new Date();
     const user = await db.getUserByOpenId(session.openId);
 
     if (!user) {
       throw ForbiddenError("User not found");
     }
 
-    await db.upsertUser({
-      openId: user.openId,
-      lastSignedIn: signedInAt,
-    });
+    // Throttle lastSignedIn writes — only update if more than 5 minutes have elapsed.
+    // Every API call previously triggered a DB write; this reduces it to at most once per session.
+    const FIVE_MIN_MS = 5 * 60 * 1000;
+    const lastSeen = user.lastSignedIn ? new Date(user.lastSignedIn).getTime() : 0;
+    if (Date.now() - lastSeen > FIVE_MIN_MS) {
+      await db.upsertUser({ openId: user.openId, lastSignedIn: new Date() });
+    }
 
     return user;
   }
