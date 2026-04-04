@@ -30,6 +30,11 @@ function checkRequiredEnv() {
   const missing = ["DATABASE_URL", "ANTHROPIC_API_KEY", "JWT_SECRET"].filter(k => !process.env[k]);
   if (missing.length > 0) {
     console.error(`\n[Startup] ERROR: Missing required environment variables: ${missing.join(", ")}`);
+    // JWT_SECRET missing in production is a hard security failure — sessions cannot be signed.
+    if (process.env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
+      console.error("[Startup] JWT_SECRET is required in production. Exiting.");
+      process.exit(1);
+    }
     console.error("[Startup] The server will start but AI generation and auth will fail without these.\n");
   }
 }
