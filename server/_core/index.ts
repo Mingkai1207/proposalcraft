@@ -50,6 +50,10 @@ async function startServer() {
     res.setHeader("X-Frame-Options", "SAMEORIGIN");
     res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
     res.setHeader("X-XSS-Protection", "0"); // Explicitly disable legacy IE XSS filter; modern browsers use CSP
+    // Prevent this window from being opened as a popup that inherits opener access
+    res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
+    // Restrict unused browser features — proposal tool has no need for camera, mic, etc.
+    res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=()");
     if (process.env.NODE_ENV === "production") {
       res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
     }
