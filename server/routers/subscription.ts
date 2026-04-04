@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { protectedProcedure, router } from "../_core/trpc";
+import { protectedProcedure, adminProcedure, router } from "../_core/trpc";
 import { ensureSubscription, updateSubscription, getPlanLimit } from "../db";
 
 export const subscriptionRouter = router({
@@ -14,8 +14,8 @@ export const subscriptionRouter = router({
     };
   }),
 
-  // Called by Stripe webhook or manually for testing
-  updatePlan: protectedProcedure
+  // Admin-only: manually update a user's plan (for testing/support use only)
+  updatePlan: adminProcedure
     .input(
       z.object({
         plan: z.enum(["free", "starter", "pro"]),

@@ -80,7 +80,7 @@ export default function ProposalDetail() {
     }
   ]);
 
-  const { data: proposal, isLoading, refetch } = trpc.proposals.get.useQuery(
+  const { data: proposal, isLoading, isError: proposalError, refetch } = trpc.proposals.get.useQuery(
     { id: proposalId },
     { enabled: isAuthenticated && proposalId > 0 }
   );
@@ -245,6 +245,20 @@ export default function ProposalDetail() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
   if (!isAuthenticated) return null;
+  if (proposalError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
+          <p className="text-muted-foreground mb-4">Failed to load proposal</p>
+          <div className="flex gap-2 justify-center">
+            <Button variant="outline" onClick={() => refetch()}>Retry</Button>
+            <Button onClick={() => navigate("/dashboard")}>Back to Dashboard</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   if (!proposal) {
     return (
       <div className="min-h-screen flex items-center justify-center">
