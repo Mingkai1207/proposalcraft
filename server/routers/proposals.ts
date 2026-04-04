@@ -467,9 +467,15 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
           const { generatePdfFromHtml } = await import("../utils/proposalPdfExport");
           const pdfBuffer = await generatePdfFromHtml(content);
           const fileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
-          const { url } = await storagePut(fileName, pdfBuffer, "application/pdf");
-          await updateProposal(proposal.id, ctx.user.id, { pdfUrl: url });
-          return { url, fileName };
+          try {
+            const { url } = await storagePut(fileName, pdfBuffer, "application/pdf");
+            await updateProposal(proposal.id, ctx.user.id, { pdfUrl: url });
+            return { url, fileName };
+          } catch {
+            // S3 not configured — return PDF as base64 data URL for direct download
+            const base64 = pdfBuffer.toString("base64");
+            return { url: `data:application/pdf;base64,${base64}`, fileName };
+          }
         }
 
         // Legacy LaTeX-based proposals: generatedContent starts with \documentclass
@@ -477,9 +483,14 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
           const { latexToPdf } = await import("../utils/latexToPdf");
           const pdfBuffer = await latexToPdf(content);
           const fileName = `proposal-${proposal.id}-${Date.now()}.pdf`;
-          const { url } = await storagePut(fileName, pdfBuffer, "application/pdf");
-          await updateProposal(proposal.id, ctx.user.id, { pdfUrl: url });
-          return { url, fileName };
+          try {
+            const { url } = await storagePut(fileName, pdfBuffer, "application/pdf");
+            await updateProposal(proposal.id, ctx.user.id, { pdfUrl: url });
+            return { url, fileName };
+          } catch {
+            const base64 = pdfBuffer.toString("base64");
+            return { url: `data:application/pdf;base64,${base64}`, fileName };
+          }
         }
 
         // Use template renderer if proposal was created from a template

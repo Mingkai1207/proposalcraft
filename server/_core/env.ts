@@ -12,6 +12,8 @@ export const ENV = {
   anthropicApiKey: process.env.ANTHROPIC_API_KEY ?? "",
   llmApiUrl: process.env.LLM_API_URL ?? "https://api.anthropic.com/v1/chat/completions",
   llmModel: process.env.LLM_MODEL ?? "claude-sonnet-4-5",
+  // Faster/cheaper model for high-volume steps like HTML rendering (defaults to llmModel)
+  llmFastModel: process.env.LLM_FAST_MODEL ?? "",
   // Google Maps
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY ?? "",
   // AWS S3 for file storage
