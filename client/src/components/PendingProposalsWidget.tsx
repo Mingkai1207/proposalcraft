@@ -11,17 +11,19 @@ export function PendingProposalsWidget() {
   const pendingProposals = proposals
     ?.filter(p => p.status === "sent")
     .sort((a, b) => {
-      // Sort by expiry urgency
-      const aExpiry = a.expiryDays ? new Date(a.createdAt).getTime() + a.expiryDays * 24 * 60 * 60 * 1000 : Infinity;
-      const bExpiry = b.expiryDays ? new Date(b.createdAt).getTime() + b.expiryDays * 24 * 60 * 60 * 1000 : Infinity;
+      // Sort by expiry urgency — use sentAt as the start of the expiry window
+      const aBase = a.sentAt ? new Date(a.sentAt).getTime() : new Date(a.createdAt).getTime();
+      const bBase = b.sentAt ? new Date(b.sentAt).getTime() : new Date(b.createdAt).getTime();
+      const aExpiry = a.expiryDays ? aBase + a.expiryDays * 24 * 60 * 60 * 1000 : Infinity;
+      const bExpiry = b.expiryDays ? bBase + b.expiryDays * 24 * 60 * 60 * 1000 : Infinity;
       return aExpiry - bExpiry;
     })
     .slice(0, 5) || [];
 
-  const calculateDaysRemaining = (createdAt: Date, expiryDays: number | null) => {
+  const calculateDaysRemaining = (sentAt: Date | null, createdAt: Date, expiryDays: number | null) => {
     if (!expiryDays) return null;
-    const created = new Date(createdAt).getTime();
-    const expiry = created + expiryDays * 24 * 60 * 60 * 1000;
+    const base = sentAt ? new Date(sentAt).getTime() : new Date(createdAt).getTime();
+    const expiry = base + expiryDays * 24 * 60 * 60 * 1000;
     const now = Date.now();
     const remaining = Math.ceil((expiry - now) / (24 * 60 * 60 * 1000));
     return remaining;
@@ -58,7 +60,7 @@ export function PendingProposalsWidget() {
 
       <div className="space-y-3">
         {pendingProposals.map((proposal) => {
-          const daysRemaining = calculateDaysRemaining(proposal.createdAt, proposal.expiryDays);
+          const daysRemaining = calculateDaysRemaining(proposal.sentAt ?? null, proposal.createdAt, proposal.expiryDays);
           const urgent = isUrgent(daysRemaining);
 
           return (

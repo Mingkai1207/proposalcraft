@@ -347,7 +347,12 @@ export default function Dashboard() {
           <div className="bg-card border border-border rounded-xl p-5">
             <p className="text-sm text-muted-foreground mb-1">{t("dashboard.sentThisMonth")}</p>
             <p className="text-3xl font-bold text-foreground">
-              {proposals?.filter(p => p.status !== "draft").length || 0}
+              {proposals?.filter(p => {
+                if (!p.sentAt) return false;
+                const sent = new Date(p.sentAt);
+                const now = new Date();
+                return sent.getFullYear() === now.getFullYear() && sent.getMonth() === now.getMonth();
+              }).length || 0}
             </p>
           </div>
           <div className="bg-card border border-border rounded-xl p-5">
