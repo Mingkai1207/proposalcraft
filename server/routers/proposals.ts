@@ -1371,6 +1371,8 @@ Your job:
         totalCost: z.string().optional(),
         estimatedDays: z.string().optional(),
         expiryDays: z.number().default(30),
+        /** If provided, update this existing draft instead of creating a new proposal */
+        proposalId: z.number().optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -1514,25 +1516,48 @@ Base font size: 13.5px-14px with line-height: 1.6 for body text.`;
         // For free plan, we'll add a watermark via the PDF export, not in the HTML
       }
 
-      const trackingToken = nanoid(32);
-
-      // Create proposal record
-      const proposal = await createProposal({
-        userId: ctx.user.id,
-        title: input.title,
-        tradeType: input.tradeType,
-        clientName: input.clientName || null,
-        clientEmail: input.clientEmail || null,
-        clientAddress: input.clientAddress || null,
-        jobScope: input.jobScope,
-        totalCost: input.totalCost || null,
-        generatedContent,
-        summaryContent: input.approvedSummary,
-        trackingToken,
-        status: "draft",
-        expiryDays: input.expiryDays,
-        templateId: String(input.templateId),
-      });
+      // Reuse the existing draft created by compileSummary (if provided) to avoid orphaned records
+      let proposal: Awaited<ReturnType<typeof createProposal>>;
+      if (input.proposalId) {
+        const existing = await getProposalById(input.proposalId);
+        if (existing && existing.userId === ctx.user.id) {
+          await updateProposal(input.proposalId, ctx.user.id, {
+            generatedContent,
+            summaryContent: input.approvedSummary,
+            templateId: String(input.templateId),
+          });
+          proposal = { ...existing, generatedContent, summaryContent: input.approvedSummary, templateId: String(input.templateId) } as any;
+        } else {
+          // Fallback: create new
+          const trackingToken = nanoid(32);
+          proposal = await createProposal({
+            userId: ctx.user.id, title: input.title, tradeType: input.tradeType,
+            clientName: input.clientName || null, clientEmail: input.clientEmail || null,
+            clientAddress: input.clientAddress || null, jobScope: input.jobScope,
+            totalCost: input.totalCost || null, generatedContent,
+            summaryContent: input.approvedSummary, trackingToken, status: "draft",
+            expiryDays: input.expiryDays, templateId: String(input.templateId),
+          });
+        }
+      } else {
+        const trackingToken = nanoid(32);
+        proposal = await createProposal({
+          userId: ctx.user.id,
+          title: input.title,
+          tradeType: input.tradeType,
+          clientName: input.clientName || null,
+          clientEmail: input.clientEmail || null,
+          clientAddress: input.clientAddress || null,
+          jobScope: input.jobScope,
+          totalCost: input.totalCost || null,
+          generatedContent,
+          summaryContent: input.approvedSummary,
+          trackingToken: nanoid(32),
+          status: "draft",
+          expiryDays: input.expiryDays,
+          templateId: String(input.templateId),
+        });
+      }
       if (!proposal) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Failed to save proposal" });
 
       // Auto-generate PDF from HTML using Puppeteer

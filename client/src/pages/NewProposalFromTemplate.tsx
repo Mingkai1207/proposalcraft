@@ -223,6 +223,7 @@ export default function NewProposalFromTemplate() {
       totalCost,
       estimatedDays,
       expiryDays: 30,
+      proposalId: proposalId ?? undefined,
     });
   }
 
