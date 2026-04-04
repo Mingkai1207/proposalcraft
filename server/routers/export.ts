@@ -1,7 +1,7 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { proposals } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { getDb } from "../db";
 import { TRPCError } from "@trpc/server";
 import JSZip from "jszip";
@@ -112,13 +112,11 @@ export const exportRouter = router({
         throw new TRPCError({ code: "BAD_REQUEST", message: "No proposals selected" });
       }
 
-      // Fetch proposals (verify ownership)
-      const userProposals = await db
+      // Fetch proposals — filter at DB level by both userId and proposalIds (verifies ownership)
+      const selectedProposals = await db
         .select()
         .from(proposals)
-        .where(eq(proposals.userId, ctx.user.id));
-
-      const selectedProposals = userProposals.filter((p) => input.proposalIds.includes(p.id));
+        .where(and(eq(proposals.userId, ctx.user.id), inArray(proposals.id, input.proposalIds)));
 
       if (selectedProposals.length === 0) {
         throw new TRPCError({ code: "NOT_FOUND", message: "No proposals found" });
