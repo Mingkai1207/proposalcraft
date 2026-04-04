@@ -362,6 +362,7 @@ export default function NewProposal() {
                 placeholder="e.g., HVAC System Replacement – 123 Main St"
                 value={form.title}
                 onChange={e => update("title", e.target.value)}
+                maxLength={200}
               />
             </div>
 
@@ -371,16 +372,16 @@ export default function NewProposal() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Client Name</Label>
-                  <SuggestInput placeholder="John Smith" value={form.clientName} onChange={e => update("clientName", e.target.value)} />
+                  <SuggestInput placeholder="John Smith" value={form.clientName} onChange={e => update("clientName", e.target.value)} maxLength={200} />
                 </div>
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Client Email</Label>
-                  <SuggestInput type="email" placeholder="john@example.com" value={form.clientEmail} onChange={e => update("clientEmail", e.target.value)} />
+                  <SuggestInput type="email" placeholder="john@example.com" value={form.clientEmail} onChange={e => update("clientEmail", e.target.value)} maxLength={320} />
                 </div>
               </div>
               <div>
                 <Label className="text-sm font-medium mb-2 block">Property / Job Address</Label>
-                <SuggestInput placeholder="123 Main St, City, State 90210" value={form.clientAddress} onChange={e => update("clientAddress", e.target.value)} />
+                <SuggestInput placeholder="123 Main St, City, State 90210" value={form.clientAddress} onChange={e => update("clientAddress", e.target.value)} maxLength={500} />
               </div>
             </div>
 
@@ -417,6 +418,7 @@ export default function NewProposal() {
                 onChange={e => update("jobScope", e.target.value)}
                 rows={5}
                 className="resize-none"
+                maxLength={5000}
               />
               <p className="text-xs text-muted-foreground mt-1">Be specific — mention equipment models, square footage, or any special conditions.</p>
             </div>
@@ -429,6 +431,7 @@ export default function NewProposal() {
                 onChange={e => update("materials", e.target.value)}
                 rows={3}
                 className="resize-none"
+                maxLength={2000}
               />
             </div>
 
@@ -487,6 +490,7 @@ export default function NewProposal() {
                 onChange={e => update("specialNotes", e.target.value)}
                 rows={3}
                 className="resize-none"
+                maxLength={2000}
               />
             </div>
 
