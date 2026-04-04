@@ -29,12 +29,15 @@ export async function sendAutomaticFollowUps() {
     const now = new Date();
     const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
 
-    // Find proposals that were sent 48+ hours ago, not yet opened, and no follow-up sent yet
+    // Find proposals that were sent 48+ hours ago, not yet opened, and no follow-up sent yet.
+    // Must still be in "sent" status — accepted/declined proposals must not receive follow-ups
+    // even if the tracking pixel never fired (viewedAt stays null in that case).
     const eligibleProposals = await db
       .select()
       .from(proposals)
       .where(
         and(
+          eq(proposals.status, "sent"), // Only "sent" — not accepted, declined, draft, etc.
           isNull(proposals.viewedAt), // Not opened
           isNull(proposals.followUpSentAt), // No follow-up sent yet
           lt(proposals.sentAt, fortyEightHoursAgo), // Sent 48+ hours ago

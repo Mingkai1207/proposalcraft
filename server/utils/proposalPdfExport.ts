@@ -238,7 +238,6 @@ function _buildLegacyHtml(p: {
 <head>
 <meta charset="UTF-8">
 <title>${esc(jobTitle)}</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"><\/script>
 <style>
 /* System fonts only — no external imports for PDF reliability */
 
@@ -507,7 +506,30 @@ body{font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;color:#1e29
       </div>
       <div class="chart-box">
         <div class="chart-heading">Cost Breakdown</div>
-        <div class="chart-canvas"><canvas id="costChart"></canvas></div>
+        <div class="chart-canvas">
+          <!-- Inline SVG donut chart — no external JS dependency -->
+          <svg viewBox="0 0 200 200" width="190" height="190" xmlns="http://www.w3.org/2000/svg">
+            <!-- Track -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#f1f5f9" stroke-width="30"/>
+            <!-- Labor segment (blue) — starts at top (−90°) -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#3b82f6" stroke-width="30"
+              stroke-dasharray="${(laborPct * 439.82 / 100).toFixed(2)} 439.82"
+              stroke-dashoffset="0"
+              transform="rotate(-90 100 100)"/>
+            <!-- Materials segment (orange) — offset by labor arc -->
+            <circle cx="100" cy="100" r="70" fill="none" stroke="#f97316" stroke-width="30"
+              stroke-dasharray="${(matPct * 439.82 / 100).toFixed(2)} 439.82"
+              stroke-dashoffset="-${(laborPct * 439.82 / 100).toFixed(2)}"
+              transform="rotate(-90 100 100)"/>
+            <!-- Center labels -->
+            <text x="100" y="94" text-anchor="middle" font-size="18" font-weight="700" fill="#0c1e33" font-family="Arial,sans-serif">$${fmt(totalCost)}</text>
+            <text x="100" y="113" text-anchor="middle" font-size="10" fill="#64748b" font-family="Arial,sans-serif">Total</text>
+          </svg>
+          <div style="display:flex;gap:12px;justify-content:center;margin-top:6px;font-size:8.5px;">
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#3b82f6;display:inline-block;"></span>Labor (${laborPct}%)</span>
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:50%;background:#f97316;display:inline-block;"></span>Materials (${matPct}%)</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -559,35 +581,6 @@ body{font-family:'Segoe UI',system-ui,-apple-system,Arial,sans-serif;color:#1e29
   </div>
 </div>
 
-<script>
-setTimeout(()=>{
-  const ctx=document.getElementById('costChart');
-  if(!ctx)return;
-  new Chart(ctx,{
-    type:'doughnut',
-    data:{
-      labels:['Labor (${laborPct}%)','Materials (${matPct}%)'],
-      datasets:[{
-        data:[${laborPct},${matPct}],
-        backgroundColor:['#3b82f6','#f97316'],
-        borderColor:['#2563eb','#ea580c'],
-        borderWidth:2,
-        borderRadius:4,
-        hoverOffset:8
-      }]
-    },
-    options:{
-      responsive:true,
-      maintainAspectRatio:true,
-      cutout:'45%',
-      plugins:{
-        legend:{position:'bottom',labels:{font:{size:9,weight:'600',family:'Inter'},padding:12,usePointStyle:true,pointStyle:'circle'}},
-        tooltip:{backgroundColor:'rgba(12,30,51,0.92)',padding:10,titleFont:{size:10,weight:'700'},bodyFont:{size:9},cornerRadius:4}
-      }
-    }
-  });
-},600);
-<\/script>
 </body>
 </html>`;
   return html;

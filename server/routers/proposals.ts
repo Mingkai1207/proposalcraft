@@ -442,9 +442,12 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
         throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
       }
 
-      // Only send if proposal was sent but not yet viewed
+      // Only send if proposal was sent but not yet viewed/responded to
       if (!proposal.sentAt || proposal.viewedAt) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Can only send follow-up for sent but unopened proposals" });
+      }
+      if (proposal.status === "accepted" || proposal.status === "declined") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot send a follow-up for a proposal that has already been accepted or declined" });
       }
 
       // Check if already sent a follow-up
