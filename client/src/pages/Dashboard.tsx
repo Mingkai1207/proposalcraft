@@ -55,7 +55,7 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const { data: proposals, isLoading, refetch } = trpc.proposals.list.useQuery(undefined, {
+  const { data: proposals, isLoading, isError: proposalsError, refetch } = trpc.proposals.list.useQuery(undefined, {
     enabled: isAuthenticated,
   });
   const { data: subscription } = trpc.subscription.get.useQuery(undefined, {
@@ -375,6 +375,11 @@ export default function Dashboard() {
           {isLoading ? (
             <div className="p-12 text-center">
               <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
+            </div>
+          ) : proposalsError ? (
+            <div className="p-12 text-center">
+              <p className="text-destructive text-sm mb-3">Failed to load proposals.</p>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
             </div>
           ) : proposals?.length === 0 ? (
             <div className="p-12 text-center">

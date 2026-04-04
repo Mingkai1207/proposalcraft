@@ -1,7 +1,7 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { proposals, proposalVersions } from "../../drizzle/schema";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { getDb } from "../db";
 import { TRPCError } from "@trpc/server";
 
@@ -64,7 +64,8 @@ export const versionsRouter = router({
       const versions = await db
         .select()
         .from(proposalVersions)
-        .where(eq(proposalVersions.proposalId, input.proposalId));
+        .where(eq(proposalVersions.proposalId, input.proposalId))
+        .orderBy(desc(proposalVersions.versionNumber));
 
       return versions;
     }),
@@ -122,13 +123,13 @@ export const versionsRouter = router({
         throw new TRPCError({ code: "FORBIDDEN", message: "Not authorized" });
       }
 
-      // Get version
+      // Get version — must belong to this proposal to prevent cross-proposal content injection
       const versionRows = await db
         .select()
         .from(proposalVersions)
         .where(eq(proposalVersions.id, input.versionId));
       const version = versionRows[0];
-      if (!version) {
+      if (!version || version.proposalId !== input.proposalId) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Version not found" });
       }
 
