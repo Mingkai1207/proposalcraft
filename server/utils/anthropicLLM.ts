@@ -97,7 +97,7 @@ export async function invokeAnthropic(opts: AnthropicOptions): Promise<Anthropic
     fallbackMessages.push({ role: m.role, content: m.content });
   }
 
-  const response = await invokeLLM({ messages: fallbackMessages });
+  const response = await invokeLLM({ messages: fallbackMessages, maxTokens: opts.maxTokens });
   const rawContent = response.choices[0]?.message?.content;
   const text = typeof rawContent === "string" ? rawContent : "";
   return { content: text, usedAnthropicApi: false };
