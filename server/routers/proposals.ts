@@ -19,7 +19,7 @@ import {
 import { storagePut, storageGet } from "../storage";
 import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
-import { proposalTemplates, proposals as proposalsTable } from "../../drizzle/schema";
+import { proposalTemplates, proposals as proposalsTable, emailEvents } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { ENV } from "../_core/env";
 import { generateProposalPdf, type ProposalPdfData } from "../utils/proposalPdfExport";
@@ -308,6 +308,11 @@ Write a complete, ready-to-send proposal. Use professional formatting with clear
       const proposal = await getProposalById(input.id);
       if (!proposal || proposal.userId !== ctx.user.id) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
+      }
+      // emailEvents has no FK cascade — delete orphans explicitly before removing the proposal
+      const db = await getDb();
+      if (db) {
+        await db.delete(emailEvents).where(eq(emailEvents.proposalId, input.id));
       }
       await deleteProposal(input.id, ctx.user.id);
       return { success: true };
