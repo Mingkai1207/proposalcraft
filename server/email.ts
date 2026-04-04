@@ -11,9 +11,28 @@ export interface SendEmailOptions {
   subject: string;
   html: string;
   text?: string;
+  /** Optional per-user SMTP override. When provided, uses this instead of env-var SMTP. */
+  smtpOverride?: {
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+    fromEmail: string;
+    fromName?: string;
+  };
 }
 
-function getTransport() {
+function getTransport(smtpOverride?: SendEmailOptions["smtpOverride"]) {
+  // Per-user custom SMTP takes priority over system env-var SMTP
+  if (smtpOverride?.host && smtpOverride?.username && smtpOverride?.password) {
+    return nodemailer.createTransport({
+      host: smtpOverride.host,
+      port: smtpOverride.port,
+      secure: smtpOverride.port === 465,
+      auth: { user: smtpOverride.username, pass: smtpOverride.password },
+    });
+  }
+
   const host = process.env.SMTP_HOST;
   const port = parseInt(process.env.SMTP_PORT ?? "587", 10);
   const user = process.env.SMTP_USER;
@@ -33,8 +52,13 @@ function getTransport() {
 }
 
 export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
-  const from = process.env.SMTP_FROM ?? "ProposAI <noreply@proposai.org>";
-  const transport = getTransport();
+  const { smtpOverride } = opts;
+  const from = smtpOverride?.fromEmail
+    ? smtpOverride.fromName
+      ? `"${smtpOverride.fromName}" <${smtpOverride.fromEmail}>`
+      : smtpOverride.fromEmail
+    : (process.env.SMTP_FROM ?? "ProposAI <noreply@proposai.org>");
+  const transport = getTransport(smtpOverride);
 
   if (!transport) {
     // Dev mode: print the email to the server console

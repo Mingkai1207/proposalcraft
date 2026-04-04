@@ -358,12 +358,23 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
 </body>
 </html>`;
 
-      // Send email via nodemailer
+      // Send email via nodemailer (use contractor's custom SMTP if configured)
+      const smtpOverride = profile?.smtpHost && profile?.smtpUsername && profile?.smtpPassword
+        ? {
+            host: profile.smtpHost,
+            port: profile.smtpPort || 587,
+            username: profile.smtpUsername,
+            password: profile.smtpPassword,
+            fromEmail: profile.smtpFromEmail || profile.email || "",
+            fromName: profile.smtpFromName || businessName,
+          }
+        : undefined;
       try {
         await sendEmail({
           to: input.clientEmail,
           subject: `Proposal from ${businessName}: ${proposal.title}`,
           html: emailHtml,
+          smtpOverride,
         });
       } catch (err) {
         console.error("[Email] Failed to send:", err);
@@ -469,13 +480,24 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
         `;
       }
 
-      // Send follow-up via nodemailer
+      // Send follow-up via nodemailer (use contractor's custom SMTP if configured)
+      const followUpSmtpOverride = profile?.smtpHost && profile?.smtpUsername && profile?.smtpPassword
+        ? {
+            host: profile.smtpHost,
+            port: profile.smtpPort || 587,
+            username: profile.smtpUsername,
+            password: profile.smtpPassword,
+            fromEmail: profile.smtpFromEmail || profile.email || "",
+            fromName: profile.smtpFromName || businessName,
+          }
+        : undefined;
       try {
         if (proposal.clientEmail) {
           await sendEmail({
             to: proposal.clientEmail,
             subject: `Follow-up: ${proposal.title}`,
             html: followUpHtml,
+            smtpOverride: followUpSmtpOverride,
           });
         }
       } catch (err) {
