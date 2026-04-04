@@ -17,8 +17,9 @@ import {
   Smartphone, BarChart3, Layers, Timer,
   Play, Download, ExternalLink, Sparkles,
   Building2, MapPin, DollarSign,
-  FileCheck, Send
+  FileCheck, Send, Menu, X as XIcon
 } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 const GUARANTEE_BADGE_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/proposai-guarantee-badge-iVr29Hp4v4FN5DhPsDtUwF.webp";
 
@@ -573,6 +574,7 @@ export default function Home() {
   }, []);
 
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const checkoutMutation = trpc.billing.createCheckout.useMutation({
     onSuccess: (data) => {
@@ -711,14 +713,69 @@ export default function Home() {
                 <Button variant="ghost" size="sm" onClick={() => navigate("/login")} className="hidden sm:flex">
                   {t("nav.signIn")}
                 </Button>
-                <Button size="sm" onClick={handleCTA} className="shadow-sm">
+                <Button size="sm" onClick={handleCTA} className="shadow-sm hidden sm:flex">
+                  {t("nav.startFree")}
+                </Button>
+              </>
+            )}
+            {/* Hamburger — mobile only */}
+            <button
+              className="md:hidden p-2 rounded-lg hover:bg-accent transition-colors"
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Open menu"
+            >
+              <Menu className="w-5 h-5 text-foreground" />
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── Mobile Navigation Sheet ── */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="right" className="w-72 pt-6">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
+                <FileText className="w-3.5 h-3.5 text-white" />
+              </div>
+              <span className="font-bold text-foreground">ProposAI</span>
+            </div>
+          </div>
+          <nav className="flex flex-col gap-1">
+            {[
+              { href: "#how-it-works", label: t("nav.howItWorks") },
+              { href: "#features", label: t("nav.features") },
+              { href: "#pricing", label: t("nav.pricing") },
+              { href: "#faq", label: t("nav.faq") },
+            ].map(({ href, label }) => (
+              <a
+                key={href}
+                href={href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3 py-2.5 rounded-lg text-sm font-medium text-foreground hover:bg-accent transition-colors"
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+          <div className="mt-8 flex flex-col gap-2">
+            {isAuthenticated ? (
+              <Button onClick={() => { setMobileMenuOpen(false); navigate("/dashboard"); }} className="w-full">
+                {t("nav.dashboard")} <ArrowRight className="w-4 h-4 ml-1" />
+              </Button>
+            ) : (
+              <>
+                <Button variant="outline" className="w-full" onClick={() => { setMobileMenuOpen(false); navigate("/login"); }}>
+                  {t("nav.signIn")}
+                </Button>
+                <Button className="w-full" onClick={() => { setMobileMenuOpen(false); handleCTA(); }}>
                   {t("nav.startFree")}
                 </Button>
               </>
             )}
           </div>
-        </div>
-      </nav>
+        </SheetContent>
+      </Sheet>
 
       {/* ── Hero ── */}
       <section className="relative overflow-hidden bg-slate-900">

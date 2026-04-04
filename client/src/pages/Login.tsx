@@ -109,9 +109,17 @@ export default function Login() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-300 text-sm font-medium">
-                  Password
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password" className="text-slate-300 text-sm font-medium">
+                    Password
+                  </Label>
+                  <a
+                    href="mailto:hello@proposai.org?subject=Password%20Reset%20Request"
+                    className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                  >
+                    Forgot password?
+                  </a>
+                </div>
                 <div className="relative">
                   <Input
                     id="password"

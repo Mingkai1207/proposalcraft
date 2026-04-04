@@ -11,8 +11,9 @@ import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import {
   FileText, Plus, Eye, Send, Trash2, Clock,
   CheckCircle, AlertCircle, Mail, BarChart3,
-  Settings, LogOut, Home, Zap, Download, Upload
+  Settings, LogOut, Home, Zap, Download, Upload, Menu
 } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import React from "react";
@@ -52,6 +53,7 @@ export default function Dashboard() {
   const [, navigate] = useLocation();
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const { data: proposals, isLoading, refetch } = trpc.proposals.list.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -126,126 +128,158 @@ export default function Dashboard() {
 
   const planColors = { free: "bg-gray-100 text-gray-700", starter: "bg-blue-100 text-blue-700", pro: "bg-primary/10 text-primary" };
 
+  const sidebarContent = (
+    <>
+      <div className="p-5 border-b border-sidebar-border">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+            <FileText className="w-4 h-4 text-white" />
+          </div>
+          <span className="font-bold text-sidebar-foreground">ProposAI</span>
+        </div>
+      </div>
+
+      <nav className="flex-1 p-4 space-y-1">
+        <button
+          onClick={() => { navigate("/dashboard"); setSidebarOpen(false); }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground text-sm font-medium"
+        >
+          <BarChart3 className="w-4 h-4" /> {t("dashboard.title")}
+        </button>
+        <button
+          onClick={() => { navigate("/proposals/new"); setSidebarOpen(false); }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
+        >
+          <Plus className="w-4 h-4" /> {t("dashboard.newProposal")}
+        </button>
+        <button
+          onClick={() => { navigate("/import"); setSidebarOpen(false); }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
+        >
+          <Upload className="w-4 h-4" /> {t("dashboard.importProposals")}
+        </button>
+        <button
+          onClick={() => { navigate("/settings"); setSidebarOpen(false); }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
+        >
+          <Settings className="w-4 h-4" /> {t("dashboard.settings")}
+        </button>
+        <button
+          onClick={() => { navigate("/"); setSidebarOpen(false); }}
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
+        >
+          <Home className="w-4 h-4" /> {t("dashboard.home")}
+        </button>
+      </nav>
+
+      {/* Subscription status */}
+      <div className="p-4 border-t border-sidebar-border">
+        <div className="bg-sidebar-accent rounded-lg p-3 mb-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-sidebar-foreground/70 uppercase tracking-wide">{t("dashboard.plan")}</span>
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${planColors[plan as keyof typeof planColors]}`}>
+              {plan}
+            </span>
+          </div>
+          {limit !== null && limit !== undefined ? (
+            <>
+              <div className="text-xs text-sidebar-foreground/70 mb-1">{t("dashboard.proposalsThisMonth", { used, limit })}</div>
+              <div className="h-1.5 bg-sidebar-border rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all"
+                  style={{ width: `${Math.min(100, (used / limit) * 100)}%` }}
+                />
+              </div>
+            </>
+          ) : (
+            <div className="text-xs text-sidebar-foreground/70">{t("dashboard.unlimitedProposals")}</div>
+          )}
+        </div>
+        {/* Current AI model & language indicator */}
+        <button
+          onClick={() => { navigate("/settings"); setSidebarOpen(false); }}
+          className="w-full bg-sidebar-accent rounded-lg p-3 mb-3 text-left hover:opacity-80 transition-opacity"
+        >
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-sidebar-foreground/70 uppercase tracking-wide">{t("dashboard.aiModel")}</span>
+            <span className="text-xs text-primary font-medium">{t("dashboard.changeSetting")}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="text-sm">🇺🇸</span>
+            <span className="text-xs font-medium text-sidebar-foreground truncate">
+              {profile?.preferredModel === "claude-opus-4-6" ? "Claude Opus 4.6" : "Claude Sonnet 4.6"}
+            </span>
+          </div>
+        </button>
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center text-xs font-bold text-primary">
+            {user?.name?.charAt(0)?.toUpperCase() || "U"}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-sidebar-foreground truncate">{user?.name || "Contractor"}</p>
+          </div>
+          <button onClick={logout} aria-label="Sign out" className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors">
+            <LogOut className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Sidebar */}
-      <aside className="w-64 bg-sidebar text-sidebar-foreground flex flex-col fixed inset-y-0 left-0 z-40">
-        <div className="p-5 border-b border-sidebar-border">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <FileText className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-sidebar-foreground">ProposAI</span>
-          </div>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-1">
-          <button
-            onClick={() => navigate("/dashboard")}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground text-sm font-medium"
-          >
-            <BarChart3 className="w-4 h-4" /> {t("dashboard.title")}
-          </button>
-          <button
-            onClick={() => navigate("/proposals/new")}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
-          >
-            <Plus className="w-4 h-4" /> {t("dashboard.newProposal")}
-          </button>
-          <button
-            onClick={() => navigate("/import")}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
-          >
-            <Upload className="w-4 h-4" /> {t("dashboard.importProposals")}
-          </button>
-          <button
-            onClick={() => navigate("/settings")}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
-          >
-            <Settings className="w-4 h-4" /> {t("dashboard.settings")}
-          </button>
-          <button
-            onClick={() => navigate("/")}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
-          >
-            <Home className="w-4 h-4" /> {t("dashboard.home")}
-          </button>
-        </nav>
-
-        {/* Subscription status */}
-        <div className="p-4 border-t border-sidebar-border">
-          <div className="bg-sidebar-accent rounded-lg p-3 mb-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-sidebar-foreground/70 uppercase tracking-wide">{t("dashboard.plan")}</span>
-              <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${planColors[plan as keyof typeof planColors]}`}>
-                {plan}
-              </span>
-            </div>
-            {limit !== null && limit !== undefined ? (
-              <>
-                <div className="text-xs text-sidebar-foreground/70 mb-1">{t("dashboard.proposalsThisMonth", { used, limit })}</div>
-                <div className="h-1.5 bg-sidebar-border rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full transition-all"
-                    style={{ width: `${Math.min(100, (used / limit) * 100)}%` }}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="text-xs text-sidebar-foreground/70">{t("dashboard.unlimitedProposals")}</div>
-            )}
-            {/* Upgrade button hidden during promotional period */}
-          </div>
-          {/* Current AI model & language indicator */}
-          <button
-            onClick={() => navigate("/settings")}
-            className="w-full bg-sidebar-accent rounded-lg p-3 mb-3 text-left hover:opacity-80 transition-opacity"
-          >
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-xs text-sidebar-foreground/70 uppercase tracking-wide">{t("dashboard.aiModel")}</span>
-              <span className="text-xs text-primary font-medium">{t("dashboard.changeSetting")}</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm">🇺🇸</span>
-              <span className="text-xs font-medium text-sidebar-foreground truncate">
-                {profile?.preferredModel === "claude-opus-4-6" ? "Claude Opus 4.6" : "Claude Sonnet 4.6"}
-              </span>
-            </div>
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center text-xs font-bold text-primary">
-              {user?.name?.charAt(0)?.toUpperCase() || "U"}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-sidebar-foreground truncate">{user?.name || "Contractor"}</p>
-            </div>
-            <button onClick={logout} className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors">
-              <LogOut className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
+      {/* Desktop Sidebar */}
+      <aside className="hidden md:flex w-64 bg-sidebar text-sidebar-foreground flex-col fixed inset-y-0 left-0 z-40">
+        {sidebarContent}
       </aside>
 
+      {/* Mobile Sidebar Sheet */}
+      <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+        <SheetContent side="left" className="w-64 p-0 bg-sidebar text-sidebar-foreground border-sidebar-border">
+          {sidebarContent}
+        </SheetContent>
+      </Sheet>
+
       {/* Main content */}
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 md:ml-64">
+        {/* Mobile header */}
+        <div className="md:hidden sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-background border-b border-border">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-lg hover:bg-accent transition-colors"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5 text-foreground" />
+          </button>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+              <FileText className="w-3 h-3 text-white" />
+            </div>
+            <span className="font-bold text-sm">ProposAI</span>
+          </div>
+          <Button size="sm" onClick={() => navigate("/proposals/new")} className="h-8 px-3 text-xs gap-1">
+            <Plus className="w-3 h-3" /> New
+          </Button>
+        </div>
+        <div className="p-4 md:p-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h1>
             <p className="text-muted-foreground text-sm mt-0.5">
               {t("dashboard.welcomeBack", { name: user?.name?.split(" ")[0] || t("common.contractor") })}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {proposals && proposals.length > 0 && (
-              <Button onClick={handleBulkExport} variant="outline" className="gap-2">
+              <Button onClick={handleBulkExport} variant="outline" size="sm" className="gap-2">
                 <Download className="w-4 h-4" /> {t("dashboard.exportAll")}
               </Button>
             )}
-            <Button onClick={() => navigate("/templates")} variant="outline" className="gap-2">
+            <Button onClick={() => navigate("/templates")} variant="outline" size="sm" className="gap-2">
               <FileText className="w-4 h-4" /> {t("dashboard.myTemplates")}
             </Button>
-            <Button onClick={() => navigate("/proposals/new")} className="gap-2">
+            <Button onClick={() => navigate("/proposals/new")} size="sm" className="gap-2">
               <Plus className="w-4 h-4" /> New Proposal
             </Button>
           </div>
@@ -395,6 +429,7 @@ export default function Dashboard() {
                               className="h-7 w-7"
                               onClick={() => navigate(`/proposals/${p.id}`)}
                               title="View"
+                              aria-label={`View proposal: ${p.title}`}
                             >
                               <Eye className="w-3.5 h-3.5" />
                             </Button>
@@ -403,6 +438,7 @@ export default function Dashboard() {
                               className="h-7 w-7 text-destructive hover:text-destructive"
                               onClick={() => setDeleteId(p.id)}
                               title="Delete"
+                              aria-label={`Delete proposal: ${p.title}`}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
@@ -415,6 +451,7 @@ export default function Dashboard() {
               </table>
             </div>
           )}
+        </div>
         </div>
       </main>
 

@@ -85,7 +85,7 @@ function parseHtmlToSections(html: string): DocSection[] {
   return sections;
 }
 
-function headingLevel(level: number): HeadingLevel {
+function headingLevel(level: number): typeof HeadingLevel[keyof typeof HeadingLevel] {
   switch (level) {
     case 1: return HeadingLevel.HEADING_1;
     case 2: return HeadingLevel.HEADING_2;
