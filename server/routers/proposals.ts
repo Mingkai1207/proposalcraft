@@ -19,7 +19,7 @@ import {
 import { storagePut } from "../storage";
 import { nanoid } from "nanoid";
 import { eq, and } from "drizzle-orm";
-import { proposalTemplates } from "../../drizzle/schema";
+import { proposalTemplates, proposals as proposalsTable } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { ENV } from "../_core/env";
 import { generateProposalPdf, type ProposalPdfData } from "../utils/proposalPdfExport";
@@ -371,7 +371,7 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
       return { success: true };
     }),
 
-  // Create a shareable link for a proposal
+  // Create a shareable link for a proposal (reuses the client portal token)
   createShareLink: protectedProcedure
     .input(z.object({ id: z.number() }))
     .mutation(async ({ ctx, input }) => {
@@ -380,13 +380,17 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
         throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
       }
 
-      // Generate a unique token
-      const token = nanoid(32);
-      const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+      // Reuse or generate the client portal token (already persisted in the proposals table)
+      let token = proposal.clientPortalToken;
+      if (!token) {
+        token = nanoid(32);
+        const db = await getDb();
+        if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database connection failed" });
+        await db.update(proposalsTable).set({ clientPortalToken: token }).where(eq(proposalsTable.id, proposal.id));
+      }
 
-      // Save to database (simplified - in production use proper db helper)
-      const shareUrl = `${ENV.appUrl}/share/${token}`;
-      return { token, shareUrl, expiresAt };
+      const shareUrl = `${ENV.appUrl}/client-portal?token=${token}`;
+      return { token, shareUrl };
     }),
 
   // Send follow-up email if proposal not yet opened
