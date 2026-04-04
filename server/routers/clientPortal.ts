@@ -242,7 +242,7 @@ ${proposal.totalCost ? `<p>Project value: <strong>$${escHtml(proposal.totalCost)
           .where(eq(proposals.id, proposal.id));
       }
 
-      const origin = process.env.VITE_APP_URL || "https://proposai.org";
+      const origin = process.env.APP_URL || "https://proposai.org";
       const portalUrl = `${origin}/client-portal?token=${token}`;
 
       return { token, portalUrl };
