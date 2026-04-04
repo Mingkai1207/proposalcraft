@@ -26,7 +26,16 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 
+function checkRequiredEnv() {
+  const missing = ["DATABASE_URL", "ANTHROPIC_API_KEY", "JWT_SECRET"].filter(k => !process.env[k]);
+  if (missing.length > 0) {
+    console.error(`\n[Startup] ERROR: Missing required environment variables: ${missing.join(", ")}`);
+    console.error("[Startup] The server will start but AI generation and auth will fail without these.\n");
+  }
+}
+
 async function startServer() {
+  checkRequiredEnv();
   const app = express();
   const server = createServer(app);
 
