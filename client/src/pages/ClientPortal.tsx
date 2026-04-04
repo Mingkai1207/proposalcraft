@@ -16,9 +16,8 @@ export default function ClientPortal() {
     const t = params.get("token");
     if (t) {
       setToken(t);
-    } else {
-      setIsLoading(false);
     }
+    setIsLoading(false);
   }, []);
 
   const { data: proposal, isLoading: proposalLoading, error } = trpc.clientPortal.getProposal.useQuery(
