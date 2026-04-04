@@ -11,8 +11,9 @@ import { RecommendationsWidget } from "@/components/RecommendationsWidget";
 import {
   FileText, Plus, Eye, Send, Trash2, Clock,
   CheckCircle, AlertCircle, Mail, BarChart3,
-  Settings, LogOut, Home, Zap, Download, Upload, Menu
+  Settings, LogOut, Home, Zap, Download, Upload, Menu, Search
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -54,6 +55,7 @@ export default function Dashboard() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: proposals, isLoading, isError: proposalsError, refetch } = trpc.proposals.list.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -367,9 +369,22 @@ export default function Dashboard() {
 
         {/* Proposals Table */}
         <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <div className="p-5 border-b border-border flex items-center justify-between">
-            <h2 className="font-semibold text-foreground">{t("dashboard.allProposals")}</h2>
-            <span className="text-sm text-muted-foreground">{proposals?.length || 0} {t("dashboard.total")}</span>
+          <div className="p-5 border-b border-border flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center justify-between flex-1">
+              <h2 className="font-semibold text-foreground">{t("dashboard.allProposals")}</h2>
+              <span className="text-sm text-muted-foreground">{proposals?.length || 0} {t("dashboard.total")}</span>
+            </div>
+            {proposals && proposals.length > 5 && (
+              <div className="relative sm:w-56">
+                <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search proposals..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="pl-8 h-8 text-sm"
+                />
+              </div>
+            )}
           </div>
 
           {isLoading ? (
@@ -414,7 +429,16 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {proposals?.map((p) => {
+                  {proposals?.filter(p => {
+                    if (!searchQuery.trim()) return true;
+                    const q = searchQuery.toLowerCase();
+                    return (
+                      p.title.toLowerCase().includes(q) ||
+                      (p.clientName?.toLowerCase() || "").includes(q) ||
+                      (p.clientEmail?.toLowerCase() || "").includes(q) ||
+                      p.tradeType.toLowerCase().includes(q)
+                    );
+                  }).map((p) => {
                     const statusColor = STATUS_COLORS[p.status] || STATUS_COLORS.draft;
                     const StatusIcon = STATUS_ICONS[p.status] || STATUS_ICONS.draft;
                     const statusLabel = t(`dashboard.status${p.status.charAt(0).toUpperCase() + p.status.slice(1)}` as any) || p.status;
