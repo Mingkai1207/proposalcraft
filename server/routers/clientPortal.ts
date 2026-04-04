@@ -17,7 +17,7 @@ function isProposalExpired(proposal: { sentAt: Date | null; expiryDays: number |
 export const clientPortalRouter = router({
   // Public: Get proposal by client portal token
   getProposal: publicProcedure
-    .input(z.object({ token: z.string() }))
+    .input(z.object({ token: z.string().min(1).max(64) }))
     .query(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database connection failed" });
@@ -70,7 +70,7 @@ export const clientPortalRouter = router({
 
   // Public: Accept proposal
   acceptProposal: publicProcedure
-    .input(z.object({ token: z.string() }))
+    .input(z.object({ token: z.string().min(1).max(64) }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database connection failed" });
@@ -139,7 +139,7 @@ ${proposal.totalCost ? `<p>Project value: <strong>$${proposal.totalCost}</strong
 
   // Public: Decline proposal
   declineProposal: publicProcedure
-    .input(z.object({ token: z.string() }))
+    .input(z.object({ token: z.string().min(1).max(64) }))
     .mutation(async ({ input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database connection failed" });

@@ -7,7 +7,7 @@ import { TRPCError } from "@trpc/server";
 export const trackingRouter = router({
   // Public endpoint: called when tracking pixel is loaded (client opens email)
   recordOpen: publicProcedure
-    .input(z.object({ token: z.string() }))
+    .input(z.object({ token: z.string().min(1).max(64) }))
     .mutation(async ({ ctx, input }) => {
       const proposal = await getProposalByToken(input.token);
       if (!proposal) return { success: false };

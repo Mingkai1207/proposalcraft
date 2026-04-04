@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
+
+const ALL_TRADE_TYPES = ["hvac", "plumbing", "electrical", "roofing", "general", "painting", "flooring", "landscaping", "carpentry", "concrete", "masonry", "insulation", "drywall", "windows", "solar"] as const;
 import { TRPCError } from "@trpc/server";
 import { getDb } from "../db";
 import { proposalTemplates } from "../../drizzle/schema";
@@ -36,17 +38,17 @@ export const templatesRouter = router({
   create: protectedProcedure
     .input(
       z.object({
-        name: z.string().min(1),
-        tradeType: z.enum(["hvac", "plumbing", "electrical", "roofing", "general", "painting", "flooring", "landscaping", "carpentry", "concrete", "masonry", "insulation", "drywall", "windows", "solar"]),
-        description: z.string().optional(),
-        content: z.string().min(1),
-        clientName: z.string().nullable().optional(),
-        clientAddress: z.string().nullable().optional(),
-        jobScope: z.string().nullable().optional(),
-        materials: z.string().nullable().optional(),
-        laborCost: z.string().nullable().optional(),
-        materialsCost: z.string().nullable().optional(),
-        totalCost: z.string().nullable().optional(),
+        name: z.string().min(1).max(200),
+        tradeType: z.enum(ALL_TRADE_TYPES),
+        description: z.string().max(500).optional(),
+        content: z.string().min(1).max(500000),
+        clientName: z.string().max(200).nullable().optional(),
+        clientAddress: z.string().max(500).nullable().optional(),
+        jobScope: z.string().max(5000).nullable().optional(),
+        materials: z.string().max(2000).nullable().optional(),
+        laborCost: z.string().optional(),
+        materialsCost: z.string().optional(),
+        totalCost: z.string().optional(),
         language: z.string().optional(),
         expiryDays: z.number().optional(),
       })
@@ -79,9 +81,9 @@ export const templatesRouter = router({
     .input(
       z.object({
         id: z.number(),
-        name: z.string().optional(),
-        description: z.string().optional(),
-        content: z.string().optional(),
+        name: z.string().max(200).optional(),
+        description: z.string().max(500).optional(),
+        content: z.string().max(500000).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -114,8 +116,8 @@ export const templatesRouter = router({
     .input(
       z.object({
         proposalId: z.number(),
-        name: z.string().min(1),
-        description: z.string().optional(),
+        name: z.string().min(1).max(200),
+        description: z.string().max(500).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -176,11 +178,11 @@ export const templatesRouter = router({
   uploadTemplate: protectedProcedure
     .input(
       z.object({
-        name: z.string().min(1),
-        tradeType: z.string().min(1),
-        description: z.string().optional(),
-        content: z.string().min(10),  // extracted text content of the uploaded document
-        originalFileUrl: z.string().url().optional(),
+        name: z.string().min(1).max(200),
+        tradeType: z.enum(ALL_TRADE_TYPES),
+        description: z.string().max(500).optional(),
+        content: z.string().min(10).max(500000),  // extracted text content of the uploaded document
+        originalFileUrl: z.string().url().max(2000).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {

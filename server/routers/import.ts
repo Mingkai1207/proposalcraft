@@ -1,5 +1,14 @@
 import { protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
+
+const VALID_TRADE_TYPES = ["hvac", "plumbing", "electrical", "roofing", "general", "painting", "flooring", "landscaping", "carpentry", "concrete", "masonry", "insulation", "drywall", "windows", "solar"] as const;
+type TradeType = typeof VALID_TRADE_TYPES[number];
+function sanitizeTradeType(value: unknown): TradeType {
+  if (typeof value === "string" && (VALID_TRADE_TYPES as readonly string[]).includes(value)) {
+    return value as TradeType;
+  }
+  return "general";
+}
 import { proposals, proposalTemplates, contractorProfiles } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { TRPCError } from "@trpc/server";
@@ -13,11 +22,11 @@ export const importRouter = router({
       z.object({
         files: z.array(
           z.object({
-            name: z.string(),
-            type: z.string(),
-            content: z.string(), // base64 encoded
+            name: z.string().max(255),
+            type: z.string().max(100),
+            content: z.string().max(14_000_000), // ~10MB base64 encoded (10MB * 4/3 ≈ 13.3MB)
           })
-        ),
+        ).max(10), // at most 10 files per import
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -102,7 +111,7 @@ Return ONLY valid JSON, no markdown or extra text.`;
               .values({
                 userId: ctx.user.id,
                 name: extracted.proposalTitle,
-                tradeType: extracted.tradeType || "general",
+                tradeType: sanitizeTradeType(extracted.tradeType),
                 description: `Imported from ${file.name}`,
                 content: text.substring(0, 2000), // Store first 2000 chars as content
                 clientName: extracted.clientName,

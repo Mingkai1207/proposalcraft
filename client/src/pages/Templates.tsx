@@ -50,7 +50,7 @@ const TRADE_LABELS: Record<string, string> = {
 function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [tradeType, setTradeType] = useState("general");
+  const [tradeType, setTradeType] = useState<typeof ALL_TRADE_TYPES[number]>("general");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [extractedContent, setExtractedContent] = useState("");
@@ -135,7 +135,7 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Trade Type</Label>
-              <Select value={tradeType} onValueChange={setTradeType}>
+              <Select value={tradeType} onValueChange={(v) => setTradeType(v as typeof ALL_TRADE_TYPES[number])}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ALL_TRADE_TYPES.map(t => (

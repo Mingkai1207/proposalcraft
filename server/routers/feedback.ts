@@ -1,7 +1,7 @@
 import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
 import { proposals, clientFeedback } from "../../drizzle/schema";
-import { eq, inArray } from "drizzle-orm";
+import { eq, inArray, isNotNull, and } from "drizzle-orm";
 import { getDb } from "../db";
 import { TRPCError } from "@trpc/server";
 
@@ -68,13 +68,13 @@ export const feedbackRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database connection failed" });
 
-      // Get all declined proposals for this user
+      // Get only declined proposals for this user
       const declinedProposals = await db
-        .select()
+        .select({ id: proposals.id })
         .from(proposals)
-        .where(eq(proposals.userId, ctx.user.id));
+        .where(and(eq(proposals.userId, ctx.user.id), isNotNull(proposals.declinedAt)));
 
-      const declinedIds = declinedProposals.filter(p => p.declinedAt).map(p => p.id);
+      const declinedIds = declinedProposals.map(p => p.id);
 
       if (declinedIds.length === 0) {
         return {
