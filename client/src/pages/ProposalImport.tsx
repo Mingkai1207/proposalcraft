@@ -36,9 +36,16 @@ export default function ProposalImport() {
     }
   };
 
+  const MAX_FILE_SIZE_MB = 10;
   const handleImport = async () => {
     if (files.length === 0) {
       toast.error("Please select at least one file");
+      return;
+    }
+
+    const oversized = files.filter(f => f.size > MAX_FILE_SIZE_MB * 1024 * 1024);
+    if (oversized.length > 0) {
+      toast.error(`${oversized[0].name} exceeds the ${MAX_FILE_SIZE_MB}MB limit. Please use a smaller file.`);
       return;
     }
 
@@ -88,7 +95,7 @@ export default function ProposalImport() {
                 Drop files here or click to select
               </span>
               <span className="text-sm text-muted-foreground">
-                Supports PDF, Word (.docx), and text files
+                Supports PDF, Word (.docx), and text files · Max 10MB per file
               </span>
               <input
                 type="file"
