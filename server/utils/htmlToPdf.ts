@@ -46,7 +46,16 @@ from weasyprint import HTML, CSS
 from weasyprint.text.fonts import FontConfiguration
 
 font_config = FontConfiguration()
-html = HTML(filename=${JSON.stringify(htmlFile)})
+
+# Block external HTTP/HTTPS URL fetches to prevent SSRF via proposal HTML.
+# Only data: URIs (inline images) and the local temp file itself are allowed.
+def restricted_url_fetcher(url):
+    if url.startswith('data:') or url.startswith('file:'):
+        from weasyprint import default_url_fetcher
+        return default_url_fetcher(url)
+    raise ValueError(f"External URL blocked by security policy: {url[:100]}")
+
+html = HTML(filename=${JSON.stringify(htmlFile)}, url_fetcher=restricted_url_fetcher)
 html.write_pdf(${JSON.stringify(pdfFile)}, font_config=font_config)
 print("OK", file=sys.stderr)
 `;
