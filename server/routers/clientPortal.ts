@@ -1,11 +1,12 @@
 import { publicProcedure, protectedProcedure, router } from "../_core/trpc";
 import { z } from "zod";
-import { proposals, contractorProfiles } from "../../drizzle/schema";
+import { proposals, contractorProfiles, users } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { getDb } from "../db";
 import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
 import { notifyOwner } from "../_core/notification";
+import { sendEmail } from "../email";
 
 export const clientPortalRouter = router({
   // Public: Get proposal by client portal token
@@ -69,10 +70,37 @@ export const clientPortalRouter = router({
         })
         .where(eq(proposals.id, proposal.id));
 
-      // Notify contractor via in-app notification
+      // Notify contractor by email
+      try {
+        const contractorRows = await db
+          .select({ email: users.email, name: users.name })
+          .from(users)
+          .where(eq(users.id, proposal.userId))
+          .limit(1);
+        const contractor = contractorRows[0];
+        if (contractor?.email) {
+          const clientLabel = proposal.clientName || proposal.clientEmail || "Your client";
+          await sendEmail({
+            to: contractor.email,
+            subject: `Proposal Accepted: ${proposal.title}`,
+            html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;">
+<h2 style="color:#16a34a;">🎉 Proposal Accepted!</h2>
+<p>Great news${contractor.name ? `, ${contractor.name.split(" ")[0]}` : ""}!</p>
+<p><strong>${clientLabel}</strong> has accepted your proposal <strong>"${proposal.title}"</strong>.</p>
+${proposal.totalCost ? `<p>Project value: <strong>$${proposal.totalCost}</strong></p>` : ""}
+<p>Log in to ProposAI to view the full details and next steps.</p>
+<hr style="margin:24px 0;border:none;border-top:1px solid #e0e0e0;"/>
+<p style="color:#888;font-size:12px;">Sent by ProposAI</p>
+</body></html>`,
+            text: `Proposal Accepted!\n\n${clientLabel} has accepted your proposal "${proposal.title}".\n\nLog in to ProposAI to view details.`,
+          });
+        }
+      } catch {}
+
+      // Also notify admin
       await notifyOwner({
         title: "Proposal Accepted! 🎉",
-        content: `Your proposal "${proposal.title}" for ${proposal.clientName || proposal.clientEmail} has been accepted!`,
+        content: `Proposal "${proposal.title}" for ${proposal.clientName || proposal.clientEmail} has been accepted.`,
       }).catch(() => {});
 
       return { success: true };
@@ -107,10 +135,37 @@ export const clientPortalRouter = router({
         })
         .where(eq(proposals.id, proposal.id));
 
-      // Notify contractor via in-app notification
+      // Notify contractor by email
+      try {
+        const contractorRows = await db
+          .select({ email: users.email, name: users.name })
+          .from(users)
+          .where(eq(users.id, proposal.userId))
+          .limit(1);
+        const contractor = contractorRows[0];
+        if (contractor?.email) {
+          const clientLabel = proposal.clientName || proposal.clientEmail || "Your client";
+          await sendEmail({
+            to: contractor.email,
+            subject: `Proposal Declined: ${proposal.title}`,
+            html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px;">
+<h2 style="color:#dc2626;">Proposal Declined</h2>
+<p>Hi${contractor.name ? ` ${contractor.name.split(" ")[0]}` : ""},</p>
+<p><strong>${clientLabel}</strong> has declined your proposal <strong>"${proposal.title}"</strong>.</p>
+<p>You may want to follow up with the client to understand their concerns or provide a revised proposal.</p>
+<p>Log in to ProposAI to view the proposal details.</p>
+<hr style="margin:24px 0;border:none;border-top:1px solid #e0e0e0;"/>
+<p style="color:#888;font-size:12px;">Sent by ProposAI</p>
+</body></html>`,
+            text: `Proposal Declined\n\n${clientLabel} has declined your proposal "${proposal.title}".\n\nLog in to ProposAI to view details.`,
+          });
+        }
+      } catch {}
+
+      // Also notify admin
       await notifyOwner({
         title: "Proposal Declined",
-        content: `Your proposal "${proposal.title}" for ${proposal.clientName || proposal.clientEmail} has been declined.`,
+        content: `Proposal "${proposal.title}" for ${proposal.clientName || proposal.clientEmail} has been declined.`,
       }).catch(() => {});
 
       return { success: true };

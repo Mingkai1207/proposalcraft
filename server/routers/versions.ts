@@ -49,12 +49,12 @@ export const versionsRouter = router({
         .where(eq(proposalVersions.proposalId, input.proposalId));
       const nextVersion = (versions.length || 0) + 1;
 
-      // Save version
+      // Save version (store generatedContent as the version content)
       await db.insert(proposalVersions).values({
         proposalId: input.proposalId,
         versionNumber: nextVersion,
         title: proposal.title,
-        content: proposal.pdfUrl || "",
+        content: proposal.generatedContent || proposal.pdfUrl || "",
         clientName: proposal.clientName || undefined,
         clientEmail: proposal.clientEmail || undefined,
         jobScope: proposal.jobScope || undefined,
@@ -91,12 +91,13 @@ export const versionsRouter = router({
         throw new TRPCError({ code: "NOT_FOUND", message: "Version not found" });
       }
 
-      // Restore to proposal
+      // Restore to proposal — content field holds generatedContent (or pdfUrl for legacy versions)
+      const isLegacyUrl = version.content.startsWith("http");
       await db
         .update(proposals)
         .set({
           title: version.title,
-          pdfUrl: version.content,
+          ...(isLegacyUrl ? { pdfUrl: version.content } : { generatedContent: version.content }),
           clientName: version.clientName || undefined,
           clientEmail: version.clientEmail || undefined,
           jobScope: version.jobScope || undefined,
