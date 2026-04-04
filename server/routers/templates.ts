@@ -106,7 +106,7 @@ export const templatesRouter = router({
           description: input.description !== undefined ? input.description : template.description,
           content: input.content || template.content,
         })
-        .where(eq(proposalTemplates.id, input.id));
+        .where(and(eq(proposalTemplates.id, input.id), eq(proposalTemplates.userId, ctx.user.id)));
 
       return { success: true };
     }),
