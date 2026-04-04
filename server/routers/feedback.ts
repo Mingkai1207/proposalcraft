@@ -7,9 +7,11 @@ import { TRPCError } from "@trpc/server";
 
 export const feedbackRouter = router({
   // Public: Submit feedback on a declined proposal
+  // Requires clientPortalToken so only the actual proposal recipient can submit feedback,
+  // not anyone who guesses a sequential proposalId.
   submitFeedback: publicProcedure
     .input(z.object({
-      proposalId: z.number(),
+      token: z.string().min(1).max(64), // clientPortalToken — proves caller has the link
       reason: z.enum(["price", "scope", "timeline", "other"]).optional(),
       comments: z.string().max(1000).optional(),
       rating: z.number().min(1).max(5).optional(),
@@ -18,8 +20,8 @@ export const feedbackRouter = router({
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database connection failed" });
 
-      // Verify proposal exists and is declined
-      const rows = await db.select().from(proposals).where(eq(proposals.id, input.proposalId));
+      // Look up proposal by the portal token (not by guessable integer ID)
+      const rows = await db.select().from(proposals).where(eq(proposals.clientPortalToken, input.token));
       const proposal = rows[0];
       if (!proposal) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
@@ -33,7 +35,7 @@ export const feedbackRouter = router({
       const existing = await db
         .select({ id: clientFeedback.id })
         .from(clientFeedback)
-        .where(eq(clientFeedback.proposalId, input.proposalId))
+        .where(eq(clientFeedback.proposalId, proposal.id))
         .limit(1);
       if (existing.length > 0) {
         // Silently succeed — client already submitted, no need to error
@@ -42,7 +44,7 @@ export const feedbackRouter = router({
 
       // Save feedback
       await db.insert(clientFeedback).values({
-        proposalId: input.proposalId,
+        proposalId: proposal.id,
         reason: input.reason,
         comments: input.comments,
         rating: input.rating,
