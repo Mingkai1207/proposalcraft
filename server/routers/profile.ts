@@ -6,7 +6,14 @@ import { nanoid } from "nanoid";
 
 export const profileRouter = router({
   get: protectedProcedure.query(async ({ ctx }) => {
-    return getContractorProfile(ctx.user.id);
+    const profile = await getContractorProfile(ctx.user.id);
+    if (!profile) return profile;
+    // Never return the raw SMTP password to the client — return a sentinel so the UI
+    // knows whether a password has been configured without exposing the actual value.
+    return {
+      ...profile,
+      smtpPassword: profile.smtpPassword ? "__configured__" : null,
+    };
   }),
 
   update: protectedProcedure
@@ -33,9 +40,12 @@ export const profileRouter = router({
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // "__configured__" is the sentinel returned by get() — never write it back to the DB
+      const smtpPassword = input.smtpPassword === "__configured__" ? undefined : input.smtpPassword;
       return upsertContractorProfile({
         userId: ctx.user.id,
         ...input,
+        smtpPassword,
         email: input.email || null,
       });
     }),

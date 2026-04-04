@@ -30,6 +30,7 @@ export default function Settings() {
     smtpHost: "", smtpPort: 587, smtpUsername: "", smtpPassword: "",
     smtpFromEmail: "", smtpFromName: "",
   });
+  const [smtpPasswordConfigured, setSmtpPasswordConfigured] = useState(false);
   const [followUpTemplate, setFollowUpTemplate] = useState("");
 
   const AI_MODELS = [
@@ -75,11 +76,12 @@ export default function Settings() {
         defaultTerms: profile.defaultTerms || "",
       });
       setPreferredModel(profile.preferredModel || "claude-sonnet-4-6-thinking");
+      setSmtpPasswordConfigured(profile.smtpPassword === "__configured__");
       setSmtpForm({
         smtpHost: profile.smtpHost || "",
         smtpPort: profile.smtpPort || 587,
         smtpUsername: profile.smtpUsername || "",
-        smtpPassword: profile.smtpPassword || "",
+        smtpPassword: "", // never pre-populate — server returns "__configured__" sentinel
         smtpFromEmail: profile.smtpFromEmail || "",
         smtpFromName: profile.smtpFromName || "",
       });
@@ -299,7 +301,12 @@ export default function Settings() {
               </div>
               <div>
                 <Label className="text-sm font-medium mb-2 block">Password</Label>
-                <Input type="password" placeholder="••••••••" value={smtpForm.smtpPassword} onChange={e => setSmtpForm({...smtpForm, smtpPassword: e.target.value})} />
+                <Input
+                  type="password"
+                  placeholder={smtpPasswordConfigured ? "Leave blank to keep existing password" : "App password or SMTP password"}
+                  value={smtpForm.smtpPassword}
+                  onChange={e => setSmtpForm({...smtpForm, smtpPassword: e.target.value})}
+                />
               </div>
               <div>
                 <Label className="text-sm font-medium mb-2 block">From Email Address</Label>
