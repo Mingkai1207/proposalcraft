@@ -65,6 +65,11 @@ export default function Dashboard() {
     enabled: isAuthenticated,
   });
 
+  // Redirect to login if not authenticated (useEffect avoids setState-during-render warning)
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) navigate("/login");
+  }, [authLoading, isAuthenticated]);
+
   // Show onboarding modal if user hasn't completed it
   useEffect(() => {
     if (profile && !profile.onboardingCompleted) {
@@ -118,10 +123,7 @@ export default function Dashboard() {
     );
   }
 
-  if (!isAuthenticated) {
-    navigate("/login");
-    return null;
-  }
+  if (!isAuthenticated) return null;
 
   const plan = subscription?.plan || "free";
   const used = subscription?.proposalsUsedThisMonth || 0;

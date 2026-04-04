@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -183,6 +183,11 @@ export default function ProposalDetail() {
     },
   });
 
+  // Redirect to login if not authenticated (useEffect avoids setState-during-render warning)
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) navigate("/login");
+  }, [authLoading, isAuthenticated]);
+
   // ── Handlers ───────────────────────────────────────────────────────────────
 
   const handleReviseMessage = (message: string) => {
@@ -239,7 +244,7 @@ export default function ProposalDetail() {
   if (authLoading || isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
   }
-  if (!isAuthenticated) { navigate("/login"); return null; }
+  if (!isAuthenticated) return null;
   if (!proposal) {
     return (
       <div className="min-h-screen flex items-center justify-center">

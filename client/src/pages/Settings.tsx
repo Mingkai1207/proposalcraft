@@ -57,6 +57,11 @@ export default function Settings() {
     },
   ];
 
+  // Redirect to login if not authenticated (useEffect avoids setState-during-render warning)
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) navigate("/login");
+  }, [authLoading, isAuthenticated]);
+
   useEffect(() => {
     if (profile) {
       setForm({
@@ -95,7 +100,7 @@ export default function Settings() {
   if (authLoading || isLoading) {
     return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" /></div>;
   }
-  if (!isAuthenticated) { navigate("/login"); return null; }
+  if (!isAuthenticated) return null;
 
   const update = (field: string, value: string) => setForm(f => ({ ...f, [field]: value }));
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -278,6 +278,11 @@ export function Templates() {
     onError: () => toast.error("Failed to delete template"),
   });
 
+  // Redirect to login if not authenticated (useEffect avoids setState-during-render warning)
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) navigate("/login");
+  }, [authLoading, isAuthenticated]);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -286,10 +291,7 @@ export function Templates() {
     );
   }
 
-  if (!isAuthenticated) {
-    navigate("/login");
-    return null;
-  }
+  if (!isAuthenticated) return null;
 
   const savedTemplates = templates?.filter(t => t.sourceType === "saved_from_proposal") || [];
   const uploadedTemplates = templates?.filter(t => t.sourceType === "uploaded") || [];
