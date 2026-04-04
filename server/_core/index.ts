@@ -42,13 +42,64 @@ async function startServer() {
   // PayPal webhook endpoint — registered before express.json() to receive raw body
   app.post("/api/paypal/webhook", express.raw({ type: "application/json" }), async (req, res) => {
     let eventData: any;
+    let rawBody: string;
     try {
-      const rawBody = req.body.toString("utf8");
+      rawBody = req.body.toString("utf8");
       eventData = JSON.parse(rawBody);
     } catch (err: any) {
       console.error("[PayPal Webhook] Parse error:", err.message);
       res.status(400).json({ error: "Invalid payload" });
       return;
+    }
+
+    // Verify PayPal webhook signature when PAYPAL_WEBHOOK_ID is configured.
+    // Without this check, anyone could forge a webhook to upgrade accounts for free.
+    const webhookId = process.env.PAYPAL_WEBHOOK_ID;
+    if (webhookId) {
+      try {
+        const clientId = process.env.PAYPAL_CLIENT_ID || "";
+        const clientSecret = process.env.PAYPAL_CLIENT_SECRET || "";
+        const creds = Buffer.from(`${clientId}:${clientSecret}`).toString("base64");
+        const tokenRes = await fetch("https://api-m.paypal.com/v1/oauth2/token", {
+          method: "POST",
+          headers: { Authorization: `Basic ${creds}`, "Content-Type": "application/x-www-form-urlencoded" },
+          body: "grant_type=client_credentials",
+        });
+        const tokenData = await tokenRes.json() as { access_token?: string };
+        if (tokenData.access_token) {
+          const verifyRes = await fetch("https://api-m.paypal.com/v1/notifications/verify-webhook-signature", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${tokenData.access_token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              auth_algo: req.headers["paypal-auth-algo"],
+              cert_url: req.headers["paypal-cert-url"],
+              transmission_id: req.headers["paypal-transmission-id"],
+              transmission_sig: req.headers["paypal-transmission-sig"],
+              transmission_time: req.headers["paypal-transmission-time"],
+              webhook_id: webhookId,
+              webhook_event: eventData,
+            }),
+          });
+          const verifyData = await verifyRes.json() as { verification_status?: string };
+          if (verifyData.verification_status !== "SUCCESS") {
+            console.warn("[PayPal Webhook] Signature verification failed:", verifyData);
+            res.status(401).json({ error: "Webhook signature verification failed" });
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("[PayPal Webhook] Signature verification error:", err);
+        // Don't process unverified webhooks in production
+        if (process.env.NODE_ENV === "production") {
+          res.status(500).json({ error: "Webhook verification failed" });
+          return;
+        }
+      }
+    } else {
+      console.warn("[PayPal Webhook] PAYPAL_WEBHOOK_ID not set — skipping signature verification (unsafe in production)");
     }
 
     const eventType = eventData?.event_type || "";
