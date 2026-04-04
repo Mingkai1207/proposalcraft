@@ -18,6 +18,12 @@ import { sendEmail, buildVerificationEmail } from "../email";
 const BCRYPT_ROUNDS = 12;
 const VERIFICATION_TOKEN_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+// If SMTP is not configured, skip email verification entirely — users auto-verify on signup.
+// This prevents a hard block on deployments (e.g. Railway) where SMTP hasn't been set up yet.
+function isSmtpConfigured(): boolean {
+  return !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
 // Generate a unique openId for native users (not from Manus OAuth)
 function generateNativeOpenId(email: string): string {
   return `native_${email.toLowerCase().replace(/[^a-z0-9]/g, "_")}_${Date.now()}`;
@@ -47,7 +53,7 @@ export const nativeAuthProcedures = {
         origin: z.string().url().optional(), // frontend passes window.location.origin
       })
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ input, ctx }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
 
@@ -65,6 +71,7 @@ export const nativeAuthProcedures = {
         });
       }
 
+      const smtpEnabled = isSmtpConfigured();
       const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
       const openId = generateNativeOpenId(input.email);
       const verificationToken = generateVerificationToken();
@@ -76,17 +83,32 @@ export const nativeAuthProcedures = {
         email: input.email.toLowerCase(),
         passwordHash,
         loginMethod: "email",
-        emailVerified: false,
-        verificationToken,
-        verificationTokenExpiresAt,
+        // Auto-verify when SMTP isn't configured — avoids hard-blocking users on deployments
+        // that haven't set up email yet.
+        emailVerified: !smtpEnabled,
+        verificationToken: smtpEnabled ? verificationToken : null,
+        verificationTokenExpiresAt: smtpEnabled ? verificationTokenExpiresAt : null,
         lastSignedIn: new Date(),
       });
 
-      // Build the verification URL
+      if (!smtpEnabled) {
+        // No email service — log them in immediately after signup
+        const sessionToken = await sdk.createSessionToken(openId, {
+          name: input.name,
+          expiresInMs: ONE_YEAR_MS,
+        });
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+        return {
+          success: true,
+          autoVerified: true,
+          message: "Account created! You are now signed in.",
+        };
+      }
+
+      // SMTP is available — send a verification email
       const origin = input.origin ?? "https://proposai.org";
       const verifyUrl = `${origin}/verify-email?token=${verificationToken}`;
-
-      // Send verification email (non-blocking — don't fail registration if email fails)
       const { html, text } = buildVerificationEmail({ name: input.name, verifyUrl });
       await sendEmail({
         to: input.email,
@@ -99,6 +121,7 @@ export const nativeAuthProcedures = {
 
       return {
         success: true,
+        autoVerified: false,
         message: "Account created! Please check your email to verify your account before signing in.",
       };
     }),

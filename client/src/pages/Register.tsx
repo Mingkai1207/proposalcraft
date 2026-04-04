@@ -20,9 +20,15 @@ export default function Register() {
   const utils = trpc.useUtils();
 
   const registerMutation = trpc.auth.register.useMutation({
-    onSuccess: () => {
-      // Redirect to check-your-email page (don't log in yet — email must be verified first)
-      navigate(`/check-your-email?email=${encodeURIComponent(email)}`);
+    onSuccess: (data) => {
+      if (data.autoVerified) {
+        // SMTP not configured — user is already verified and logged in, go straight to dashboard
+        utils.auth.me.invalidate();
+        navigate("/dashboard");
+      } else {
+        // SMTP configured — ask user to check email first
+        navigate(`/check-your-email?email=${encodeURIComponent(email)}`);
+      }
     },
     onError: (err) => {
       setError(err.message || "Registration failed. Please try again.");
