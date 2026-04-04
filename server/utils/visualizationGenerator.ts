@@ -423,6 +423,15 @@ function buildPaymentScheduleBarConfig(data: VisualizationData): object {
   };
 }
 
+function escHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 /**
  * Generate a scope checklist as an HTML table (not a chart)
  * Returns an HTML string instead of a PNG
@@ -441,7 +450,7 @@ function buildScopeChecklistHtml(data: VisualizationData): string {
       <td style="width:32px;text-align:center;padding:8px 4px;border-bottom:1px solid #e5e7eb;">
         <div style="width:18px;height:18px;border:2px solid #3b82f6;border-radius:3px;margin:0 auto;"></div>
       </td>
-      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${item}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:13px;color:#374151;">${escHtml(item)}</td>
     </tr>`).join("");
 
   return `
