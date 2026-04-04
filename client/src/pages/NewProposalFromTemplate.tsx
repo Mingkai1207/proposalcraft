@@ -427,6 +427,7 @@ export default function NewProposalFromTemplate() {
             onChange={e => setTitle(e.target.value)}
             placeholder="e.g. Roof Replacement — Johnson Residence"
             className="text-base"
+            maxLength={200}
           />
         </div>
 
@@ -451,16 +452,16 @@ export default function NewProposalFromTemplate() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Client Name</Label>
-              <Input value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Jane Smith" />
+              <Input value={clientName} onChange={e => setClientName(e.target.value)} placeholder="Jane Smith" maxLength={200} />
             </div>
             <div className="space-y-1.5">
               <Label>Client Email</Label>
-              <Input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder="jane@example.com" />
+              <Input type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} placeholder="jane@example.com" maxLength={320} />
             </div>
           </div>
           <div className="space-y-1.5">
             <Label>Property Address</Label>
-            <Input value={clientAddress} onChange={e => setClientAddress(e.target.value)} placeholder="123 Main St, City, State 12345" />
+            <Input value={clientAddress} onChange={e => setClientAddress(e.target.value)} placeholder="123 Main St, City, State 12345" maxLength={500} />
           </div>
         </div>
 
@@ -477,6 +478,7 @@ export default function NewProposalFromTemplate() {
               placeholder="Describe the work to be done in detail. Include scope, materials, special requirements..."
               rows={5}
               className="resize-none"
+              maxLength={5000}
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
