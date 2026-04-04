@@ -296,7 +296,17 @@ Write a complete, ready-to-send proposal. Use professional formatting with clear
       const trackingUrl = `${ENV.appUrl}/api/track/${proposal.trackingToken}`;
       const portalLink = `${ENV.appUrl}/client-portal?token=${proposal.trackingToken}`;
 
-      // Build email HTML
+      // Proposal summary lines (first 3 non-empty lines, stripped of HTML/markdown)
+      const summaryText = (proposal.generatedContent || "")
+        .replace(/<[^>]*>/g, " ")
+        .replace(/[#*`_~]/g, "")
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .slice(0, 3)
+        .join(" • ");
+
+      // Build email HTML — link to client portal; do NOT embed raw proposal HTML
       const emailHtml = `
 <!DOCTYPE html>
 <html>
@@ -304,8 +314,9 @@ Write a complete, ready-to-send proposal. Use professional formatting with clear
 body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; }
 .header { background: #1a1a2e; color: white; padding: 24px; border-radius: 8px 8px 0 0; }
 .content { background: #f9f9f9; padding: 24px; border: 1px solid #e0e0e0; }
-.proposal-box { background: white; border: 1px solid #ddd; border-radius: 6px; padding: 20px; margin: 16px 0; white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
-.cta { background: #e8630a; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; display: inline-block; margin: 16px 0; }
+.summary-box { background: white; border-left: 4px solid #e8630a; border-radius: 0 6px 6px 0; padding: 16px 20px; margin: 16px 0; font-size: 14px; line-height: 1.6; color: #555; font-style: italic; }
+.cta { background: #e8630a; color: white; padding: 14px 28px; border-radius: 6px; text-decoration: none; display: inline-block; margin: 16px 0; font-weight: 600; font-size: 15px; }
+.meta { font-size: 13px; color: #666; margin: 4px 0; }
 .footer { color: #888; font-size: 12px; padding: 16px; text-align: center; }
 </style></head>
 <body>
@@ -313,20 +324,23 @@ body { font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 
   <h2 style="margin:0">${businessName}</h2>
   <p style="margin:4px 0 0;opacity:0.8">Professional Proposal</p>
 </div>
-  <div class="content">
+<div class="content">
   <p>Dear ${input.clientName || "Valued Client"},</p>
-  <p>${input.message || `Thank you for considering ${businessName} for your project. Please find our detailed proposal below.`}</p>
-  <div class="proposal-box">${proposal.generatedContent || ""}</div>
-  <p style="text-align:center;margin-top:24px">
-    <a href="${portalLink}" class="cta">Review & Respond to Proposal</a>
+  <p>${input.message || `Thank you for considering ${businessName} for your project. I've prepared a detailed proposal for your review.`}</p>
+  <p class="meta"><strong>Proposal:</strong> ${proposal.title}</p>
+  ${proposal.totalCost ? `<p class="meta"><strong>Estimated investment:</strong> $${proposal.totalCost}</p>` : ""}
+  ${summaryText ? `<div class="summary-box">${summaryText}</div>` : ""}
+  <p style="text-align:center;margin:28px 0 16px">
+    <a href="${portalLink}" class="cta">View Full Proposal &amp; Respond</a>
   </p>
+  <p style="font-size:13px;color:#777;text-align:center">Click the button above to view the complete proposal, accept, or decline.</p>
   <p>We look forward to working with you. Please don't hesitate to reach out with any questions.</p>
   <p>Best regards,<br><strong>${businessName}</strong></p>
   ${profile?.phone ? `<p>📞 ${profile.phone}</p>` : ""}
   ${profile?.email ? `<p>✉️ ${profile.email}</p>` : ""}
 </div>
 <div class="footer">
-  <p>This proposal was sent via ProposAI</p>
+  <p>This proposal was sent via <a href="https://proposai.org" style="color:#e8630a;text-decoration:none">ProposAI</a></p>
   <img src="${trackingUrl}" width="1" height="1" style="display:none" alt="" />
 </div>
 </body>
