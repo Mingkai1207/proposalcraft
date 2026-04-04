@@ -26,7 +26,7 @@ export default function ProposalImport() {
 
   if (authLoading) return <div className="flex items-center justify-center h-screen">Loading...</div>;
   if (!isAuthenticated) {
-    navigate("/login");
+    navigate(`/login?return=${encodeURIComponent(window.location.pathname)}`);
     return null;
   }
 

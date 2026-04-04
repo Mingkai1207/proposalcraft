@@ -285,7 +285,7 @@ export function Templates() {
 
   // Redirect to login if not authenticated (useEffect avoids setState-during-render warning)
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) navigate("/login");
+    if (!authLoading && !isAuthenticated) navigate(`/login?return=${encodeURIComponent(window.location.pathname)}`);
   }, [authLoading, isAuthenticated]);
 
   if (authLoading) {

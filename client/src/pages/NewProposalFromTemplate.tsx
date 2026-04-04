@@ -144,7 +144,7 @@ export default function NewProposalFromTemplate() {
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate("/login");
+      navigate(`/login?return=${encodeURIComponent(window.location.pathname)}`);
     }
   }, [isAuthenticated, authLoading]);
 

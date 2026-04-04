@@ -14,6 +14,7 @@ export default function Settings() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const [, navigate] = useLocation();
   const fileRef = useRef<HTMLInputElement>(null);
+  const utils = trpc.useUtils();
 
   const { data: profile, isLoading, isError: profileError, refetch } = trpc.profile.get.useQuery(undefined, {
     enabled: isAuthenticated,
@@ -62,7 +63,7 @@ export default function Settings() {
 
   // Redirect to login if not authenticated (useEffect avoids setState-during-render warning)
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) navigate("/login");
+    if (!authLoading && !isAuthenticated) navigate(`/login?return=${encodeURIComponent(window.location.pathname)}`);
   }, [authLoading, isAuthenticated]);
 
   useEffect(() => {
@@ -102,7 +103,11 @@ export default function Settings() {
   });
 
   const deleteAccountMutation = trpc.auth.deleteAccount.useMutation({
-    onSuccess: () => { navigate("/"); },
+    onSuccess: async () => {
+      utils.auth.me.setData(undefined, null);
+      await utils.auth.me.invalidate();
+      navigate("/");
+    },
     onError: (e) => toast.error(e.message),
   });
 

@@ -19,10 +19,16 @@ export default function Login() {
 
   const utils = trpc.useUtils();
 
+  // Read ?return= param and validate it's a safe relative path (no open redirect)
+  const returnTo = (() => {
+    const raw = new URLSearchParams(window.location.search).get("return") || "";
+    return raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
+  })();
+
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: async () => {
       await utils.auth.me.invalidate();
-      navigate("/dashboard");
+      navigate(returnTo);
     },
     onError: (err) => {
       setError(err.message || "Login failed. Please try again.");
