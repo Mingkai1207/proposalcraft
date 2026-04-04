@@ -54,8 +54,8 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000); // clean every 5 minutes
 
-// Trusted origins for email verification links — use env var in production
-const TRUSTED_APP_ORIGIN = process.env.VITE_APP_URL?.replace(/\/$/, "") || "https://proposai.org";
+// Trusted origins for email verification links — reads APP_URL (same as ENV.appUrl)
+const TRUSTED_APP_ORIGIN = (process.env.APP_URL ?? "https://proposai.org").replace(/\/$/, "");
 
 function getSafeOrigin(requestedOrigin?: string): string {
   if (!requestedOrigin) return TRUSTED_APP_ORIGIN;

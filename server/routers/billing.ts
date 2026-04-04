@@ -35,7 +35,7 @@ export const billingRouter = router({
 
       // Use the trusted app URL for PayPal redirect URLs, not the client-supplied Origin header.
       // In development, fall back to the request origin if it's localhost.
-      const TRUSTED_ORIGIN = process.env.VITE_APP_URL?.replace(/\/$/, "") || "https://proposai.org";
+      const TRUSTED_ORIGIN = (process.env.APP_URL ?? "https://proposai.org").replace(/\/$/, "");
       const reqOrigin = (ctx.req.headers.origin as string) || "";
       let origin = TRUSTED_ORIGIN;
       try {
