@@ -207,7 +207,6 @@ export default function ProposalDetail() {
     }
 
     // No PDF yet — generate one server-side via Puppeteer
-    toast.info("Generating PDF... this may take a few seconds.");
     exportPdfMutation.mutate({ id: proposal.id });
   };
 

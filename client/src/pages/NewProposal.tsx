@@ -441,7 +441,7 @@ export default function NewProposal() {
                   <SuggestInput type="number" placeholder="2500" value={form.materialsCost} onChange={e => update("materialsCost", e.target.value)} />
                 </div>
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Total Cost ($) <span className="text-destructive">*</span></Label>
+                  <Label className="text-sm font-medium mb-2 block">Total Cost ($)</Label>
                   <SuggestInput type="number" placeholder="4000" value={form.totalCost} onChange={e => update("totalCost", e.target.value)} />
                 </div>
               </div>
@@ -450,7 +450,7 @@ export default function NewProposal() {
             {/* Timeline */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm font-medium mb-2 block">Estimated Duration (days) <span className="text-destructive">*</span></Label>
+                <Label className="text-sm font-medium mb-2 block">Estimated Duration (days)</Label>
                 <SuggestInput type="number" placeholder="5" value={form.estimatedDays} onChange={e => update("estimatedDays", e.target.value)} />
               </div>
               <div>

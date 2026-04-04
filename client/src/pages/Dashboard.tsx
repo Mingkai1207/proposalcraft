@@ -91,9 +91,10 @@ export default function Dashboard() {
   };
 
   const handleBulkExport = async () => {
+    const loadingId = toast.loading(t("common.loading"));
     try {
-      toast.loading(t("common.loading"));
       const result = await exportQuery.refetch();
+      toast.dismiss(loadingId);
       if (result.data) {
         const link = document.createElement("a");
         link.href = `data:application/zip;base64,${result.data.data}`;
@@ -104,6 +105,7 @@ export default function Dashboard() {
         toast.success(t("common.success"));
       }
     } catch (e) {
+      toast.dismiss(loadingId);
       toast.error(e instanceof Error ? e.message : "Export failed");
     }
   };
