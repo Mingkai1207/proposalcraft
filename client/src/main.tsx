@@ -11,10 +11,17 @@ import "./index.css";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Retry up to 3 times on network failures (e.g. server cold-start)
+      // Retry up to 3 times on network failures or 5xx errors (e.g. server cold-start)
+      // Never retry on 4xx client errors — they won't resolve on retry
       retry: (failureCount, error) => {
-        // Don't retry on auth errors
-        if (error instanceof TRPCClientError && error.data?.code === 'UNAUTHORIZED') return false;
+        if (error instanceof TRPCClientError) {
+          const code = error.data?.code;
+          // 4xx-equivalent codes: don't retry
+          if (code === 'UNAUTHORIZED' || code === 'FORBIDDEN' || code === 'NOT_FOUND' ||
+              code === 'BAD_REQUEST' || code === 'CONFLICT' || code === 'METHOD_NOT_SUPPORTED') {
+            return false;
+          }
+        }
         return failureCount < 3;
       },
       retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
