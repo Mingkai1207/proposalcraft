@@ -60,6 +60,29 @@ export async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
       ? `"${safeName}" <${smtpOverride.fromEmail}>`
       : smtpOverride.fromEmail
     : (process.env.SMTP_FROM ?? "ProposAI <noreply@proposai.org>");
+
+  // Prefer Resend API over SMTP when RESEND_API_KEY is set (no SMTP port issues)
+  const resendKey = process.env.RESEND_API_KEY;
+  if (resendKey && !smtpOverride) {
+    try {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendKey}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ from, to: opts.to, subject: opts.subject, html: opts.html, text: opts.text }),
+      });
+      if (res.ok) return true;
+      const err = await res.text();
+      console.error("[Email] Resend API error:", err);
+      return false;
+    } catch (err) {
+      console.error("[Email] Resend API fetch failed:", err);
+      return false;
+    }
+  }
+
   const transport = getTransport(smtpOverride);
 
   if (!transport) {
