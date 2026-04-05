@@ -38,6 +38,46 @@ function escHtml(str: string): string {
     .replace(/'/g, "&#39;");
 }
 
+// ─── Per-user rate limiter for expensive LLM endpoints ────────────────────────
+// Prevents a single paid user from hammering the Anthropic API in a tight loop.
+// Not a substitute for plan-based limits — it runs in addition to them.
+const llmRateLimitStore = new Map<string, { count: number; windowStart: number }>();
+const LLM_RATE_WINDOW_MS = 60 * 60 * 1000; // 1 hour window
+// Max calls per user per hour for each expensive endpoint type
+const LLM_RATE_LIMITS: Record<string, number> = {
+  refine: 20,    // refineProposal — thinking model, 30K max tokens
+  revise: 30,    // reviseWithAI
+  compile: 15,   // compileSummary
+};
+
+function checkLlmRateLimit(userId: number, type: keyof typeof LLM_RATE_LIMITS): void {
+  const max = LLM_RATE_LIMITS[type];
+  const key = `${type}:${userId}`;
+  const now = Date.now();
+  const entry = llmRateLimitStore.get(key);
+  if (!entry || now - entry.windowStart > LLM_RATE_WINDOW_MS) {
+    llmRateLimitStore.set(key, { count: 1, windowStart: now });
+    return;
+  }
+  entry.count++;
+  if (entry.count > max) {
+    throw new TRPCError({
+      code: "TOO_MANY_REQUESTS",
+      message: `Too many AI requests. Please wait before trying again.`,
+    });
+  }
+}
+
+// Periodically clean up expired rate limit entries
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of llmRateLimitStore.entries()) {
+    if (now - entry.windowStart > LLM_RATE_WINDOW_MS) {
+      llmRateLimitStore.delete(key);
+    }
+  }
+}, 15 * 60 * 1000);
+
 const TRADE_TEMPLATES: Record<string, string> = {
   hvac: "HVAC (Heating, Ventilation & Air Conditioning)",
   plumbing: "Plumbing",
@@ -926,6 +966,8 @@ ${portalLink ? `<p>Direct link: <a href="${portalLink}" style="color:#e8630a;">$
       })
     )
     .mutation(async ({ ctx, input }) => {
+      // Per-user rate limit — prevents rapid-fire LLM calls
+      checkLlmRateLimit(ctx.user.id, "compile");
       // Check subscription limits
       const isAdmin = ctx.user.role === "admin";
       const sub = await ensureSubscription(ctx.user.id);
@@ -1268,6 +1310,9 @@ STRUCTURE:
       message: z.string().min(1).max(2000),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Per-user rate limit — prevents rapid-fire LLM calls
+      checkLlmRateLimit(ctx.user.id, "revise");
+
       const proposal = await getProposalById(input.id);
       if (!proposal || proposal.userId !== ctx.user.id) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
@@ -1719,6 +1764,9 @@ Base font size: 13.5px-14px with line-height: 1.6 for body text.`;
       message: z.string().min(1).max(2000),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Per-user rate limit — prevents rapid-fire expensive thinking-model calls
+      checkLlmRateLimit(ctx.user.id, "refine");
+
       const proposal = await getProposalById(input.id);
       if (!proposal || proposal.userId !== ctx.user.id) {
         throw new TRPCError({ code: "NOT_FOUND", message: "Proposal not found" });
