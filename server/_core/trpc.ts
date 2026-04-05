@@ -5,6 +5,15 @@ import type { TrpcContext } from "./context";
 
 const t = initTRPC.context<TrpcContext>().create({
   transformer: superjson,
+  errorFormatter({ shape, error }) {
+    // Never expose raw database errors (SQL, stack traces) to the client.
+    // TRPCErrors have intentional user-facing messages; everything else is internal.
+    const isInternal = !(error.cause instanceof TRPCError) && shape.data.code === "INTERNAL_SERVER_ERROR";
+    return {
+      ...shape,
+      message: isInternal ? "Something went wrong. Please try again." : shape.message,
+    };
+  },
 });
 
 export const router = t.router;
