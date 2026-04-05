@@ -134,7 +134,7 @@ export async function latexToPdf(latexSource: string): Promise<Buffer> {
   const sanitized = sanitizeLatex(latexSource);
 
   // Create a unique temp directory for this compilation
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "proposalcraft-"));
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "proposai-"));
   const texFile = path.join(tmpDir, "proposal.tex");
   const pdfFile = path.join(tmpDir, "proposal.pdf");
 

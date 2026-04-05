@@ -31,7 +31,7 @@ function buildCleanEnv(): NodeJS.ProcessEnv {
  */
 export async function htmlToPdf(htmlContent: string): Promise<Buffer> {
   // Create a unique temp directory for this conversion
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "proposalcraft-html-"));
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "proposai-html-"));
   const htmlFile = path.join(tmpDir, "proposal.html");
   const pdfFile = path.join(tmpDir, "proposal.pdf");
 

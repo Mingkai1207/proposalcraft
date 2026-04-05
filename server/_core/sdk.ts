@@ -45,7 +45,7 @@ class SDKServer {
     return this.signSession(
       {
         openId,
-        appId: "proposalcraft",
+        appId: "proposai",
         name: options.name || "",
       },
       options
