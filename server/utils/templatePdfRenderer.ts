@@ -11,6 +11,16 @@ import { marked } from "marked";
 import type { TemplateStyle } from "../../shared/templateDefs";
 import { generateVisualization } from "./visualizationGenerator";
 
+/** HTML-escape a user-controlled string before embedding it in a template literal. */
+function esc(s: string): string {
+  if (!s) return "";
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 export interface TemplatePdfInput {
   style: TemplateStyle;
   title: string;
@@ -1034,7 +1044,23 @@ function buildExecutiveSidebarHtml(input: TemplatePdfInput, sections: string, vi
 // ─── Main builder ─────────────────────────────────────────────────────────────
 
 export async function buildHtml(input: TemplatePdfInput): Promise<string> {
-  const { style, sectionContents } = input;
+  // Pre-escape all user-controlled string fields so every style builder is safe
+  // by default, without each one needing its own escaping.
+  const safeInput: TemplatePdfInput = {
+    ...input,
+    title: esc(input.title),
+    businessName: esc(input.businessName),
+    businessPhone: esc(input.businessPhone),
+    businessEmail: esc(input.businessEmail),
+    businessAddress: esc(input.businessAddress),
+    licenseNumber: esc(input.licenseNumber),
+    clientName: esc(input.clientName),
+    clientAddress: esc(input.clientAddress),
+    clientEmail: esc(input.clientEmail),
+    preparedDate: esc(input.preparedDate),
+    validUntil: esc(input.validUntil),
+  };
+  const { style, sectionContents } = safeInput;
 
   // Build sections HTML
   const sectionsHtml = SECTION_ORDER
@@ -1050,22 +1076,22 @@ export async function buildHtml(input: TemplatePdfInput): Promise<string> {
     .filter(Boolean)
     .join("\n");
 
-  // Build visualizations
+  // Build visualizations (use original input.fields — these are numeric, not HTML-injected)
   const vizHtml = await buildVizHtml(input.fields, style);
 
-  // Route to the correct style renderer
+  // Route to the correct style renderer — pass safeInput so all string interpolations are pre-escaped
   switch (style.id) {
     case "classic-letterhead":
-      return buildClassicLetterheadHtml(input, sectionsHtml, vizHtml);
+      return buildClassicLetterheadHtml(safeInput, sectionsHtml, vizHtml);
     case "bold-dark":
-      return buildBoldDarkHtml(input, sectionsHtml, vizHtml);
+      return buildBoldDarkHtml(safeInput, sectionsHtml, vizHtml);
     case "minimal-clean":
-      return buildMinimalCleanHtml(input, sectionsHtml, vizHtml);
+      return buildMinimalCleanHtml(safeInput, sectionsHtml, vizHtml);
     case "executive-sidebar":
-      return buildExecutiveSidebarHtml(input, sectionsHtml, vizHtml);
+      return buildExecutiveSidebarHtml(safeInput, sectionsHtml, vizHtml);
     case "modern-wave":
     default:
-      return buildModernWaveHtml(input, sectionsHtml, vizHtml);
+      return buildModernWaveHtml(safeInput, sectionsHtml, vizHtml);
   }
 }
 
