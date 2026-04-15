@@ -129,7 +129,7 @@ Return ONLY valid JSON, no markdown or extra text.`;
 
           // Create template from extracted data
           if (extracted.proposalTitle) {
-            const templateId = await db
+            const [templateRow] = await db
               .insert(proposalTemplates)
               .values({
                 userId: ctx.user.id,
@@ -146,9 +146,9 @@ Return ONLY valid JSON, no markdown or extra text.`;
                 totalCost: typeof extracted.totalCost === "number" ? extracted.totalCost : undefined,
                 language: "english",
               })
-              .$returningId();
+              .returning({ id: proposalTemplates.id });
 
-            if (templateId && templateId[0]) {
+            if (templateRow) {
               templatesCreated++;
             }
           }

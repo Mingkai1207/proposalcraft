@@ -1,29 +1,18 @@
-// AWS S3 storage helpers
-// Uses @aws-sdk/client-s3 + @aws-sdk/s3-request-presigner
+// Supabase Storage helpers
+// Uses @supabase/supabase-js
 
-import {
-  DeleteObjectCommand,
-  GetObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { createClient } from "@supabase/supabase-js";
 import { ENV } from "./_core/env";
 
-function getS3Client(): S3Client {
-  if (!ENV.awsAccessKeyId || !ENV.awsSecretAccessKey || !ENV.awsBucket) {
+const BUCKET = "proposals";
+
+function getSupabaseAdmin() {
+  if (!ENV.supabaseUrl || !ENV.supabaseServiceRoleKey) {
     throw new Error(
-      "AWS S3 credentials missing: set AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and AWS_S3_BUCKET"
+      "Supabase credentials missing: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY"
     );
   }
-
-  return new S3Client({
-    region: ENV.awsRegion || "us-east-1",
-    credentials: {
-      accessKeyId: ENV.awsAccessKeyId,
-      secretAccessKey: ENV.awsSecretAccessKey,
-    },
-  });
+  return createClient(ENV.supabaseUrl, ENV.supabaseServiceRoleKey);
 }
 
 function normalizeKey(relKey: string): string {
@@ -35,51 +24,50 @@ export async function storagePut(
   data: Buffer | Uint8Array | string,
   contentType = "application/octet-stream"
 ): Promise<{ key: string; url: string }> {
-  const client = getS3Client();
+  const supabase = getSupabaseAdmin();
   const key = normalizeKey(relKey);
 
   const body =
     typeof data === "string" ? Buffer.from(data, "utf-8") : Buffer.from(data);
 
-  await client.send(
-    new PutObjectCommand({
-      Bucket: ENV.awsBucket,
-      Key: key,
-      Body: body,
-      ContentType: contentType,
-    })
-  );
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(key, body, { contentType, upsert: true });
 
-  // Return a presigned GET URL valid for 7 days
-  const url = await getSignedUrl(
-    client,
-    new GetObjectCommand({ Bucket: ENV.awsBucket, Key: key }),
-    { expiresIn: 60 * 60 * 24 * 7 }
-  );
+  if (error) throw new Error(`Supabase storage upload failed: ${error.message}`);
 
-  return { key, url };
+  const { data: signedData, error: urlError } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrl(key, 60 * 60 * 24 * 7); // 7 days
+
+  if (urlError || !signedData) {
+    throw new Error(`Supabase signed URL failed: ${urlError?.message}`);
+  }
+
+  return { key, url: signedData.signedUrl };
 }
 
 export async function storageGet(
   relKey: string
 ): Promise<{ key: string; url: string }> {
-  const client = getS3Client();
+  const supabase = getSupabaseAdmin();
   const key = normalizeKey(relKey);
 
-  const url = await getSignedUrl(
-    client,
-    new GetObjectCommand({ Bucket: ENV.awsBucket, Key: key }),
-    { expiresIn: 60 * 60 * 24 * 7 }
-  );
+  const { data, error } = await supabase.storage
+    .from(BUCKET)
+    .createSignedUrl(key, 60 * 60 * 24 * 7); // 7 days
 
-  return { key, url };
+  if (error || !data) {
+    throw new Error(`Supabase signed URL failed: ${error?.message}`);
+  }
+
+  return { key, url: data.signedUrl };
 }
 
 export async function storageDelete(relKey: string): Promise<void> {
-  const client = getS3Client();
+  const supabase = getSupabaseAdmin();
   const key = normalizeKey(relKey);
 
-  await client.send(
-    new DeleteObjectCommand({ Bucket: ENV.awsBucket, Key: key })
-  );
+  const { error } = await supabase.storage.from(BUCKET).remove([key]);
+  if (error) throw new Error(`Supabase storage delete failed: ${error.message}`);
 }

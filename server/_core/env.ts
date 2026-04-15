@@ -16,9 +16,8 @@ export const ENV = {
   llmFastModel: process.env.LLM_FAST_MODEL ?? "",
   // Google Maps
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY ?? "",
-  // AWS S3 for file storage
-  awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID ?? "",
-  awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY ?? "",
-  awsRegion: process.env.AWS_REGION ?? "us-east-1",
-  awsBucket: process.env.AWS_S3_BUCKET ?? "",
+  // Supabase for file storage
+  supabaseUrl: process.env.SUPABASE_URL ?? "",
+  supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? "",
+  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
 };

@@ -1,5 +1,6 @@
 import { eq, desc, and, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import {
   InsertUser,
   users,
@@ -19,7 +20,8 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const client = postgres(process.env.DATABASE_URL);
+      _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -53,7 +55,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   if (!values.lastSignedIn) values.lastSignedIn = new Date();
   if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
 
-  await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
+  await db.insert(users).values(values).onConflictDoUpdate({ target: users.openId, set: updateSet });
 }
 
 export async function getUserByOpenId(openId: string) {
@@ -76,7 +78,7 @@ export async function upsertContractorProfile(data: InsertContractorProfile) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const { userId, ...rest } = data;
-  await db.insert(contractorProfiles).values({ userId, ...rest }).onDuplicateKeyUpdate({ set: rest });
+  await db.insert(contractorProfiles).values({ userId, ...rest }).onConflictDoUpdate({ target: contractorProfiles.userId, set: rest });
   return getContractorProfile(userId);
 }
 
@@ -129,7 +131,7 @@ export function getPlanLimit(_plan: string): number {
 export async function createProposal(data: InsertProposal) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  const [result] = await db.insert(proposals).values(data).$returningId();
+  const [result] = await db.insert(proposals).values(data).returning({ id: proposals.id });
   return getProposalById(result.id);
 }
 
