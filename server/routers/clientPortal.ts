@@ -7,43 +7,9 @@ import { TRPCError } from "@trpc/server";
 import { nanoid } from "nanoid";
 import { notifyOwner } from "../_core/notification";
 import { sendEmail } from "../email";
-import { storageGet } from "../storage";
+import { refreshSignedUrlIfStale } from "../storage";
 
-/**
- * S3 presigned URLs expire after 7 days. If the stored pdfUrl is within 1 day of expiry
- * (or already expired), extract the S3 key from the URL and issue a fresh presigned URL.
- * Returns the original url unchanged when storage is not configured or the URL is not an S3
- * presigned URL.
- */
-async function refreshPdfUrlIfStale(pdfUrl: string | null): Promise<string | null> {
-  if (!pdfUrl) return null;
-  try {
-    const parsed = new URL(pdfUrl);
-    const dateParam = parsed.searchParams.get("X-Amz-Date");
-    const expiresParam = parsed.searchParams.get("X-Amz-Expires");
-    if (!dateParam || !expiresParam) return pdfUrl; // Not a presigned URL
-
-    // Parse YYYYMMDDTHHmmssZ → ISO date
-    const iso = `${dateParam.slice(0, 4)}-${dateParam.slice(4, 6)}-${dateParam.slice(6, 8)}T${dateParam.slice(9, 11)}:${dateParam.slice(11, 13)}:${dateParam.slice(13, 15)}Z`;
-    const issuedAt = new Date(iso).getTime();
-    if (isNaN(issuedAt)) return pdfUrl;
-
-    const expiresAt = issuedAt + parseInt(expiresParam, 10) * 1000;
-    const ONE_DAY_MS = 24 * 60 * 60 * 1000;
-
-    // Still has >1 day of validity — no need to refresh
-    if (Date.now() < expiresAt - ONE_DAY_MS) return pdfUrl;
-
-    // Extract the S3 key from the URL path (strip leading '/')
-    const key = parsed.pathname.replace(/^\/+/, "");
-    if (!key) return pdfUrl;
-
-    const { url: freshUrl } = await storageGet(key);
-    return freshUrl;
-  } catch {
-    return pdfUrl; // Non-fatal — return original URL on any error
-  }
-}
+// refreshSignedUrlIfStale is imported from ../storage — handles both Supabase and AWS S3 URLs
 
 function escHtml(str: string): string {
   return str
@@ -91,7 +57,7 @@ export const clientPortalRouter = router({
       } catch {}
 
       // Refresh the presigned PDF URL if it is within 1 day of expiry or already expired
-      const pdfUrl = await refreshPdfUrlIfStale(proposal.pdfUrl);
+      const pdfUrl = await refreshSignedUrlIfStale(proposal.pdfUrl);
 
       // Only expose fields needed for the client portal — never leak internal IDs or tokens
       return {

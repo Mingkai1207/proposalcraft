@@ -100,7 +100,7 @@ export async function sendAutomaticFollowUps() {
           // Record follow-up sent time
           await db
             .update(proposals)
-            .set({ followUpSentAt: new Date() } as any)
+            .set({ followUpSentAt: new Date() })
             .where(eq(proposals.id, proposal.id));
 
           console.log(`[FollowUp Cron] Follow-up sent for proposal ${proposal.id}`);

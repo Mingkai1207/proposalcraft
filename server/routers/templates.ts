@@ -56,7 +56,7 @@ export const templatesRouter = router({
     .mutation(async ({ ctx, input }) => {
       const db = await getDb();
       if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
-      const result = await db.insert(proposalTemplates).values({
+      const [row] = await db.insert(proposalTemplates).values({
         userId: ctx.user.id,
         name: input.name,
         tradeType: input.tradeType,
@@ -71,9 +71,9 @@ export const templatesRouter = router({
         totalCost: input.totalCost || null,
         language: input.language || "english",
         expiryDays: input.expiryDays || 30,
-      });
+      }).returning({ id: proposalTemplates.id });
 
-      return { success: true, ...input };
+      return { success: true, id: row.id };
     }),
 
   // Update a template
@@ -151,7 +151,7 @@ export const templatesRouter = router({
         extractedText = htmlContent;
       }
 
-      const result = await db.insert(proposalTemplates).values({
+      const [row] = await db.insert(proposalTemplates).values({
         userId: ctx.user.id,
         name: input.name,
         tradeType: proposal.tradeType || "general",
@@ -169,9 +169,9 @@ export const templatesRouter = router({
         expiryDays: 30,
         sourceType: "saved_from_proposal",
         originalFileUrl: null,
-      });
+      }).returning({ id: proposalTemplates.id });
 
-      return { success: true };
+      return { success: true, id: row.id };
     }),
 
   // Upload a document as a template (stores the text content extracted from the file)

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
 import { getContractorProfile, upsertContractorProfile } from "../db";
-import { storagePut } from "../storage";
+import { storagePut, refreshSignedUrlIfStale } from "../storage";
 import { nanoid } from "nanoid";
 import { encryptSmtpPassword } from "../_core/smtpCrypto";
 
@@ -9,10 +9,13 @@ export const profileRouter = router({
   get: protectedProcedure.query(async ({ ctx }) => {
     const profile = await getContractorProfile(ctx.user.id);
     if (!profile) return profile;
+    // Refresh the logo signed URL if it is within 1 day of expiry or already expired
+    const logoUrl = await refreshSignedUrlIfStale(profile.logoUrl ?? null);
     // Never return the raw SMTP password to the client — return a sentinel so the UI
     // knows whether a password has been configured without exposing the actual value.
     return {
       ...profile,
+      logoUrl,
       smtpPassword: profile.smtpPassword ? "__configured__" : null,
     };
   }),

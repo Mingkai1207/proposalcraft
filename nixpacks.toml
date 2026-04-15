@@ -1,0 +1,2 @@
+[phases.setup]
+aptPkgs = ["chromium-browser", "fonts-freefont-ttf", "fonts-noto-color-emoji"]
