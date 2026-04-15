@@ -1,8 +1,6 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { trpc } from "@/lib/trpc";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useLocation } from "wouter";
 import { PendingProposalsWidget } from "@/components/PendingProposalsWidget";
 import { ResponseAnalyticsWidget } from "@/components/ResponseAnalyticsWidget";
@@ -13,7 +11,6 @@ import {
   CheckCircle, AlertCircle, Mail, BarChart3,
   Settings, LogOut, Home, Zap, Download, Upload, Menu, Search
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -26,11 +23,11 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-gray-100 text-gray-700",
-  sent: "bg-blue-100 text-blue-700",
-  viewed: "bg-green-100 text-green-700",
-  accepted: "bg-emerald-100 text-emerald-700",
-  declined: "bg-red-100 text-red-700",
+  draft: "bg-stone-100 text-stone-600",
+  sent: "bg-amber-50 text-amber-700 border border-amber-200",
+  viewed: "bg-orange-50 text-orange-700 border border-orange-200",
+  accepted: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+  declined: "bg-rose-50 text-rose-600 border border-rose-200",
 };
 const STATUS_ICONS: Record<string, React.ElementType> = {
   draft: Clock,
@@ -119,8 +116,8 @@ export default function Dashboard() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-[#faf7f2]">
+        <div className="animate-spin w-8 h-8 border-2 border-orange-400 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -132,105 +129,100 @@ export default function Dashboard() {
   const limit = subscription?.limit;
   const remaining = subscription?.remaining;
 
-  const planColors = { free: "bg-gray-100 text-gray-700", starter: "bg-blue-100 text-blue-700", pro: "bg-primary/10 text-primary" };
+  const planColors = {
+    free: "bg-stone-700 text-stone-300",
+    starter: "bg-amber-500/20 text-amber-400",
+    pro: "bg-orange-500/20 text-orange-400",
+  };
 
   const sidebarContent = (
     <>
-      <div className="p-5 border-b border-sidebar-border">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <FileText className="w-4 h-4 text-white" />
+      {/* Logo */}
+      <div className="p-5 border-b border-stone-800">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-orange-500/20">
+            <span className="text-white font-black text-base">P</span>
           </div>
-          <span className="font-bold text-sidebar-foreground">ProposAI</span>
+          <span className="font-bold text-white text-lg tracking-tight">ProposAI</span>
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-1">
-        <button
-          onClick={() => { navigate("/dashboard"); setSidebarOpen(false); }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg bg-sidebar-accent text-sidebar-accent-foreground text-sm font-medium"
-        >
-          <BarChart3 className="w-4 h-4" /> {t("dashboard.title")}
-        </button>
-        <button
-          onClick={() => { navigate("/proposals/new"); setSidebarOpen(false); }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
-        >
-          <Plus className="w-4 h-4" /> {t("dashboard.newProposal")}
-        </button>
-        <button
-          onClick={() => { navigate("/templates"); setSidebarOpen(false); }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
-        >
-          <FileText className="w-4 h-4" /> {t("dashboard.myTemplates")}
-        </button>
-        <button
-          onClick={() => { navigate("/import"); setSidebarOpen(false); }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
-        >
-          <Upload className="w-4 h-4" /> {t("dashboard.importProposals")}
-        </button>
-        <button
-          onClick={() => { navigate("/settings"); setSidebarOpen(false); }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
-        >
-          <Settings className="w-4 h-4" /> {t("dashboard.settings")}
-        </button>
-        <button
-          onClick={() => { navigate("/"); setSidebarOpen(false); }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sm transition-colors"
-        >
-          <Home className="w-4 h-4" /> {t("dashboard.home")}
-        </button>
+      {/* Nav */}
+      <nav className="flex-1 p-4 space-y-0.5">
+        {[
+          { label: t("dashboard.title"), icon: BarChart3, path: "/dashboard", active: true },
+          { label: t("dashboard.newProposal"), icon: Plus, path: "/proposals/new" },
+          { label: t("dashboard.myTemplates"), icon: FileText, path: "/templates" },
+          { label: t("dashboard.importProposals"), icon: Upload, path: "/import" },
+          { label: t("dashboard.settings"), icon: Settings, path: "/settings" },
+          { label: t("dashboard.home"), icon: Home, path: "/" },
+        ].map(({ label, icon: Icon, path, active }) => (
+          <button
+            key={path}
+            onClick={() => { navigate(path); setSidebarOpen(false); }}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+              active
+                ? "bg-orange-500/15 text-orange-400"
+                : "text-stone-400 hover:bg-stone-800 hover:text-stone-200"
+            }`}
+          >
+            <Icon className="w-4 h-4 flex-shrink-0" /> {label}
+          </button>
+        ))}
       </nav>
 
-      {/* Subscription status */}
-      <div className="p-4 border-t border-sidebar-border">
-        <div className="bg-sidebar-accent rounded-lg p-3 mb-3">
+      {/* Subscription + user */}
+      <div className="p-4 border-t border-stone-800 space-y-3">
+        {/* Plan usage */}
+        <div className="bg-stone-800 rounded-xl p-3">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs text-sidebar-foreground/70 uppercase tracking-wide">{t("dashboard.plan")}</span>
-            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full capitalize ${planColors[plan as keyof typeof planColors]}`}>
+            <span className="text-xs text-stone-400 uppercase tracking-wider font-semibold">{t("dashboard.plan")}</span>
+            <span className={`text-xs font-bold px-2 py-0.5 rounded-full capitalize ${planColors[plan as keyof typeof planColors]}`}>
               {plan}
             </span>
           </div>
           {limit !== null && limit !== undefined ? (
             <>
-              <div className="text-xs text-sidebar-foreground/70 mb-1">{t("dashboard.proposalsThisMonth", { used, limit })}</div>
-              <div className="h-1.5 bg-sidebar-border rounded-full overflow-hidden">
+              <div className="text-xs text-stone-400 mb-2">{t("dashboard.proposalsThisMonth", { used, limit })}</div>
+              <div className="h-1.5 bg-stone-700 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-primary rounded-full transition-all"
+                  className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full transition-all"
                   style={{ width: `${Math.min(100, (used / limit) * 100)}%` }}
                 />
               </div>
             </>
           ) : (
-            <div className="text-xs text-sidebar-foreground/70">{t("dashboard.unlimitedProposals")}</div>
+            <div className="text-xs text-stone-400">{t("dashboard.unlimitedProposals")}</div>
           )}
         </div>
-        {/* Current AI model & language indicator */}
+
+        {/* AI model */}
         <button
           onClick={() => { navigate("/settings"); setSidebarOpen(false); }}
-          className="w-full bg-sidebar-accent rounded-lg p-3 mb-3 text-left hover:opacity-80 transition-opacity"
+          className="w-full bg-stone-800 rounded-xl p-3 text-left hover:bg-stone-700/80 transition-colors"
         >
           <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-sidebar-foreground/70 uppercase tracking-wide">{t("dashboard.aiModel")}</span>
-            <span className="text-xs text-primary font-medium">{t("dashboard.changeSetting")}</span>
+            <span className="text-xs text-stone-400 uppercase tracking-wider font-semibold">{t("dashboard.aiModel")}</span>
+            <span className="text-xs text-orange-400 font-medium">{t("dashboard.changeSetting")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-sm">🇺🇸</span>
-            <span className="text-xs font-medium text-sidebar-foreground truncate">
-              {profile?.preferredModel === "claude-opus-4-6" ? "Claude Opus 4.6" : "Claude Sonnet 4.6"}
+            <span className="text-xs font-medium text-stone-300 truncate">
+              {profile?.preferredModel === "claude-opus-4-6" ? "Advanced Model" : "Standard Model"}
             </span>
           </div>
         </button>
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-primary/20 rounded-full flex items-center justify-center text-xs font-bold text-primary">
+
+        {/* User */}
+        <div className="flex items-center gap-2.5 px-1">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-sm font-black text-white flex-shrink-0">
             {user?.name?.charAt(0)?.toUpperCase() || "U"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-sidebar-foreground truncate">{user?.name || "Contractor"}</p>
+            <p className="text-xs font-semibold text-stone-200 truncate">{user?.name || "Contractor"}</p>
+            <p className="text-[10px] text-stone-500 truncate">{user?.email || ""}</p>
           </div>
-          <button onClick={logout} aria-label="Sign out" className="text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors">
+          <button onClick={logout} aria-label="Sign out" className="text-stone-500 hover:text-stone-300 transition-colors p-1">
             <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -239,83 +231,91 @@ export default function Dashboard() {
   );
 
   return (
-    <div className="min-h-screen flex bg-background">
-      {/* Desktop Sidebar */}
-      <aside className="hidden md:flex w-64 bg-sidebar text-sidebar-foreground flex-col fixed inset-y-0 left-0 z-40">
+    <div className="min-h-screen flex bg-[#faf7f2]">
+      {/* Desktop Sidebar — stone-900 to match HomeE pricing section */}
+      <aside className="hidden md:flex w-64 bg-stone-900 flex-col fixed inset-y-0 left-0 z-40">
         {sidebarContent}
       </aside>
 
       {/* Mobile Sidebar Sheet */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="w-64 p-0 bg-sidebar text-sidebar-foreground border-sidebar-border">
+        <SheetContent side="left" className="w-64 p-0 bg-stone-900 border-stone-800">
           {sidebarContent}
         </SheetContent>
       </Sheet>
 
       {/* Main content */}
       <main className="flex-1 md:ml-64">
-        {/* Mobile header */}
-        <div className="md:hidden sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-background border-b border-border">
+        {/* Mobile header — matches HomeE navbar style */}
+        <div className="md:hidden sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-[#faf7f2]/90 backdrop-blur-xl border-b border-stone-200/80 shadow-sm">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-lg hover:bg-accent transition-colors"
+            className="p-2 rounded-xl hover:bg-stone-100 transition-colors"
             aria-label="Open menu"
           >
-            <Menu className="w-5 h-5 text-foreground" />
+            <Menu className="w-5 h-5 text-stone-700" />
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-              <FileText className="w-3 h-3 text-white" />
+            <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-sm">
+              <span className="text-white font-black text-sm">P</span>
             </div>
-            <span className="font-bold text-sm">ProposAI</span>
+            <span className="font-bold text-stone-900 text-base tracking-tight">ProposAI</span>
           </div>
-          <Button size="sm" onClick={() => navigate("/proposals/new")} className="h-8 px-3 text-xs gap-1">
+          <button
+            onClick={() => navigate("/proposals/new")}
+            className="h-8 px-3 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold flex items-center gap-1 transition-colors"
+          >
             <Plus className="w-3 h-3" /> New
-          </Button>
-        </div>
-        <div className="p-4 md:p-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{t("dashboard.title")}</h1>
-            <p className="text-muted-foreground text-sm mt-0.5">
-              {t("dashboard.welcomeBack", { name: user?.name?.split(" ")[0] || t("common.contractor") })}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {proposals && proposals.length > 0 && (
-              <Button onClick={handleBulkExport} variant="outline" size="sm" className="gap-2">
-                <Download className="w-4 h-4" /> {t("dashboard.exportAll")}
-              </Button>
-            )}
-            <Button onClick={() => navigate("/templates")} variant="outline" size="sm" className="gap-2">
-              <FileText className="w-4 h-4" /> {t("dashboard.myTemplates")}
-            </Button>
-            <Button onClick={() => navigate("/proposals/new")} size="sm" className="gap-2">
-              <Plus className="w-4 h-4" /> New Proposal
-            </Button>
-          </div>
+          </button>
         </div>
 
-        {/* Empty State Banner for New Users */}
-        {proposals?.length === 0 && !isLoading && (
-          <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                <Upload className="w-5 h-5 text-blue-600" />
-              </div>
-              <div className="flex-1 text-left">
-                <h3 className="font-semibold text-blue-900 mb-1">{t("dashboard.importBannerTitle")}</h3>
-                <p className="text-sm text-blue-800 mb-3">
-                  {t("dashboard.importBannerDesc")}
-                </p>
-                <Button onClick={() => navigate("/import")} size="sm" className="bg-blue-600 hover:bg-blue-700">
-                  <Upload className="w-4 h-4 mr-2" /> {t("dashboard.importNow")}
-                </Button>
-              </div>
+        <div className="p-4 md:p-8">
+          {/* Page header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-2xl font-black text-stone-900 tracking-tight">{t("dashboard.title")}</h1>
+              <p className="text-stone-500 text-sm mt-0.5">
+                {t("dashboard.welcomeBack", { name: user?.name?.split(" ")[0] || t("common.contractor") })}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {proposals && proposals.length > 0 && (
+                <button onClick={handleBulkExport}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors">
+                  <Download className="w-4 h-4" /> {t("dashboard.exportAll")}
+                </button>
+              )}
+              <button onClick={() => navigate("/templates")}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors">
+                <FileText className="w-4 h-4" /> {t("dashboard.myTemplates")}
+              </button>
+              <button onClick={() => navigate("/proposals/new")}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold transition-all hover:scale-105 shadow-md shadow-orange-500/20">
+                <Plus className="w-4 h-4" /> New Proposal
+              </button>
             </div>
           </div>
-        )}
+
+          {/* Empty State Banner */}
+          {proposals?.length === 0 && !isLoading && (
+            <div className="mb-8 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Upload className="w-5 h-5 text-amber-600" />
+                </div>
+                <div className="flex-1 text-left">
+                  <h3 className="font-bold text-stone-900 mb-1">{t("dashboard.importBannerTitle")}</h3>
+                  <p className="text-sm text-stone-600 mb-3">
+                    {t("dashboard.importBannerDesc")}
+                  </p>
+                  <button onClick={() => navigate("/import")}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold transition-colors">
+                    <Upload className="w-4 h-4" /> {t("dashboard.importNow")}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
         {/* Pending Proposals Widget */}
         {proposals && proposals.length > 0 && (
@@ -326,176 +326,182 @@ export default function Dashboard() {
 
         {/* Response Analytics */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4">{t("dashboard.proposalPerformance")}</h2>
+          <h2 className="text-lg font-black text-stone-900 tracking-tight mb-4">{t("dashboard.proposalPerformance")}</h2>
           <ResponseAnalyticsWidget />
         </div>
 
         {/* Feedback Analytics */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4">{t("dashboard.clientFeedback")}</h2>
+          <h2 className="text-lg font-black text-stone-900 tracking-tight mb-4">{t("dashboard.clientFeedback")}</h2>
           <FeedbackAnalyticsWidget />
         </div>
 
         {/* Recommendations */}
         <div className="mb-8">
-          <h2 className="text-lg font-semibold text-foreground mb-4">{t("dashboard.improvementRecs")}</h2>
+          <h2 className="text-lg font-black text-stone-900 tracking-tight mb-4">{t("dashboard.improvementRecs")}</h2>
           <RecommendationsWidget />
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          <div className="bg-card border border-border rounded-xl p-5">
-            <p className="text-sm text-muted-foreground mb-1">{t("dashboard.totalProposals")}</p>
-            <p className="text-3xl font-bold text-foreground">{proposals?.length || 0}</p>
+          {/* Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+            {[
+              { label: t("dashboard.totalProposals"), value: proposals?.length || 0, accent: "border-l-amber-400" },
+              {
+                label: t("dashboard.sentThisMonth"),
+                value: proposals?.filter(p => {
+                  if (!p.sentAt) return false;
+                  const s = new Date(p.sentAt), n = new Date();
+                  return s.getFullYear() === n.getFullYear() && s.getMonth() === n.getMonth();
+                }).length || 0,
+                accent: "border-l-orange-400",
+              },
+              {
+                label: t("dashboard.viewedByClients"),
+                value: proposals?.filter(p => p.status === "viewed" || p.status === "accepted").length || 0,
+                accent: "border-l-emerald-400",
+                highlight: true,
+              },
+            ].map(({ label, value, accent, highlight }) => (
+              <div key={label} className={`bg-white border border-stone-100 rounded-2xl p-5 border-l-4 ${accent} shadow-sm`}>
+                <p className="text-xs font-semibold text-stone-400 uppercase tracking-wider mb-2">{label}</p>
+                <p className={`text-4xl font-black tracking-tight ${highlight ? "text-orange-500" : "text-stone-900"}`}>{value}</p>
+              </div>
+            ))}
           </div>
-          <div className="bg-card border border-border rounded-xl p-5">
-            <p className="text-sm text-muted-foreground mb-1">{t("dashboard.sentThisMonth")}</p>
-            <p className="text-3xl font-bold text-foreground">
-              {proposals?.filter(p => {
-                if (!p.sentAt) return false;
-                const sent = new Date(p.sentAt);
-                const now = new Date();
-                return sent.getFullYear() === now.getFullYear() && sent.getMonth() === now.getMonth();
-              }).length || 0}
-            </p>
-          </div>
-          <div className="bg-card border border-border rounded-xl p-5">
-            <p className="text-sm text-muted-foreground mb-1">{t("dashboard.viewedByClients")}</p>
-            <p className="text-3xl font-bold text-primary">
-              {proposals?.filter(p => p.status === "viewed" || p.status === "accepted").length || 0}
-            </p>
-          </div>
-        </div>
 
-        {/* Proposals Table */}
-        <div className="bg-card border border-border rounded-xl overflow-hidden">
-          <div className="p-5 border-b border-border flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex items-center justify-between flex-1">
-              <h2 className="font-semibold text-foreground">{t("dashboard.allProposals")}</h2>
-              <span className="text-sm text-muted-foreground">{proposals?.length || 0} {t("dashboard.total")}</span>
+          {/* Proposals Table */}
+          <div className="bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-sm">
+            <div className="px-6 py-4 border-b border-stone-100 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex items-center justify-between flex-1">
+                <h2 className="font-bold text-stone-900">{t("dashboard.allProposals")}</h2>
+                <span className="text-sm text-stone-400">{proposals?.length || 0} {t("dashboard.total")}</span>
+              </div>
+              {proposals && proposals.length > 5 && (
+                <div className="relative sm:w-56">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-stone-400" />
+                  <input
+                    placeholder="Search proposals..."
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-stone-200 text-sm text-stone-800 placeholder:text-stone-400 focus:border-orange-400 focus:ring-2 focus:ring-orange-100 outline-none transition-all"
+                  />
+                </div>
+              )}
             </div>
-            {proposals && proposals.length > 5 && (
-              <div className="relative sm:w-56">
-                <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
-                <Input
-                  placeholder="Search proposals..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-8 h-8 text-sm"
-                />
+
+            {isLoading ? (
+              <div className="p-12 text-center">
+                <div className="animate-spin w-8 h-8 border-2 border-orange-400 border-t-transparent rounded-full mx-auto" />
+              </div>
+            ) : proposalsError ? (
+              <div className="p-12 text-center">
+                <p className="text-rose-500 text-sm mb-3">Failed to load proposals.</p>
+                <button onClick={() => refetch()}
+                  className="px-4 py-2 rounded-xl border border-stone-200 text-stone-700 text-sm font-medium hover:bg-stone-50 transition-colors">
+                  Retry
+                </button>
+              </div>
+            ) : proposals?.length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="w-14 h-14 bg-stone-50 border border-stone-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <FileText className="w-7 h-7 text-stone-300" />
+                </div>
+                <h3 className="font-bold text-stone-900 mb-1">{t("dashboard.noProposals")}</h3>
+                <p className="text-stone-400 text-sm mb-6">{t("dashboard.getStarted")}</p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <button onClick={() => navigate("/templates")}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold transition-colors">
+                    <FileText className="w-4 h-4" /> {t("dashboard.myTemplates")}
+                  </button>
+                  <button onClick={() => navigate("/proposals/new")}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors">
+                    <Plus className="w-4 h-4" /> {t("dashboard.createWithAI")}
+                  </button>
+                  <button onClick={() => navigate("/import")}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors">
+                    <Upload className="w-4 h-4" /> {t("dashboard.importPast")}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-stone-100 bg-stone-50/60">
+                      <th className="text-left text-[11px] font-bold text-stone-400 uppercase tracking-wider px-6 py-3">{t("dashboard.colProposal")}</th>
+                      <th className="text-left text-[11px] font-bold text-stone-400 uppercase tracking-wider px-5 py-3">{t("dashboard.colTrade")}</th>
+                      <th className="text-left text-[11px] font-bold text-stone-400 uppercase tracking-wider px-5 py-3">{t("dashboard.colClient")}</th>
+                      <th className="text-left text-[11px] font-bold text-stone-400 uppercase tracking-wider px-5 py-3">{t("dashboard.colStatus")}</th>
+                      <th className="text-left text-[11px] font-bold text-stone-400 uppercase tracking-wider px-5 py-3">{t("dashboard.colDate")}</th>
+                      <th className="text-right text-[11px] font-bold text-stone-400 uppercase tracking-wider px-5 py-3">{t("dashboard.colActions")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {proposals?.filter(p => {
+                      if (!searchQuery.trim()) return true;
+                      const q = searchQuery.toLowerCase();
+                      return (
+                        p.title.toLowerCase().includes(q) ||
+                        (p.clientName?.toLowerCase() || "").includes(q) ||
+                        (p.clientEmail?.toLowerCase() || "").includes(q) ||
+                        p.tradeType.toLowerCase().includes(q)
+                      );
+                    }).map((p) => {
+                      const statusColor = STATUS_COLORS[p.status] || STATUS_COLORS.draft;
+                      const StatusIcon = STATUS_ICONS[p.status] || STATUS_ICONS.draft;
+                      const statusLabel = t(`dashboard.status${p.status.charAt(0).toUpperCase() + p.status.slice(1)}` as any) || p.status;
+                      return (
+                        <tr key={p.id} className="border-b border-stone-100 last:border-0 hover:bg-stone-50/60 transition-colors">
+                          <td className="px-6 py-4">
+                            <p className="font-semibold text-sm text-stone-900 truncate max-w-[200px]">{p.title}</p>
+                            {p.totalCost && <p className="text-xs text-stone-400 mt-0.5">${p.totalCost}</p>}
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="text-xs text-stone-500 font-medium">{TRADE_LABELS[p.tradeType] || p.tradeType}</span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="text-sm text-stone-700">{p.clientName || "-"}</span>
+                            {p.clientEmail && <p className="text-xs text-stone-400 mt-0.5">{p.clientEmail}</p>}
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full ${statusColor}`}>
+                              <StatusIcon className="w-3 h-3" />
+                              {statusLabel}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className="text-xs text-stone-400">
+                              {new Date(p.createdAt).toLocaleDateString()}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4">
+                            <div className="flex items-center justify-end gap-1">
+                              <button
+                                onClick={() => navigate(`/proposals/${p.id}`)}
+                                title="View"
+                                aria-label={`View proposal: ${p.title}`}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => setDeleteId(p.id)}
+                                title="Delete"
+                                aria-label={`Delete proposal: ${p.title}`}
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-rose-500 hover:bg-rose-50 transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
-
-          {isLoading ? (
-            <div className="p-12 text-center">
-              <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full mx-auto" />
-            </div>
-          ) : proposalsError ? (
-            <div className="p-12 text-center">
-              <p className="text-destructive text-sm mb-3">Failed to load proposals.</p>
-              <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
-            </div>
-          ) : proposals?.length === 0 ? (
-            <div className="p-12 text-center">
-              <div className="w-14 h-14 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-7 h-7 text-muted-foreground" />
-              </div>
-              <h3 className="font-semibold text-foreground mb-1">{t("dashboard.noProposals")}</h3>
-              <p className="text-muted-foreground text-sm mb-6">{t("dashboard.getStarted")}</p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button onClick={() => navigate("/templates")} size="sm">
-                  <FileText className="w-4 h-4 mr-1" /> {t("dashboard.myTemplates")}
-                </Button>
-                <Button onClick={() => navigate("/proposals/new")} variant="outline" size="sm">
-                  <Plus className="w-4 h-4 mr-1" /> {t("dashboard.createWithAI")}
-                </Button>
-                <Button onClick={() => navigate("/import")} variant="outline" size="sm">
-                  <Upload className="w-4 h-4 mr-1" /> {t("dashboard.importPast")}
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border bg-muted/30">
-                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">{t("dashboard.colProposal")}</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">{t("dashboard.colTrade")}</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">{t("dashboard.colClient")}</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">{t("dashboard.colStatus")}</th>
-                    <th className="text-left text-xs font-medium text-muted-foreground px-5 py-3">{t("dashboard.colDate")}</th>
-                    <th className="text-right text-xs font-medium text-muted-foreground px-5 py-3">{t("dashboard.colActions")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {proposals?.filter(p => {
-                    if (!searchQuery.trim()) return true;
-                    const q = searchQuery.toLowerCase();
-                    return (
-                      p.title.toLowerCase().includes(q) ||
-                      (p.clientName?.toLowerCase() || "").includes(q) ||
-                      (p.clientEmail?.toLowerCase() || "").includes(q) ||
-                      p.tradeType.toLowerCase().includes(q)
-                    );
-                  }).map((p) => {
-                    const statusColor = STATUS_COLORS[p.status] || STATUS_COLORS.draft;
-                    const StatusIcon = STATUS_ICONS[p.status] || STATUS_ICONS.draft;
-                    const statusLabel = t(`dashboard.status${p.status.charAt(0).toUpperCase() + p.status.slice(1)}` as any) || p.status;
-                    return (
-                      <tr key={p.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                        <td className="px-5 py-3.5">
-                          <p className="font-medium text-sm text-foreground truncate max-w-[200px]">{p.title}</p>
-                          {p.totalCost && <p className="text-xs text-muted-foreground">${p.totalCost}</p>}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <span className="text-xs text-muted-foreground">{TRADE_LABELS[p.tradeType] || p.tradeType}</span>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <span className="text-sm text-foreground">{p.clientName || "-"}</span>
-                          {p.clientEmail && <p className="text-xs text-muted-foreground">{p.clientEmail}</p>}
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${statusColor}`}>
-                            <StatusIcon className="w-3 h-3" />
-                            {statusLabel}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(p.createdAt).toLocaleDateString()}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button
-                              variant="ghost" size="icon"
-                              className="h-7 w-7"
-                              onClick={() => navigate(`/proposals/${p.id}`)}
-                              title="View"
-                              aria-label={`View proposal: ${p.title}`}
-                            >
-                              <Eye className="w-3.5 h-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost" size="icon"
-                              className="h-7 w-7 text-destructive hover:text-destructive"
-                              onClick={() => setDeleteId(p.id)}
-                              title="Delete"
-                              aria-label={`Delete proposal: ${p.title}`}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
         </div>
       </main>
 
