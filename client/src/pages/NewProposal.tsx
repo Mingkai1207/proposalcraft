@@ -188,6 +188,13 @@ export default function NewProposal() {
   const [summaryMode, setSummaryMode] = useState<"preview" | "edit">("preview");
   const [proposalId, setProposalId] = useState<number | null>(null);
 
+  // Scroll to top whenever the user advances or goes back through wizard steps —
+  // otherwise React preserves the previous scroll position and drops users into
+  // the middle of the new step (where they miss the title and section headers).
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [step]);
+
   const [form, setForm] = useState<FormData>({
     title: "",
     tradeType: "",
@@ -357,8 +364,9 @@ export default function NewProposal() {
 
             {/* Project title */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Proposal Title <span className="text-destructive">*</span></Label>
+              <Label htmlFor="title" className="text-sm font-medium mb-2 block">Proposal Title <span className="text-destructive">*</span></Label>
               <SuggestInput
+                id="title"
                 placeholder="e.g., HVAC System Replacement – 123 Main St"
                 value={form.title}
                 onChange={e => update("title", e.target.value)}
@@ -371,17 +379,17 @@ export default function NewProposal() {
               <h3 className="text-sm font-semibold text-foreground">Client Information</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Client Name</Label>
-                  <SuggestInput placeholder="John Smith" value={form.clientName} onChange={e => update("clientName", e.target.value)} maxLength={200} />
+                  <Label htmlFor="clientName" className="text-sm font-medium mb-2 block">Client Name</Label>
+                  <SuggestInput id="clientName" placeholder="John Smith" value={form.clientName} onChange={e => update("clientName", e.target.value)} maxLength={200} />
                 </div>
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Client Email</Label>
-                  <SuggestInput type="email" placeholder="john@example.com" value={form.clientEmail} onChange={e => update("clientEmail", e.target.value)} maxLength={320} />
+                  <Label htmlFor="clientEmail" className="text-sm font-medium mb-2 block">Client Email</Label>
+                  <SuggestInput id="clientEmail" type="email" placeholder="john@example.com" value={form.clientEmail} onChange={e => update("clientEmail", e.target.value)} maxLength={320} />
                 </div>
               </div>
               <div>
-                <Label className="text-sm font-medium mb-2 block">Property / Job Address</Label>
-                <SuggestInput placeholder="123 Main St, City, State 90210" value={form.clientAddress} onChange={e => update("clientAddress", e.target.value)} maxLength={500} />
+                <Label htmlFor="clientAddress" className="text-sm font-medium mb-2 block">Property / Job Address</Label>
+                <SuggestInput id="clientAddress" placeholder="123 Main St, City, State 90210" value={form.clientAddress} onChange={e => update("clientAddress", e.target.value)} maxLength={500} />
               </div>
             </div>
 
@@ -411,8 +419,9 @@ export default function NewProposal() {
             </div>
 
             <div>
-              <Label className="text-sm font-medium mb-2 block">Scope of Work <span className="text-destructive">*</span></Label>
+              <Label htmlFor="jobScope" className="text-sm font-medium mb-2 block">Scope of Work <span className="text-destructive">*</span></Label>
               <SuggestTextarea
+                id="jobScope"
                 placeholder="Describe the work to be done in detail. e.g., Replace existing 3-ton HVAC unit with new Carrier 16 SEER system. Install new refrigerant lines, disconnect old unit, and test new system. Include thermostat upgrade."
                 value={form.jobScope}
                 onChange={e => update("jobScope", e.target.value)}
@@ -424,8 +433,9 @@ export default function NewProposal() {
             </div>
 
             <div>
-              <Label className="text-sm font-medium mb-2 block">Materials & Equipment</Label>
+              <Label htmlFor="materials" className="text-sm font-medium mb-2 block">Materials & Equipment</Label>
               <SuggestTextarea
+                id="materials"
                 placeholder="List key materials and equipment. e.g., Carrier 24ACC336A003 3-ton AC unit, 50ft copper refrigerant lines, Honeywell T6 Pro thermostat"
                 value={form.materials}
                 onChange={e => update("materials", e.target.value)}
@@ -440,16 +450,16 @@ export default function NewProposal() {
               <h3 className="text-sm font-semibold text-foreground">Pricing</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Labor Cost ($)</Label>
-                  <SuggestInput type="number" placeholder="1500" value={form.laborCost} onChange={e => update("laborCost", e.target.value)} />
+                  <Label htmlFor="laborCost" className="text-sm font-medium mb-2 block">Labor Cost ($)</Label>
+                  <SuggestInput id="laborCost" type="number" placeholder="1500" value={form.laborCost} onChange={e => update("laborCost", e.target.value)} />
                 </div>
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Materials Cost ($)</Label>
-                  <SuggestInput type="number" placeholder="2500" value={form.materialsCost} onChange={e => update("materialsCost", e.target.value)} />
+                  <Label htmlFor="materialsCost" className="text-sm font-medium mb-2 block">Materials Cost ($)</Label>
+                  <SuggestInput id="materialsCost" type="number" placeholder="2500" value={form.materialsCost} onChange={e => update("materialsCost", e.target.value)} />
                 </div>
                 <div>
-                  <Label className="text-sm font-medium mb-2 block">Total Cost ($)</Label>
-                  <SuggestInput type="number" placeholder="4000" value={form.totalCost} onChange={e => update("totalCost", e.target.value)} />
+                  <Label htmlFor="totalCost" className="text-sm font-medium mb-2 block">Total Cost ($)</Label>
+                  <SuggestInput id="totalCost" type="number" placeholder="4000" value={form.totalCost} onChange={e => update("totalCost", e.target.value)} />
                 </div>
               </div>
             </div>
@@ -457,12 +467,12 @@ export default function NewProposal() {
             {/* Timeline */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm font-medium mb-2 block">Estimated Duration (days)</Label>
-                <SuggestInput type="number" placeholder="5" value={form.estimatedDays} onChange={e => update("estimatedDays", e.target.value)} />
+                <Label htmlFor="estimatedDays" className="text-sm font-medium mb-2 block">Estimated Duration (days)</Label>
+                <SuggestInput id="estimatedDays" type="number" placeholder="5" value={form.estimatedDays} onChange={e => update("estimatedDays", e.target.value)} />
               </div>
               <div>
-                <Label className="text-sm font-medium mb-2 block">Proposed Start Date</Label>
-                <Input type="date" value={form.startDate} onChange={e => update("startDate", e.target.value)} />
+                <Label htmlFor="startDate" className="text-sm font-medium mb-2 block">Proposed Start Date</Label>
+                <Input id="startDate" type="date" value={form.startDate} onChange={e => update("startDate", e.target.value)} />
               </div>
             </div>
 
@@ -483,8 +493,9 @@ export default function NewProposal() {
 
             {/* Special notes */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Special Notes / Additional Requirements</Label>
+              <Label htmlFor="specialNotes" className="text-sm font-medium mb-2 block">Special Notes / Additional Requirements</Label>
               <SuggestTextarea
+                id="specialNotes"
                 placeholder="Permit requirements, access restrictions, client preferences, warranty terms..."
                 value={form.specialNotes}
                 onChange={e => update("specialNotes", e.target.value)}
