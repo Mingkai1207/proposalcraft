@@ -1,6 +1,7 @@
 import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
+import { ZodError } from "zod";
 import type { TrpcContext } from "./context";
 
 const t = initTRPC.context<TrpcContext>().create({
@@ -9,10 +10,19 @@ const t = initTRPC.context<TrpcContext>().create({
     // Never expose raw database errors (SQL, stack traces) to the client.
     // TRPCErrors have intentional user-facing messages; everything else is internal.
     const isInternal = !(error.cause instanceof TRPCError) && shape.data.code === "INTERNAL_SERVER_ERROR";
-    return {
-      ...shape,
-      message: isInternal ? "Something went wrong. Please try again." : shape.message,
-    };
+    if (isInternal) {
+      return { ...shape, message: "Something went wrong. Please try again." };
+    }
+    // Zod input validation errors arrive with the whole ZodError JSON-stringified
+    // into shape.message. Unwrap the first issue's message so the user sees
+    // "Password must be at least 8 characters" instead of a regex pattern blob.
+    if (error.cause instanceof ZodError) {
+      const first = error.cause.issues[0];
+      if (first?.message) {
+        return { ...shape, message: first.message };
+      }
+    }
+    return shape;
   },
 });
 
