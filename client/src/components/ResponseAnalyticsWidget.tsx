@@ -7,7 +7,11 @@ export function ResponseAnalyticsWidget() {
   const { data: proposals } = trpc.proposals.list.useQuery();
 
   if (!proposals || proposals.length === 0) {
-    return null;
+    return (
+      <div className="text-sm text-muted-foreground">
+        No proposals yet. Performance stats appear after you send your first one.
+      </div>
+    );
   }
 
   const sent = proposals.filter(p => p.sentAt).length;
