@@ -2,10 +2,12 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import path from "path";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { storageResolveFile } from "../storage";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -226,6 +228,31 @@ async function startServer() {
       }
     } catch (err) {
       console.error("[Track] Error recording open:", err);
+    }
+  });
+
+  // Serve user-uploaded files (PDFs, logos, etc.) from the Railway volume.
+  // Keys are unguessable random nanoids — security comes from URL opacity,
+  // not auth (same model as S3 random-keyed private buckets / signed URLs).
+  app.get(/^\/files\/(.+)$/, async (req, res) => {
+    const rawKey = req.params[0];
+    if (!rawKey) { res.status(404).send("Not found"); return; }
+    let key: string;
+    try {
+      key = decodeURIComponent(rawKey);
+    } catch {
+      res.status(400).send("Invalid key"); return;
+    }
+    try {
+      const fullPath = await storageResolveFile(key);
+      if (!fullPath) { res.status(404).send("Not found"); return; }
+      // Let the browser cache these — filenames include random nanoids so
+      // they're effectively immutable. 1 hour is conservative; can bump later.
+      res.setHeader("Cache-Control", "public, max-age=3600");
+      res.sendFile(path.resolve(fullPath));
+    } catch (err) {
+      console.error("[Files] Error serving", key, err);
+      res.status(500).send("Internal error");
     }
   });
 

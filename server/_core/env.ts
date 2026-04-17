@@ -16,8 +16,7 @@ export const ENV = {
   llmFastModel: process.env.LLM_FAST_MODEL ?? "",
   // Google Maps
   googleMapsApiKey: process.env.GOOGLE_MAPS_API_KEY ?? "",
-  // Supabase for file storage
-  supabaseUrl: process.env.SUPABASE_URL ?? "",
-  supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? "",
-  supabaseServiceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
+  // Local filesystem storage directory (Railway volume in production).
+  // Defaults applied in server/storage.ts.
+  storageDir: process.env.STORAGE_DIR ?? "",
 };
