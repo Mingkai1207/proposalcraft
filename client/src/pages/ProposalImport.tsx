@@ -69,9 +69,9 @@ export default function ProposalImport() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
+    <div className="min-h-screen bg-background">
       {/* Top bar */}
-      <div className="border-b border-border bg-white px-6 py-4 flex items-center gap-4">
+      <div className="border-b border-border bg-card px-6 py-4 flex items-center gap-4 workspace-toolbar">
         <button onClick={() => navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors" aria-label="Back to dashboard">
           <ArrowLeft className="w-5 h-5" />
         </button>

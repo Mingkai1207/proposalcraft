@@ -3,7 +3,14 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { CheckCircle, XCircle, FileText, Clock, AlertCircle, Download } from "lucide-react";
+import {
+  CheckCircle,
+  XCircle,
+  FileText,
+  Clock,
+  AlertCircle,
+  Download,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export default function ClientPortal() {
@@ -20,17 +27,18 @@ export default function ClientPortal() {
     setIsLoading(false);
   }, []);
 
-  const { data: proposal, isLoading: proposalLoading, error } = trpc.clientPortal.getProposal.useQuery(
-    { token },
-    { enabled: !!token }
-  );
+  const {
+    data: proposal,
+    isLoading: proposalLoading,
+    error,
+  } = trpc.clientPortal.getProposal.useQuery({ token }, { enabled: !!token });
 
   const acceptMutation = trpc.clientPortal.acceptProposal.useMutation({
     onSuccess: () => {
       toast.success("Proposal accepted! The contractor will be notified.");
       setTimeout(() => navigate("/"), 2000);
     },
-    onError: (e) => toast.error(e.message),
+    onError: e => toast.error(e.message),
   });
 
   const declineMutation = trpc.clientPortal.declineProposal.useMutation({
@@ -38,7 +46,7 @@ export default function ClientPortal() {
       toast.success("Proposal declined. The contractor has been notified.");
       setTimeout(() => navigate("/"), 2000);
     },
-    onError: (e) => toast.error(e.message),
+    onError: e => toast.error(e.message),
   });
 
   const downloadPDF = () => {
@@ -50,11 +58,13 @@ export default function ClientPortal() {
   // Invalid token
   if (!token && !isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md p-8 text-center">
           <AlertCircle className="w-12 h-12 mx-auto text-destructive mb-4" />
           <h1 className="text-2xl font-bold mb-2">Invalid Link</h1>
-          <p className="text-muted-foreground mb-6">This proposal link is invalid or has expired.</p>
+          <p className="text-muted-foreground mb-6">
+            This proposal link is invalid or has expired.
+          </p>
           <Button onClick={() => navigate("/")} className="w-full">
             Back to Home
           </Button>
@@ -66,7 +76,7 @@ export default function ClientPortal() {
   // Loading
   if (proposalLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full" />
       </div>
     );
@@ -75,11 +85,13 @@ export default function ClientPortal() {
   // Proposal not found
   if (error || !proposal) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md p-8 text-center">
           <AlertCircle className="w-12 h-12 mx-auto text-destructive mb-4" />
           <h1 className="text-2xl font-bold mb-2">Proposal Not Found</h1>
-          <p className="text-muted-foreground mb-6">This proposal link is invalid or has expired.</p>
+          <p className="text-muted-foreground mb-6">
+            This proposal link is invalid or has expired.
+          </p>
           <Button onClick={() => navigate("/")} className="w-full">
             Back to Home
           </Button>
@@ -92,14 +104,15 @@ export default function ClientPortal() {
   if (proposal.acceptedAt || proposal.declinedAt) {
     const isAccepted = proposal.acceptedAt;
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md p-8 text-center">
           {isAccepted ? (
             <>
               <CheckCircle className="w-12 h-12 mx-auto text-green-600 mb-4" />
               <h1 className="text-2xl font-bold mb-2">Proposal Accepted</h1>
               <p className="text-muted-foreground mb-6">
-                You accepted this proposal on {new Date(proposal.acceptedAt!).toLocaleDateString()}.
+                You accepted this proposal on{" "}
+                {new Date(proposal.acceptedAt!).toLocaleDateString()}.
               </p>
             </>
           ) : (
@@ -107,7 +120,8 @@ export default function ClientPortal() {
               <XCircle className="w-12 h-12 mx-auto text-destructive mb-4" />
               <h1 className="text-2xl font-bold mb-2">Proposal Declined</h1>
               <p className="text-muted-foreground mb-6">
-                You declined this proposal on {new Date(proposal.declinedAt!).toLocaleDateString()}.
+                You declined this proposal on{" "}
+                {new Date(proposal.declinedAt!).toLocaleDateString()}.
               </p>
             </>
           )}
@@ -120,20 +134,30 @@ export default function ClientPortal() {
   }
 
   // Check if expired
-  const isExpired = proposal.expiryDays && proposal.sentAt
-    ? new Date(proposal.sentAt).getTime() + proposal.expiryDays * 24 * 60 * 60 * 1000 < Date.now()
-    : false;
+  const isExpired =
+    proposal.expiryDays && proposal.sentAt
+      ? new Date(proposal.sentAt).getTime() +
+          proposal.expiryDays * 24 * 60 * 60 * 1000 <
+        Date.now()
+      : false;
 
   if (isExpired) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-background to-muted flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md p-8 text-center">
           <Clock className="w-12 h-12 mx-auto text-amber-600 mb-4" />
           <h1 className="text-2xl font-bold mb-2">Proposal Expired</h1>
           <p className="text-muted-foreground mb-6">
-            This proposal expired on {new Date(new Date(proposal.sentAt!).getTime() + proposal.expiryDays! * 24 * 60 * 60 * 1000).toLocaleDateString()}.
+            This proposal expired on{" "}
+            {new Date(
+              new Date(proposal.sentAt!).getTime() +
+                proposal.expiryDays! * 24 * 60 * 60 * 1000
+            ).toLocaleDateString()}
+            .
           </p>
-          <p className="text-sm text-muted-foreground mb-6">Please contact the contractor for a new proposal.</p>
+          <p className="text-sm text-muted-foreground mb-6">
+            Please contact the contractor for a new proposal.
+          </p>
           <Button onClick={() => navigate("/")} className="w-full">
             Back to Home
           </Button>
@@ -143,13 +167,17 @@ export default function ClientPortal() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b border-border bg-white px-6 py-4">
         <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-foreground">Proposal Review</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            Proposal Review
+          </h1>
           {(proposal as any).contractorName && (
-            <p className="text-muted-foreground mt-1">From {(proposal as any).contractorName}</p>
+            <p className="text-muted-foreground mt-1">
+              From {(proposal as any).contractorName}
+            </p>
           )}
         </div>
       </div>
@@ -157,7 +185,7 @@ export default function ClientPortal() {
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Proposal Details Card */}
-        <Card className="p-8 mb-8">
+        <Card className="p-5 sm:p-8 mb-8">
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             {/* Left: Proposal Info */}
             <div>
@@ -168,34 +196,46 @@ export default function ClientPortal() {
 
               <div className="space-y-4">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Trade Type</p>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Trade Type
+                  </p>
                   <p className="font-medium capitalize">{proposal.tradeType}</p>
                 </div>
 
                 {proposal.clientName && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Client Name</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Client Name
+                    </p>
                     <p className="font-medium">{proposal.clientName}</p>
                   </div>
                 )}
 
                 {proposal.clientAddress && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Job Site Address</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Job Site Address
+                    </p>
                     <p className="font-medium">{proposal.clientAddress}</p>
                   </div>
                 )}
 
                 {proposal.totalCost && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Estimated Cost</p>
-                    <p className="text-lg font-semibold text-primary">${proposal.totalCost}</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Estimated Cost
+                    </p>
+                    <p className="text-lg font-semibold text-primary">
+                      ${proposal.totalCost}
+                    </p>
                   </div>
                 )}
 
                 {proposal.jobScope && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Job Scope</p>
+                    <p className="text-sm text-muted-foreground mb-1">
+                      Job Scope
+                    </p>
                     <p className="text-sm">{proposal.jobScope}</p>
                   </div>
                 )}
@@ -204,9 +244,14 @@ export default function ClientPortal() {
 
             {/* Right: Proposal Preview */}
             <div className="flex flex-col">
-              <p className="text-sm text-muted-foreground mb-2">Proposal Document</p>
+              <p className="text-sm text-muted-foreground mb-2">
+                Proposal Document
+              </p>
               {proposal.pdfUrl ? (
-                <div className="flex-1 rounded-lg overflow-hidden border border-border mb-4" style={{ minHeight: "400px" }}>
+                <div
+                  className="flex-1 rounded-lg overflow-hidden border border-border mb-4"
+                  style={{ minHeight: "400px" }}
+                >
                   <object
                     data={proposal.pdfUrl + "#toolbar=0&navpanes=0"}
                     type="application/pdf"
@@ -215,11 +260,16 @@ export default function ClientPortal() {
                   >
                     <div className="flex flex-col items-center justify-center h-64 bg-muted gap-3">
                       <FileText className="w-10 h-10 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground">Preview not available.</p>
+                      <p className="text-sm text-muted-foreground">
+                        Preview not available.
+                      </p>
                     </div>
                   </object>
                 </div>
-              ) : proposal.generatedContent?.trimStart().toLowerCase().startsWith("<!doctype") ? (
+              ) : proposal.generatedContent
+                  ?.trimStart()
+                  .toLowerCase()
+                  .startsWith("<!doctype") ? (
                 <div className="flex-1 rounded-lg overflow-hidden border border-border mb-4">
                   <iframe
                     srcDoc={proposal.generatedContent}
@@ -233,12 +283,18 @@ export default function ClientPortal() {
                 <div className="bg-muted rounded-lg p-4 flex-1 flex items-center justify-center mb-4">
                   <div className="text-center">
                     <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">Download to view the full proposal</p>
+                    <p className="text-sm text-muted-foreground">
+                      Download to view the full proposal
+                    </p>
                   </div>
                 </div>
               )}
               {proposal.pdfUrl && (
-                <Button onClick={downloadPDF} className="w-full" variant="outline">
+                <Button
+                  onClick={downloadPDF}
+                  className="w-full"
+                  variant="outline"
+                >
                   <Download className="w-4 h-4 mr-2" />
                   Download PDF
                 </Button>
@@ -253,18 +309,21 @@ export default function ClientPortal() {
                 <Clock className="w-4 h-4 inline mr-2" />
                 This proposal expires on{" "}
                 <strong>
-                  {new Date(new Date(proposal.sentAt).getTime() + proposal.expiryDays * 24 * 60 * 60 * 1000).toLocaleDateString()}
+                  {new Date(
+                    new Date(proposal.sentAt).getTime() +
+                      proposal.expiryDays * 24 * 60 * 60 * 1000
+                  ).toLocaleDateString()}
                 </strong>
               </p>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-3">
             <Button
               onClick={() => acceptMutation.mutate({ token })}
               disabled={acceptMutation.isPending || declineMutation.isPending}
-              className="flex-1 bg-green-600 hover:bg-green-700"
+              className="flex-1 bg-primary hover:bg-primary/90"
               size="lg"
             >
               <CheckCircle className="w-4 h-4 mr-2" />

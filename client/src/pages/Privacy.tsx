@@ -1,3 +1,4 @@
+import SiteHeader from "@/components/SiteHeader";
 import { useLocation } from "wouter";
 import Footer from "@/components/Footer";
 import { ArrowLeft } from "lucide-react";
@@ -8,12 +9,7 @@ export default function Privacy() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="border-b border-border bg-white px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
-        <button onClick={() => navigate("/")} className="text-muted-foreground hover:text-foreground transition-colors">
-          <ArrowLeft className="w-5 h-5" />
-        </button>
-        <h1 className="font-semibold text-foreground">Privacy Policy</h1>
-      </div>
+      <SiteHeader />
 
       <div className="max-w-3xl mx-auto px-4 py-10">
         <h1 className="text-2xl font-bold text-foreground mb-2">Privacy Policy</h1>

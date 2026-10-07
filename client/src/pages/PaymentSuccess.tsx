@@ -55,7 +55,7 @@ export default function PaymentSuccess() {
 
   if (authLoading || activationState === "pending") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />
       </div>
     );
@@ -63,11 +63,11 @@ export default function PaymentSuccess() {
 
   if (activationState === "activating") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="w-10 h-10 text-orange-400 animate-spin mx-auto mb-4" />
-          <p className="text-white text-lg font-semibold">Activating your subscription…</p>
-          <p className="text-slate-400 text-sm mt-1">Just a moment while we set things up.</p>
+          <Loader2 className="w-10 h-10 text-primary animate-spin mx-auto mb-4" />
+          <p className="text-foreground text-lg font-semibold">Activating your subscription…</p>
+          <p className="text-muted-foreground text-sm mt-1">Just a moment while we set things up.</p>
         </div>
       </div>
     );
@@ -75,8 +75,8 @@ export default function PaymentSuccess() {
 
   if (activationState === "error") {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
-        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="bg-white rounded-lg shadow-none p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-red-500" />
           </div>
@@ -92,30 +92,24 @@ export default function PaymentSuccess() {
 
   // Success state
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6 relative overflow-hidden">
-      {/* Background glows */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-orange-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl" />
-      </div>
-
+    <div className="min-h-screen bg-background flex items-center justify-center p-6 relative overflow-hidden">
       <div className="relative z-10 w-full max-w-lg">
         {/* Main card */}
-        <div className="bg-white rounded-3xl shadow-2xl shadow-black/40 overflow-hidden">
+        <div className="bg-white rounded-lg shadow-none overflow-hidden">
           {/* Top banner */}
-          <div className="bg-gradient-to-r from-orange-500 to-orange-400 px-8 py-6 text-center">
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3">
-              <CheckCircle className="w-9 h-9 text-white" />
+          <div className="bg-background px-8 py-6 text-center">
+            <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-3">
+              <CheckCircle className="w-9 h-9 text-foreground" />
             </div>
-            <h1 className="text-2xl font-extrabold text-white">You're all set!</h1>
-            <p className="text-orange-100 text-sm mt-1">Welcome to ProposAI {planName}</p>
+            <h1 className="text-2xl font-extrabold text-foreground">You're all set!</h1>
+            <p className="text-muted-foreground text-sm mt-1">Welcome to ProposAI {planName}</p>
           </div>
 
           {/* Body */}
           <div className="px-8 py-6">
             <div className="text-center mb-6">
               <p className="text-foreground font-semibold text-lg">
-                🎉 Congratulations{user?.name ? `, ${user.name.split(" ")[0]}` : ""}!
+                Welcome{user?.name ? `, ${user.name.split(" ")[0]}` : ""}!
               </p>
               <p className="text-muted-foreground text-sm mt-2 leading-relaxed">
                 Your <strong>{planName}</strong> subscription is now active. You can start generating professional proposals right away.
@@ -123,23 +117,23 @@ export default function PaymentSuccess() {
             </div>
 
             {/* What's unlocked */}
-            <div className="bg-slate-50 rounded-2xl p-5 mb-6 space-y-3">
-              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">What's unlocked</p>
+            <div className="bg-secondary rounded-lg p-5 mb-6 space-y-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">What's unlocked</p>
               {planName === "Pro" ? (
                 <>
-                  <FeatureRow icon="🚀" text="Unlimited AI-generated proposals" />
-                  <FeatureRow icon="🤖" text="Priority ProposAI (most powerful model)" />
-                  <FeatureRow icon="📄" text="PDF, Word & Google Doc exports" />
-                  <FeatureRow icon="📊" text="Advanced analytics & tracking" />
-                  <FeatureRow icon="🎨" text="Custom branding & templates" />
+                  <FeatureRow icon="01" text="Unlimited AI-generated proposals" />
+                  <FeatureRow icon="02" text="Priority ProposAI (most powerful model)" />
+                  <FeatureRow icon="03" text="PDF, Word & Google Doc exports" />
+                  <FeatureRow icon="04" text="Advanced analytics & tracking" />
+                  <FeatureRow icon="05" text="Custom branding & templates" />
                 </>
               ) : (
                 <>
-                  <FeatureRow icon="📋" text="20 AI-generated proposals per month" />
-                  <FeatureRow icon="🤖" text="ProposAI standard generation" />
-                  <FeatureRow icon="📄" text="PDF, Word & Google Doc exports" />
-                  <FeatureRow icon="📧" text="Email delivery & tracking" />
-                  <FeatureRow icon="💾" text="Save proposals as reusable templates" />
+                  <FeatureRow icon="01" text="20 AI-generated proposals per month" />
+                  <FeatureRow icon="02" text="ProposAI standard generation" />
+                  <FeatureRow icon="03" text="PDF, Word & Google Doc exports" />
+                  <FeatureRow icon="04" text="Email delivery & tracking" />
+                  <FeatureRow icon="05" text="Save proposals as reusable templates" />
                 </>
               )}
             </div>
@@ -147,7 +141,7 @@ export default function PaymentSuccess() {
             <div className="space-y-3">
               <Button
                 size="lg"
-                className="w-full h-12 bg-orange-500 hover:bg-orange-600 text-white font-semibold shadow-md shadow-orange-500/20"
+                className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-none"
                 onClick={() => navigate("/proposals/new")}
               >
                 <Sparkles className="w-5 h-5 mr-2" />
@@ -166,8 +160,8 @@ export default function PaymentSuccess() {
           </div>
         </div>
 
-        <p className="text-center text-slate-500 text-xs mt-4">
-          Questions? Email us at <a href="mailto:support@proposai.org" className="text-orange-400 hover:underline">support@proposai.org</a>
+        <p className="text-center text-muted-foreground text-xs mt-4">
+          Questions? Email us at <a href="mailto:support@proposai.org" className="text-primary hover:underline">support@proposai.org</a>
         </p>
       </div>
     </div>

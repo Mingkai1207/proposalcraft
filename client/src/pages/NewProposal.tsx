@@ -5,14 +5,40 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SuggestInput, SuggestTextarea } from "@/components/ui/suggest-input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import {
-  ArrowLeft, ArrowRight, FileText, Wrench, Droplets, Bolt, Home as HomeIcon,
-  HardHat, Paintbrush, Layers, Leaf, Hammer, Building2, Wind, Square, Sun,
-  Grid3x3, CheckCircle2, Loader2, Sparkles, Edit3, Clock, Eye,
+  ArrowLeft,
+  ArrowRight,
+  FileText,
+  Wrench,
+  Droplets,
+  Bolt,
+  Home as HomeIcon,
+  HardHat,
+  Paintbrush,
+  Layers,
+  Leaf,
+  Hammer,
+  Building2,
+  Wind,
+  Square,
+  Sun,
+  Grid3x3,
+  CheckCircle2,
+  Loader2,
+  Sparkles,
+  Edit3,
+  Clock,
+  Eye,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Streamdown } from "streamdown";
@@ -20,24 +46,97 @@ import { Streamdown } from "streamdown";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TRADE_OPTIONS = [
-  { value: "hvac", label: "HVAC", icon: Wrench, desc: "Heating, ventilation & air conditioning" },
-  { value: "plumbing", label: "Plumbing", icon: Droplets, desc: "Pipes, fixtures & water systems" },
-  { value: "electrical", label: "Electrical", icon: Bolt, desc: "Wiring, panels & electrical systems" },
-  { value: "roofing", label: "Roofing", icon: HomeIcon, desc: "Roof installation, repair & replacement" },
-  { value: "painting", label: "Painting", icon: Paintbrush, desc: "Interior & exterior painting" },
-  { value: "flooring", label: "Flooring", icon: Layers, desc: "Hardwood, tile, carpet & vinyl" },
-  { value: "landscaping", label: "Landscaping", icon: Leaf, desc: "Lawn care, grading & outdoor design" },
-  { value: "carpentry", label: "Carpentry", icon: Hammer, desc: "Custom woodwork & trim" },
-  { value: "concrete", label: "Concrete", icon: Building2, desc: "Foundations, driveways & slabs" },
-  { value: "masonry", label: "Masonry", icon: Grid3x3, desc: "Brick, stone & block work" },
-  { value: "insulation", label: "Insulation", icon: Wind, desc: "Spray foam, batt & blown-in" },
-  { value: "drywall", label: "Drywall", icon: Square, desc: "Hanging, taping & finishing" },
-  { value: "windows", label: "Windows & Doors", icon: Square, desc: "Installation & replacement" },
-  { value: "solar", label: "Solar", icon: Sun, desc: "Solar panel installation & battery storage" },
-  { value: "general", label: "General Contracting", icon: HardHat, desc: "General construction & renovation" },
+  {
+    value: "hvac",
+    label: "HVAC",
+    icon: Wrench,
+    desc: "Heating, ventilation & air conditioning",
+  },
+  {
+    value: "plumbing",
+    label: "Plumbing",
+    icon: Droplets,
+    desc: "Pipes, fixtures & water systems",
+  },
+  {
+    value: "electrical",
+    label: "Electrical",
+    icon: Bolt,
+    desc: "Wiring, panels & electrical systems",
+  },
+  {
+    value: "roofing",
+    label: "Roofing",
+    icon: HomeIcon,
+    desc: "Roof installation, repair & replacement",
+  },
+  {
+    value: "painting",
+    label: "Painting",
+    icon: Paintbrush,
+    desc: "Interior & exterior painting",
+  },
+  {
+    value: "flooring",
+    label: "Flooring",
+    icon: Layers,
+    desc: "Hardwood, tile, carpet & vinyl",
+  },
+  {
+    value: "landscaping",
+    label: "Landscaping",
+    icon: Leaf,
+    desc: "Lawn care, grading & outdoor design",
+  },
+  {
+    value: "carpentry",
+    label: "Carpentry",
+    icon: Hammer,
+    desc: "Custom woodwork & trim",
+  },
+  {
+    value: "concrete",
+    label: "Concrete",
+    icon: Building2,
+    desc: "Foundations, driveways & slabs",
+  },
+  {
+    value: "masonry",
+    label: "Masonry",
+    icon: Grid3x3,
+    desc: "Brick, stone & block work",
+  },
+  {
+    value: "insulation",
+    label: "Insulation",
+    icon: Wind,
+    desc: "Spray foam, batt & blown-in",
+  },
+  {
+    value: "drywall",
+    label: "Drywall",
+    icon: Square,
+    desc: "Hanging, taping & finishing",
+  },
+  {
+    value: "windows",
+    label: "Windows & Doors",
+    icon: Square,
+    desc: "Installation & replacement",
+  },
+  {
+    value: "solar",
+    label: "Solar",
+    icon: Sun,
+    desc: "Solar panel installation & battery storage",
+  },
+  {
+    value: "general",
+    label: "General Contracting",
+    icon: HardHat,
+    desc: "General construction & renovation",
+  },
 ];
-
-
 
 const PAYMENT_TERMS = [
   "50% upfront, 50% on completion",
@@ -86,13 +185,21 @@ function StepIndicator({ step }: { step: number }) {
         const active = n === step;
         return (
           <div key={n} className="flex items-center gap-1">
-            <div className={`flex items-center gap-1.5 text-xs font-medium ${active ? "text-primary" : done ? "text-muted-foreground" : "text-muted-foreground/40"}`}>
-              <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${active ? "bg-primary text-white" : done ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+            <div
+              className={`flex items-center gap-1.5 text-xs font-medium ${active ? "text-primary" : done ? "text-muted-foreground" : "text-muted-foreground/40"}`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${active ? "bg-primary text-white" : done ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}
+              >
                 {done ? <CheckCircle2 className="w-3 h-3" /> : n}
               </div>
               <span className="hidden sm:inline">{s.label}</span>
             </div>
-            {i < STEPS.length - 1 && <div className={`w-6 h-px ${n < step ? "bg-primary/40" : "bg-border"}`} />}
+            {i < STEPS.length - 1 && (
+              <div
+                className={`w-6 h-px ${n < step ? "bg-primary/40" : "bg-border"}`}
+              />
+            )}
           </div>
         );
       })}
@@ -117,38 +224,53 @@ function WaitingScreen() {
 
   useEffect(() => {
     const timer = setInterval(() => setElapsed(e => e + 1), 1000);
-    const tipTimer = setInterval(() => setTipIndex(i => (i + 1) % PROPOSAL_TIPS.length), 8000);
-    return () => { clearInterval(timer); clearInterval(tipTimer); };
+    const tipTimer = setInterval(
+      () => setTipIndex(i => (i + 1) % PROPOSAL_TIPS.length),
+      8000
+    );
+    return () => {
+      clearInterval(timer);
+      clearInterval(tipTimer);
+    };
   }, []);
 
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;
-  const timeStr = minutes > 0 ? `${minutes}m ${seconds.toString().padStart(2, "0")}s` : `${seconds}s`;
+  const timeStr =
+    minutes > 0
+      ? `${minutes}m ${seconds.toString().padStart(2, "0")}s`
+      : `${seconds}s`;
 
   // Progress bar: assume ~4 minutes (240s) average
   const progressPct = Math.min(95, Math.round((elapsed / 240) * 100));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="max-w-lg w-full">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/20 border border-primary/30 mb-4">
-            <Sparkles className="w-8 h-8 text-primary animate-pulse" />
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-primary/20 border border-primary/30 mb-4">
+            <FileText className="w-8 h-8 text-primary " />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">Crafting Your Proposal</h2>
-          <p className="text-slate-400 text-sm">ProposAI is writing a complete, professional proposal with analytic charts. This typically takes <strong className="text-white">3–5 minutes</strong>.</p>
+          <h2 className="text-2xl font-bold text-foreground mb-2">
+            Crafting Your Proposal
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            ProposAI is writing a complete, professional proposal with analytic
+            charts. This typically takes{" "}
+            <strong className="text-foreground">3–5 minutes</strong>.
+          </p>
         </div>
 
         {/* Spinner + progress */}
         <div className="flex flex-col items-center gap-6 mb-10">
           <Loader2 className="w-12 h-12 text-primary animate-spin" />
           <div className="w-full">
-            <div className="flex justify-between text-xs text-slate-500 mb-1.5">
+            <div className="flex justify-between text-xs text-muted-foreground mb-1.5">
               <span>Generating…</span>
               <span>{progressPct}%</span>
             </div>
-            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+            <div className="w-full h-2 bg-secondary rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary rounded-full transition-all duration-1000"
                 style={{ width: `${progressPct}%` }}
@@ -158,19 +280,21 @@ function WaitingScreen() {
         </div>
 
         {/* Rotating tip */}
-        <div className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 mb-8 min-h-[72px] flex items-center">
-          <p className="text-slate-300 text-sm text-center w-full transition-opacity duration-500">
-            💡 {PROPOSAL_TIPS[tipIndex]}
+        <div className="bg-card border border-border rounded-md px-5 py-4 mb-8 min-h-[72px] flex items-center">
+          <p className="text-muted-foreground text-sm text-center w-full transition-opacity duration-500">
+            {PROPOSAL_TIPS[tipIndex]}
           </p>
         </div>
 
         {/* Timer */}
         <div className="text-center">
-          <div className="inline-flex items-center gap-2 text-slate-400 text-sm">
+          <div className="inline-flex items-center gap-2 text-muted-foreground text-sm">
             <Clock className="w-4 h-4" />
             <span>Elapsed: {timeStr}</span>
           </div>
-          <p className="text-slate-500 text-xs mt-2">Please keep this page open while your proposal is being generated.</p>
+          <p className="text-muted-foreground text-xs mt-2">
+            Please keep this page open while your proposal is being generated.
+          </p>
         </div>
       </div>
     </div>
@@ -217,11 +341,14 @@ export default function NewProposal() {
 
   // Redirect to login if not authenticated (useEffect avoids setState-during-render warning)
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) navigate(`/login?return=${encodeURIComponent(window.location.pathname)}`);
+    if (!authLoading && !isAuthenticated)
+      navigate(`/login?return=${encodeURIComponent(window.location.pathname)}`);
   }, [authLoading, isAuthenticated]);
 
   // Auto-fill profile data
-  const { data: profile } = trpc.profile.get.useQuery(undefined, { enabled: isAuthenticated });
+  const { data: profile } = trpc.profile.get.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
 
   useEffect(() => {
     if (profile && !form.clientEmail) {
@@ -231,28 +358,32 @@ export default function NewProposal() {
   }, [profile]);
 
   const compileMutation = trpc.proposals.compileSummary.useMutation({
-    onSuccess: (data) => {
+    onSuccess: data => {
       setSummaryText(data.summaryContent);
       setProposalId(data.proposalId);
       setStep(3);
     },
-    onError: (e) => toast.error(e.message),
+    onError: e => toast.error(e.message),
   });
 
   const generateMutation = trpc.proposals.generateFromSummary.useMutation({
-    onSuccess: (data) => {
+    onSuccess: data => {
       setIsGenerating(false);
       toast.success("Proposal generated successfully!");
       navigate(`/proposals/${data.proposalId}`);
     },
-    onError: (e) => {
+    onError: e => {
       setIsGenerating(false);
       toast.error(e.message);
     },
   });
 
   if (authLoading) {
-    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
   if (!isAuthenticated) {
     return null;
@@ -311,8 +442,14 @@ export default function NewProposal() {
   return (
     <div className="min-h-screen bg-background">
       {/* Top bar */}
-      <div className="border-b border-border bg-white px-6 py-4 flex items-center gap-4 sticky top-0 z-10">
-        <button onClick={() => step > 1 ? setStep(s => s - 1) : navigate("/dashboard")} className="text-muted-foreground hover:text-foreground transition-colors">
+      <div className="border-b border-border bg-card px-6 py-4 flex items-center gap-4 workspace-toolbar workspace-toolbar">
+        <button
+          aria-label="Back to previous step or overview"
+          onClick={() =>
+            step > 1 ? setStep(s => s - 1) : navigate("/dashboard")
+          }
+          className="text-muted-foreground hover:text-foreground transition-colors"
+        >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex items-center gap-2">
@@ -327,34 +464,43 @@ export default function NewProposal() {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-10">
-
         {/* ── Step 1: Project Info ── */}
         {step === 1 && (
           <div className="space-y-8">
             <div>
-              <h2 className="text-xl font-bold text-foreground mb-1">Project Information</h2>
-              <p className="text-muted-foreground text-sm">Tell us about the project and your client.</p>
+              <h2 className="text-xl font-bold text-foreground mb-1">
+                Project Information
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Tell us about the project and your client.
+              </p>
             </div>
 
             {/* Trade type */}
             <div>
-              <Label className="text-sm font-medium mb-3 block">Trade Type <span className="text-destructive">*</span></Label>
+              <Label className="text-sm font-medium mb-3 block">
+                Trade Type <span className="text-destructive">*</span>
+              </Label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {TRADE_OPTIONS.map(({ value, label, icon: Icon, desc }) => (
                   <button
                     key={value}
                     onClick={() => update("tradeType", value)}
-                    className={`flex items-start gap-3 p-3.5 rounded-xl border-2 text-left transition-all ${
+                    className={`flex items-start gap-3 p-3.5 rounded-md border-2 text-left transition-all ${
                       form.tradeType === value
                         ? "border-primary bg-primary/5"
                         : "border-border hover:border-primary/40 bg-card"
                     }`}
                   >
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${form.tradeType === value ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>
+                    <div
+                      className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${form.tradeType === value ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}
+                    >
                       <Icon className="w-4 h-4" />
                     </div>
                     <div>
-                      <p className="font-medium text-sm text-foreground">{label}</p>
+                      <p className="font-medium text-sm text-foreground">
+                        {label}
+                      </p>
                       <p className="text-xs text-muted-foreground">{desc}</p>
                     </div>
                   </button>
@@ -364,7 +510,9 @@ export default function NewProposal() {
 
             {/* Project title */}
             <div>
-              <Label htmlFor="title" className="text-sm font-medium mb-2 block">Proposal Title <span className="text-destructive">*</span></Label>
+              <Label htmlFor="title" className="text-sm font-medium mb-2 block">
+                Proposal Title <span className="text-destructive">*</span>
+              </Label>
               <SuggestInput
                 id="title"
                 placeholder="e.g., HVAC System Replacement – 123 Main St"
@@ -376,29 +524,65 @@ export default function NewProposal() {
 
             {/* Client info */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-foreground">Client Information</h3>
+              <h3 className="text-sm font-semibold text-foreground">
+                Client Information
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="clientName" className="text-sm font-medium mb-2 block">Client Name</Label>
-                  <SuggestInput id="clientName" placeholder="John Smith" value={form.clientName} onChange={e => update("clientName", e.target.value)} maxLength={200} />
+                  <Label
+                    htmlFor="clientName"
+                    className="text-sm font-medium mb-2 block"
+                  >
+                    Client Name
+                  </Label>
+                  <SuggestInput
+                    id="clientName"
+                    placeholder="John Smith"
+                    value={form.clientName}
+                    onChange={e => update("clientName", e.target.value)}
+                    maxLength={200}
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="clientEmail" className="text-sm font-medium mb-2 block">Client Email</Label>
-                  <SuggestInput id="clientEmail" type="email" placeholder="john@example.com" value={form.clientEmail} onChange={e => update("clientEmail", e.target.value)} maxLength={320} />
+                  <Label
+                    htmlFor="clientEmail"
+                    className="text-sm font-medium mb-2 block"
+                  >
+                    Client Email
+                  </Label>
+                  <SuggestInput
+                    id="clientEmail"
+                    type="email"
+                    placeholder="john@example.com"
+                    value={form.clientEmail}
+                    onChange={e => update("clientEmail", e.target.value)}
+                    maxLength={320}
+                  />
                 </div>
               </div>
               <div>
-                <Label htmlFor="clientAddress" className="text-sm font-medium mb-2 block">Property / Job Address</Label>
-                <SuggestInput id="clientAddress" placeholder="123 Main St, City, State 90210" value={form.clientAddress} onChange={e => update("clientAddress", e.target.value)} maxLength={500} />
+                <Label
+                  htmlFor="clientAddress"
+                  className="text-sm font-medium mb-2 block"
+                >
+                  Property / Job Address
+                </Label>
+                <SuggestInput
+                  id="clientAddress"
+                  placeholder="123 Main St, City, State 90210"
+                  value={form.clientAddress}
+                  onChange={e => update("clientAddress", e.target.value)}
+                  maxLength={500}
+                />
               </div>
             </div>
-
-
 
             <Button
               onClick={() => {
                 if (!form.title || !form.tradeType) {
-                  toast.error("Please fill in the project title and trade type");
+                  toast.error(
+                    "Please fill in the project title and trade type"
+                  );
                   return;
                 }
                 setStep(2);
@@ -414,12 +598,21 @@ export default function NewProposal() {
         {step === 2 && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-foreground mb-1">Job Details & Pricing</h2>
-              <p className="text-muted-foreground text-sm">The more detail you provide, the better the AI proposal will be.</p>
+              <h2 className="text-xl font-bold text-foreground mb-1">
+                Job Details & Pricing
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                The more detail you provide, the better the AI proposal will be.
+              </p>
             </div>
 
             <div>
-              <Label htmlFor="jobScope" className="text-sm font-medium mb-2 block">Scope of Work <span className="text-destructive">*</span></Label>
+              <Label
+                htmlFor="jobScope"
+                className="text-sm font-medium mb-2 block"
+              >
+                Scope of Work <span className="text-destructive">*</span>
+              </Label>
               <SuggestTextarea
                 id="jobScope"
                 placeholder="Describe the work to be done in detail. e.g., Replace existing 3-ton HVAC unit with new Carrier 16 SEER system. Install new refrigerant lines, disconnect old unit, and test new system. Include thermostat upgrade."
@@ -429,11 +622,19 @@ export default function NewProposal() {
                 className="resize-none"
                 maxLength={5000}
               />
-              <p className="text-xs text-muted-foreground mt-1">Be specific — mention equipment models, square footage, or any special conditions.</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Be specific — mention equipment models, square footage, or any
+                special conditions.
+              </p>
             </div>
 
             <div>
-              <Label htmlFor="materials" className="text-sm font-medium mb-2 block">Materials & Equipment</Label>
+              <Label
+                htmlFor="materials"
+                className="text-sm font-medium mb-2 block"
+              >
+                Materials & Equipment
+              </Label>
               <SuggestTextarea
                 id="materials"
                 placeholder="List key materials and equipment. e.g., Carrier 24ACC336A003 3-ton AC unit, 50ft copper refrigerant lines, Honeywell T6 Pro thermostat"
@@ -450,16 +651,49 @@ export default function NewProposal() {
               <h3 className="text-sm font-semibold text-foreground">Pricing</h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="laborCost" className="text-sm font-medium mb-2 block">Labor Cost ($)</Label>
-                  <SuggestInput id="laborCost" type="number" placeholder="1500" value={form.laborCost} onChange={e => update("laborCost", e.target.value)} />
+                  <Label
+                    htmlFor="laborCost"
+                    className="text-sm font-medium mb-2 block"
+                  >
+                    Labor Cost ($)
+                  </Label>
+                  <SuggestInput
+                    id="laborCost"
+                    type="number"
+                    placeholder="1500"
+                    value={form.laborCost}
+                    onChange={e => update("laborCost", e.target.value)}
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="materialsCost" className="text-sm font-medium mb-2 block">Materials Cost ($)</Label>
-                  <SuggestInput id="materialsCost" type="number" placeholder="2500" value={form.materialsCost} onChange={e => update("materialsCost", e.target.value)} />
+                  <Label
+                    htmlFor="materialsCost"
+                    className="text-sm font-medium mb-2 block"
+                  >
+                    Materials Cost ($)
+                  </Label>
+                  <SuggestInput
+                    id="materialsCost"
+                    type="number"
+                    placeholder="2500"
+                    value={form.materialsCost}
+                    onChange={e => update("materialsCost", e.target.value)}
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="totalCost" className="text-sm font-medium mb-2 block">Total Cost ($)</Label>
-                  <SuggestInput id="totalCost" type="number" placeholder="4000" value={form.totalCost} onChange={e => update("totalCost", e.target.value)} />
+                  <Label
+                    htmlFor="totalCost"
+                    className="text-sm font-medium mb-2 block"
+                  >
+                    Total Cost ($)
+                  </Label>
+                  <SuggestInput
+                    id="totalCost"
+                    type="number"
+                    placeholder="4000"
+                    value={form.totalCost}
+                    onChange={e => update("totalCost", e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -467,25 +701,53 @@ export default function NewProposal() {
             {/* Timeline */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="estimatedDays" className="text-sm font-medium mb-2 block">Estimated Duration (days)</Label>
-                <SuggestInput id="estimatedDays" type="number" placeholder="5" value={form.estimatedDays} onChange={e => update("estimatedDays", e.target.value)} />
+                <Label
+                  htmlFor="estimatedDays"
+                  className="text-sm font-medium mb-2 block"
+                >
+                  Estimated Duration (days)
+                </Label>
+                <SuggestInput
+                  id="estimatedDays"
+                  type="number"
+                  placeholder="5"
+                  value={form.estimatedDays}
+                  onChange={e => update("estimatedDays", e.target.value)}
+                />
               </div>
               <div>
-                <Label htmlFor="startDate" className="text-sm font-medium mb-2 block">Proposed Start Date</Label>
-                <Input id="startDate" type="date" value={form.startDate} onChange={e => update("startDate", e.target.value)} />
+                <Label
+                  htmlFor="startDate"
+                  className="text-sm font-medium mb-2 block"
+                >
+                  Proposed Start Date
+                </Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={form.startDate}
+                  onChange={e => update("startDate", e.target.value)}
+                />
               </div>
             </div>
 
             {/* Payment terms */}
             <div>
-              <Label className="text-sm font-medium mb-2 block">Payment Terms</Label>
-              <Select value={form.paymentTerms} onValueChange={val => update("paymentTerms", val)}>
+              <Label className="text-sm font-medium mb-2 block">
+                Payment Terms
+              </Label>
+              <Select
+                value={form.paymentTerms}
+                onValueChange={val => update("paymentTerms", val)}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {PAYMENT_TERMS.map(t => (
-                    <SelectItem key={t} value={t}>{t}</SelectItem>
+                    <SelectItem key={t} value={t}>
+                      {t}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -493,7 +755,12 @@ export default function NewProposal() {
 
             {/* Special notes */}
             <div>
-              <Label htmlFor="specialNotes" className="text-sm font-medium mb-2 block">Special Notes / Additional Requirements</Label>
+              <Label
+                htmlFor="specialNotes"
+                className="text-sm font-medium mb-2 block"
+              >
+                Special Notes / Additional Requirements
+              </Label>
               <SuggestTextarea
                 id="specialNotes"
                 placeholder="Permit requirements, access restrictions, client preferences, warranty terms..."
@@ -507,11 +774,18 @@ export default function NewProposal() {
 
             {/* Style Preferences */}
             <div className="space-y-4 pt-2 border-t border-border">
-              <h3 className="text-sm font-semibold text-foreground">Style Preferences</h3>
+              <h3 className="text-sm font-semibold text-foreground">
+                Style Preferences
+              </h3>
 
               <div>
-                <Label className="text-sm font-medium mb-2 block">Color Scheme</Label>
-                <Select value={form.colorScheme} onValueChange={val => update("colorScheme", val)}>
+                <Label className="text-sm font-medium mb-2 block">
+                  Color Scheme
+                </Label>
+                <Select
+                  value={form.colorScheme}
+                  onValueChange={val => update("colorScheme", val)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -528,22 +802,35 @@ export default function NewProposal() {
 
               <div>
                 <Label className="text-sm font-medium mb-2 block">Tone</Label>
-                <Select value={form.tone} onValueChange={val => update("tone", val)}>
+                <Select
+                  value={form.tone}
+                  onValueChange={val => update("tone", val)}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="professional">Professional</SelectItem>
-                    <SelectItem value="friendly">Friendly & Approachable</SelectItem>
-                    <SelectItem value="technical">Technical & Detailed</SelectItem>
-                    <SelectItem value="executive">Executive & Formal</SelectItem>
+                    <SelectItem value="friendly">
+                      Friendly & Approachable
+                    </SelectItem>
+                    <SelectItem value="technical">
+                      Technical & Detailed
+                    </SelectItem>
+                    <SelectItem value="executive">
+                      Executive & Formal
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(1)} className="flex-1">
+              <Button
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="flex-1"
+              >
                 <ArrowLeft className="w-4 h-4 mr-1" /> Back
               </Button>
               <Button
@@ -552,15 +839,21 @@ export default function NewProposal() {
                 className="flex-1 gap-2"
               >
                 {compileMutation.isPending ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Compiling Summary...</>
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Compiling
+                    Summary...
+                  </>
                 ) : (
-                  <><Sparkles className="w-4 h-4" /> Compile Summary</>
+                  <>
+                    <FileText className="w-4 h-4" /> Compile Summary
+                  </>
                 )}
               </Button>
             </div>
             {compileMutation.isPending && (
-              <p className="text-center text-sm text-muted-foreground animate-pulse">
-                AI is organizing your project details into a structured summary...
+              <p className="text-center text-sm text-muted-foreground ">
+                AI is organizing your project details into a structured
+                summary...
               </p>
             )}
           </div>
@@ -570,18 +863,28 @@ export default function NewProposal() {
         {step === 3 && (
           <div className="space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-foreground mb-1">Review Your Draft Proposal</h2>
+              <h2 className="text-xl font-bold text-foreground mb-1">
+                Review Your Draft Proposal
+              </h2>
               <p className="text-muted-foreground text-sm">
-                ProposAI has written a complete draft proposal with all sections filled in. Review it carefully and make any edits before sending it to Claude for final polishing.
+                Review the draft carefully. Check the scope, pricing, schedule,
+                and client details, and make any edits before creating the final
+                document.
               </p>
             </div>
 
             {/* Summary info banner */}
-            <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-md p-4">
               <Edit3 className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-blue-800">Review before final generation</p>
-                <p className="text-xs text-blue-600 mt-0.5">This draft will be sent to Claude Sonnet for final polishing. Make sure all details are accurate — especially costs, dates, and client information. You can edit any section directly.</p>
+                <p className="text-sm font-medium text-blue-800">
+                  Review before final generation
+                </p>
+                <p className="text-xs text-blue-600 mt-0.5">
+                  Make sure the scope, costs, dates, and client information are
+                  accurate. You can edit any section directly before finalizing
+                  the proposal.
+                </p>
               </div>
             </div>
 
@@ -616,7 +919,7 @@ export default function NewProposal() {
               </div>
 
               {summaryMode === "preview" ? (
-                <div className="min-h-[20rem] rounded-xl border border-border bg-card p-5 prose prose-sm max-w-none text-foreground">
+                <div className="min-h-[20rem] rounded-md border border-border bg-card p-5 prose prose-sm max-w-none text-foreground">
                   <Streamdown>{summaryText}</Streamdown>
                 </div>
               ) : (
@@ -630,24 +933,27 @@ export default function NewProposal() {
               )}
             </div>
 
-
-
             <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep(2)} className="flex-1">
+              <Button
+                variant="outline"
+                onClick={() => setStep(2)}
+                className="flex-1"
+              >
                 <ArrowLeft className="w-4 h-4 mr-1" /> Back
               </Button>
               <Button
                 onClick={handleGenerate}
                 disabled={generateMutation.isPending || !summaryText}
-                className="flex-1 gap-2 bg-gradient-to-r from-primary to-primary/80"
+                className="flex-1 gap-2 bg-background"
               >
-                <Sparkles className="w-4 h-4" /> Generate Full Proposal
+                <FileText className="w-4 h-4" /> Generate Full Proposal
               </Button>
             </div>
 
             <div className="text-center">
               <p className="text-xs text-muted-foreground">
-                Generation typically takes 3–5 minutes. ProposAI will write a complete, professional proposal with analytic charts.
+                Generation typically takes 3–5 minutes. ProposAI will write a
+                complete, professional proposal with analytic charts.
               </p>
             </div>
           </div>

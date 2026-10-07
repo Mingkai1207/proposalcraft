@@ -1,55 +1,33 @@
 import { Link } from "wouter";
-import { useTranslation } from "react-i18next";
+import Brand from "./Brand";
+import { useEditorialCopy } from "@/lib/editorial";
 
 export default function Footer() {
-  const { t } = useTranslation();
-  const year = new Date().getFullYear();
-
+  const c = useEditorialCopy();
   return (
-    <footer className="border-t border-border bg-background mt-auto">
-      <div className="max-w-6xl mx-auto px-6 py-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          {/* Brand */}
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded bg-primary flex items-center justify-center">
-              <span className="text-white text-xs font-bold">P</span>
-            </div>
-            <span className="font-semibold text-foreground">ProposAI</span>
-            <span className="text-muted-foreground text-sm ml-2">
-              {t("footer.copyright", { year })}
-            </span>
+    <footer className="site-footer">
+      <div className="site-width">
+        <div className="footer-top">
+          <div>
+            <Brand />
+            <p>{c("Good work, well presented.", "好工程，好呈现。")}</p>
           </div>
-
-          {/* Legal links */}
-          <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link href="/pricing" className="hover:text-foreground transition-colors">
-              {t("footer.links.pricing")}
-            </Link>
-            <Link href="/terms" className="hover:text-foreground transition-colors">
-              {t("footer.links.terms")}
-            </Link>
-            <Link href="/privacy" className="hover:text-foreground transition-colors">
-              {t("footer.links.privacy")}
-            </Link>
-            <Link href="/refund" className="hover:text-foreground transition-colors">
-              {t("footer.links.refund")}
-            </Link>
-            <a
-              href="mailto:hello@proposai.org"
-              className="hover:text-foreground transition-colors"
-            >
-              {t("footer.links.contact")}
-            </a>
+          <nav aria-label={c("Footer navigation", "页脚导航")}>
+            <Link href="/pricing">{c("Pricing", "价格")}</Link>
+            <Link href="/terms">{c("Terms", "服务条款")}</Link>
+            <Link href="/privacy">{c("Privacy", "隐私政策")}</Link>
+            <Link href="/refund">{c("Refunds", "退款政策")}</Link>
+            <a href="mailto:hello@proposai.org">{c("Contact", "联系我们")}</a>
           </nav>
         </div>
-
-        {/* Tagline */}
-        <div className="mt-4 pt-4 border-t border-border/50 text-center text-xs text-muted-foreground">
-          {t("footer.tagline")}
-          &nbsp;&middot;&nbsp;
-          <a href="/pricing" className="underline hover:text-foreground">
-            Free during launch 🎉
-          </a>
+        <div className="footer-bottom">
+          <span>© {new Date().getFullYear()} ProposAI</span>
+          <span>
+            {c(
+              "The proposal workspace for the trades.",
+              "面向工程行业的提案工作空间。"
+            )}
+          </span>
         </div>
       </div>
     </footer>

@@ -6,7 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -33,24 +39,47 @@ import { toast } from "sonner";
 import { useAuth } from "@/_core/hooks/useAuth";
 
 const ALL_TRADE_TYPES = [
-  "hvac", "plumbing", "electrical", "roofing", "general",
-  "painting", "flooring", "landscaping", "carpentry", "concrete",
-  "masonry", "insulation", "drywall", "windows", "solar",
+  "hvac",
+  "plumbing",
+  "electrical",
+  "roofing",
+  "general",
+  "painting",
+  "flooring",
+  "landscaping",
+  "carpentry",
+  "concrete",
+  "masonry",
+  "insulation",
+  "drywall",
+  "windows",
+  "solar",
 ] as const;
 
 const TRADE_LABELS: Record<string, string> = {
-  hvac: "HVAC", plumbing: "Plumbing", electrical: "Electrical",
-  roofing: "Roofing", general: "General Contracting", painting: "Painting",
-  flooring: "Flooring", landscaping: "Landscaping", carpentry: "Carpentry",
-  concrete: "Concrete", masonry: "Masonry", insulation: "Insulation",
-  drywall: "Drywall", windows: "Windows & Doors", solar: "Solar",
+  hvac: "HVAC",
+  plumbing: "Plumbing",
+  electrical: "Electrical",
+  roofing: "Roofing",
+  general: "General Contracting",
+  painting: "Painting",
+  flooring: "Flooring",
+  landscaping: "Landscaping",
+  carpentry: "Carpentry",
+  concrete: "Concrete",
+  masonry: "Masonry",
+  insulation: "Insulation",
+  drywall: "Drywall",
+  windows: "Windows & Doors",
+  solar: "Solar",
 };
 
 // ── Upload Template Dialog ────────────────────────────────────────────────────
 function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
-  const [tradeType, setTradeType] = useState<typeof ALL_TRADE_TYPES[number]>("general");
+  const [tradeType, setTradeType] =
+    useState<(typeof ALL_TRADE_TYPES)[number]>("general");
   const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [extractedContent, setExtractedContent] = useState("");
@@ -60,10 +89,14 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
     onSuccess: () => {
       toast.success("Template uploaded successfully!");
       setOpen(false);
-      setName(""); setTradeType("general"); setDescription(""); setFile(null); setExtractedContent("");
+      setName("");
+      setTradeType("general");
+      setDescription("");
+      setFile(null);
+      setExtractedContent("");
       onSuccess();
     },
-    onError: (err) => toast.error(err.message || "Failed to upload template"),
+    onError: err => toast.error(err.message || "Failed to upload template"),
   });
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -80,10 +113,13 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
     // Extract text content from the file
     try {
       const reader = new FileReader();
-      reader.onload = (ev) => {
+      reader.onload = ev => {
         const text = ev.target?.result as string;
         // For plain text and basic extraction — strip binary chars
-        const cleaned = text.replace(/[^\x20-\x7E\n\r\t]/g, " ").replace(/\s{3,}/g, "\n\n").trim();
+        const cleaned = text
+          .replace(/[^\x20-\x7E\n\r\t]/g, " ")
+          .replace(/\s{3,}/g, "\n\n")
+          .trim();
         setExtractedContent(cleaned.slice(0, 50000)); // cap at 50k chars
         setIsExtracting(false);
       };
@@ -92,7 +128,11 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
         setIsExtracting(false);
       };
       // Read as text for .txt and .md; for .docx/.pdf we read as binary and strip
-      if (f.type === "text/plain" || f.name.endsWith(".md") || f.name.endsWith(".txt")) {
+      if (
+        f.type === "text/plain" ||
+        f.name.endsWith(".md") ||
+        f.name.endsWith(".txt")
+      ) {
         reader.readAsText(f);
       } else {
         reader.readAsBinaryString(f);
@@ -104,9 +144,20 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
   }
 
   function handleSubmit() {
-    if (!name.trim()) { toast.error("Please enter a template name"); return; }
-    if (!extractedContent.trim()) { toast.error("Please upload a file or paste the template content"); return; }
-    uploadMutation.mutate({ name, tradeType, description, content: extractedContent });
+    if (!name.trim()) {
+      toast.error("Please enter a template name");
+      return;
+    }
+    if (!extractedContent.trim()) {
+      toast.error("Please upload a file or paste the template content");
+      return;
+    }
+    uploadMutation.mutate({
+      name,
+      tradeType,
+      description,
+      content: extractedContent,
+    });
   }
 
   return (
@@ -119,34 +170,55 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Upload className="w-5 h-5 text-primary" /> Upload a Template Document
+            <Upload className="w-5 h-5 text-primary" /> Upload a Template
+            Document
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
           <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 text-sm text-primary">
-            Upload an existing proposal or template document. ProposAI will use its structure and format when generating new proposals.
+            Upload an existing proposal or template document. ProposAI will use
+            its structure and format when generating new proposals.
           </div>
 
           <div className="space-y-1.5">
-            <Label>Template Name <span className="text-destructive">*</span></Label>
-            <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Standard HVAC Replacement Proposal" />
+            <Label>
+              Template Name <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              placeholder="e.g. Standard HVAC Replacement Proposal"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Trade Type</Label>
-              <Select value={tradeType} onValueChange={(v) => setTradeType(v as typeof ALL_TRADE_TYPES[number])}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Select
+                value={tradeType}
+                onValueChange={v =>
+                  setTradeType(v as (typeof ALL_TRADE_TYPES)[number])
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   {ALL_TRADE_TYPES.map(t => (
-                    <SelectItem key={t} value={t}>{TRADE_LABELS[t]}</SelectItem>
+                    <SelectItem key={t} value={t}>
+                      {TRADE_LABELS[t]}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Description (optional)</Label>
-              <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description..." />
+              <Input
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                placeholder="Brief description..."
+              />
             </div>
           </div>
 
@@ -163,16 +235,20 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
               <label htmlFor="template-file-upload" className="cursor-pointer">
                 {isExtracting ? (
                   <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin" /> Extracting content...
+                    <Loader2 className="w-4 h-4 animate-spin" /> Extracting
+                    content...
                   </div>
                 ) : file ? (
                   <div className="flex items-center justify-center gap-2 text-green-600">
-                    <CheckCircle2 className="w-4 h-4" /> {file.name} — content extracted
+                    <CheckCircle2 className="w-4 h-4" /> {file.name} — content
+                    extracted
                   </div>
                 ) : (
                   <div className="text-muted-foreground">
                     <Upload className="w-6 h-6 mx-auto mb-1" />
-                    <div className="text-sm">Click to upload .txt, .md, .doc, .docx, or .pdf</div>
+                    <div className="text-sm">
+                      Click to upload .txt, .md, .doc, .docx, or .pdf
+                    </div>
                     <div className="text-xs mt-1">Or paste content below</div>
                   </div>
                 )}
@@ -180,12 +256,15 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
             </div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <AlertCircle className="w-3 h-3" />
-              For best results, use .txt or .md files. For .docx/.pdf, you may need to paste the content manually below.
+              For best results, use .txt or .md files. For .docx/.pdf, you may
+              need to paste the content manually below.
             </p>
           </div>
 
           <div className="space-y-1.5">
-            <Label>Template Content <span className="text-destructive">*</span></Label>
+            <Label>
+              Template Content <span className="text-destructive">*</span>
+            </Label>
             <Textarea
               value={extractedContent}
               onChange={e => setExtractedContent(e.target.value)}
@@ -193,7 +272,9 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
               placeholder="Paste or edit your template content here. This is what ProposAI will use as the structural reference..."
               className="font-mono text-sm resize-none"
             />
-            <p className="text-xs text-muted-foreground">{extractedContent.length.toLocaleString()} characters</p>
+            <p className="text-xs text-muted-foreground">
+              {extractedContent.length.toLocaleString()} characters
+            </p>
           </div>
 
           <Button
@@ -202,9 +283,13 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
             className="w-full gap-2"
           >
             {uploadMutation.isPending ? (
-              <><Loader2 className="w-4 h-4 animate-spin" /> Saving Template...</>
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" /> Saving Template...
+              </>
             ) : (
-              <><Upload className="w-4 h-4" /> Save Template</>
+              <>
+                <Upload className="w-4 h-4" /> Save Template
+              </>
             )}
           </Button>
         </div>
@@ -214,7 +299,13 @@ function UploadTemplateDialog({ onSuccess }: { onSuccess: () => void }) {
 }
 
 // ── Edit Template Dialog ──────────────────────────────────────────────────────
-function EditTemplateDialog({ template, onSuccess }: { template: any; onSuccess: () => void }) {
+function EditTemplateDialog({
+  template,
+  onSuccess,
+}: {
+  template: any;
+  onSuccess: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(template.name);
   const [description, setDescription] = useState(template.description || "");
@@ -226,7 +317,7 @@ function EditTemplateDialog({ template, onSuccess }: { template: any; onSuccess:
       setOpen(false);
       onSuccess();
     },
-    onError: (err) => toast.error(err.message || "Failed to update template"),
+    onError: err => toast.error(err.message || "Failed to update template"),
   });
 
   return (
@@ -247,7 +338,11 @@ function EditTemplateDialog({ template, onSuccess }: { template: any; onSuccess:
           </div>
           <div className="space-y-1.5">
             <Label>Description</Label>
-            <Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional description..." />
+            <Input
+              value={description}
+              onChange={e => setDescription(e.target.value)}
+              placeholder="Optional description..."
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Content</Label>
@@ -259,11 +354,22 @@ function EditTemplateDialog({ template, onSuccess }: { template: any; onSuccess:
             />
           </div>
           <Button
-            onClick={() => updateMutation.mutate({ id: template.id, name, description, content })}
+            onClick={() =>
+              updateMutation.mutate({
+                id: template.id,
+                name,
+                description,
+                content,
+              })
+            }
             disabled={updateMutation.isPending}
             className="w-full"
           >
-            {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Changes"}
+            {updateMutation.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              "Save Changes"
+            )}
           </Button>
         </div>
       </DialogContent>
@@ -275,17 +381,24 @@ function EditTemplateDialog({ template, onSuccess }: { template: any; onSuccess:
 export function Templates() {
   const [, navigate] = useLocation();
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { data: templates, isLoading, isError: templatesError, refetch } = trpc.templates.list.useQuery(
-    undefined, { enabled: isAuthenticated }
-  );
+  const {
+    data: templates,
+    isLoading,
+    isError: templatesError,
+    refetch,
+  } = trpc.templates.list.useQuery(undefined, { enabled: isAuthenticated });
   const deleteMutation = trpc.templates.delete.useMutation({
-    onSuccess: () => { toast.success("Template deleted"); refetch(); },
+    onSuccess: () => {
+      toast.success("Template deleted");
+      refetch();
+    },
     onError: () => toast.error("Failed to delete template"),
   });
 
   // Redirect to login if not authenticated (useEffect avoids setState-during-render warning)
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) navigate(`/login?return=${encodeURIComponent(window.location.pathname)}`);
+    if (!authLoading && !isAuthenticated)
+      navigate(`/login?return=${encodeURIComponent(window.location.pathname)}`);
   }, [authLoading, isAuthenticated]);
 
   if (authLoading) {
@@ -298,8 +411,10 @@ export function Templates() {
 
   if (!isAuthenticated) return null;
 
-  const savedTemplates = templates?.filter(t => t.sourceType === "saved_from_proposal") || [];
-  const uploadedTemplates = templates?.filter(t => t.sourceType === "uploaded") || [];
+  const savedTemplates =
+    templates?.filter(t => t.sourceType === "saved_from_proposal") || [];
+  const uploadedTemplates =
+    templates?.filter(t => t.sourceType === "uploaded") || [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -313,13 +428,20 @@ export function Templates() {
                 My Templates
               </h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Save proposals as reusable templates, or upload your own. ProposAI will follow the template's structure when generating new proposals.
+                Save proposals as reusable templates, or upload your own.
+                ProposAI will follow the template's structure when generating
+                new proposals.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <UploadTemplateDialog onSuccess={refetch} />
-              <Button onClick={() => navigate("/proposals/from-template")} className="gap-2">
-                <Sparkles className="w-4 h-4" /> <span className="hidden sm:inline">New from Template</span><span className="sm:hidden">New</span>
+              <Button
+                onClick={() => navigate("/proposals/from-template")}
+                className="gap-2"
+              >
+                <FileText className="w-4 h-4" />{" "}
+                <span className="hidden sm:inline">New from Template</span>
+                <span className="sm:hidden">New</span>
               </Button>
             </div>
           </div>
@@ -333,8 +455,12 @@ export function Templates() {
           </div>
         ) : templatesError ? (
           <div className="text-center py-16 space-y-4">
-            <p className="text-destructive text-sm">Failed to load templates.</p>
-            <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+            <p className="text-destructive text-sm">
+              Failed to load templates.
+            </p>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              Retry
+            </Button>
           </div>
         ) : !templates || templates.length === 0 ? (
           // Empty state
@@ -343,15 +469,21 @@ export function Templates() {
               <FileText className="w-8 h-8 text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-foreground mb-2">No templates yet</h2>
+              <h2 className="text-xl font-semibold text-foreground mb-2">
+                No templates yet
+              </h2>
               <p className="text-muted-foreground max-w-md mx-auto">
-                Templates let you generate proposals that follow a specific structure and format.
-                Upload an existing proposal or save one of your generated proposals as a template.
+                Templates let you generate proposals that follow a specific
+                structure and format. Upload an existing proposal or save one of
+                your generated proposals as a template.
               </p>
             </div>
             <div className="flex gap-3 justify-center">
               <UploadTemplateDialog onSuccess={refetch} />
-              <Button variant="outline" onClick={() => navigate("/proposals/new")}>
+              <Button
+                variant="outline"
+                onClick={() => navigate("/proposals/new")}
+              >
                 Create a Proposal First
               </Button>
             </div>
@@ -359,13 +491,30 @@ export function Templates() {
             {/* How it works */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto mt-8 text-left">
               {[
-                { icon: Upload, title: "1. Add a Template", desc: "Upload an existing proposal or save one you've already generated." },
-                { icon: FileText, title: "2. Fill Project Info", desc: "Enter the new client and job details. No style questions needed." },
-                { icon: Sparkles, title: "3. ProposAI Generates", desc: "ProposAI writes a new proposal that follows your template's exact structure." },
+                {
+                  icon: Upload,
+                  title: "1. Add a Template",
+                  desc: "Upload an existing proposal or save one you've already generated.",
+                },
+                {
+                  icon: FileText,
+                  title: "2. Fill Project Info",
+                  desc: "Enter the new client and job details. No style questions needed.",
+                },
+                {
+                  icon: Sparkles,
+                  title: "3. ProposAI Generates",
+                  desc: "ProposAI writes a new proposal that follows your template's exact structure.",
+                },
               ].map(({ icon: Icon, title, desc }) => (
-                <div key={title} className="p-4 rounded-xl border border-border bg-card text-center">
+                <div
+                  key={title}
+                  className="p-4 rounded-md border border-border bg-card text-center"
+                >
                   <Icon className="w-6 h-6 text-primary mx-auto mb-2" />
-                  <div className="font-semibold text-sm text-foreground mb-1">{title}</div>
+                  <div className="font-semibold text-sm text-foreground mb-1">
+                    {title}
+                  </div>
                   <div className="text-xs text-muted-foreground">{desc}</div>
                 </div>
               ))}
@@ -378,7 +527,9 @@ export function Templates() {
               <section className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Upload className="w-4 h-4 text-muted-foreground" />
-                  <h2 className="font-semibold text-foreground">Uploaded Templates</h2>
+                  <h2 className="font-semibold text-foreground">
+                    Uploaded Templates
+                  </h2>
                   <Badge variant="secondary">{uploadedTemplates.length}</Badge>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -388,7 +539,9 @@ export function Templates() {
                       template={t}
                       onDelete={() => deleteMutation.mutate({ id: t.id })}
                       onRefresh={refetch}
-                      onUse={() => navigate(`/proposals/from-template?templateId=${t.id}`)}
+                      onUse={() =>
+                        navigate(`/proposals/from-template?templateId=${t.id}`)
+                      }
                     />
                   ))}
                 </div>
@@ -400,7 +553,9 @@ export function Templates() {
               <section className="space-y-4">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-muted-foreground" />
-                  <h2 className="font-semibold text-foreground">Saved from Proposals</h2>
+                  <h2 className="font-semibold text-foreground">
+                    Saved from Proposals
+                  </h2>
                   <Badge variant="secondary">{savedTemplates.length}</Badge>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -410,7 +565,9 @@ export function Templates() {
                       template={t}
                       onDelete={() => deleteMutation.mutate({ id: t.id })}
                       onRefresh={refetch}
-                      onUse={() => navigate(`/proposals/from-template?templateId=${t.id}`)}
+                      onUse={() =>
+                        navigate(`/proposals/from-template?templateId=${t.id}`)
+                      }
                     />
                   ))}
                 </div>
@@ -438,13 +595,17 @@ function TemplateCard({
   const createdAt = new Date(template.createdAt).toLocaleDateString();
 
   return (
-    <Card className="flex flex-col hover:shadow-md transition-shadow">
+    <Card className="flex flex-col hover:shadow-none transition-shadow">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-base font-semibold truncate">{template.name}</CardTitle>
+            <CardTitle className="text-base font-semibold truncate">
+              {template.name}
+            </CardTitle>
             {template.description && (
-              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{template.description}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                {template.description}
+              </p>
             )}
           </div>
           <Badge variant="outline" className="text-xs flex-shrink-0">
@@ -456,20 +617,23 @@ function TemplateCard({
       <CardContent className="flex-1 flex flex-col gap-3">
         {/* Content preview */}
         <div className="bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground font-mono line-clamp-4 flex-1">
-          {template.content.slice(0, 300)}{template.content.length > 300 ? "..." : ""}
+          {template.content.slice(0, 300)}
+          {template.content.length > 300 ? "..." : ""}
         </div>
 
         {/* Meta */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <Clock className="w-3 h-3" />
           <span>Added {createdAt}</span>
-          <span className="ml-auto">{(template.content.length / 1000).toFixed(1)}k chars</span>
+          <span className="ml-auto">
+            {(template.content.length / 1000).toFixed(1)}k chars
+          </span>
         </div>
 
         {/* Actions */}
         <div className="flex items-center gap-2 pt-1 border-t border-border">
           <Button onClick={onUse} size="sm" className="flex-1 gap-1.5 text-xs">
-            <Sparkles className="w-3.5 h-3.5" /> Use Template
+            <FileText className="w-3.5 h-3.5" /> Use Template
             <ArrowRight className="w-3.5 h-3.5" />
           </Button>
           <EditTemplateDialog template={template} onSuccess={onRefresh} />
@@ -477,8 +641,10 @@ function TemplateCard({
             variant="ghost"
             size="sm"
             className="gap-1.5 text-xs text-destructive hover:text-destructive"
+            aria-label={`Delete template: ${template.name}`}
             onClick={() => {
-              if (confirm(`Delete "${template.name}"? This cannot be undone.`)) onDelete();
+              if (confirm(`Delete "${template.name}"? This cannot be undone.`))
+                onDelete();
             }}
           >
             <Trash2 className="w-3.5 h-3.5" />

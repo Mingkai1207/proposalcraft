@@ -1,9 +1,22 @@
 import { useEditor, EditorContent } from "@tiptap/react";
+import { useEffect } from "react";
 import StarterKit from "@tiptap/starter-kit";
 import {
-  Bold, Italic, Strikethrough, List, ListOrdered,
-  Heading1, Heading2, Heading3, Quote, Code,
-  Undo, Redo, AlignLeft, AlignCenter, AlignRight
+  Bold,
+  Italic,
+  Strikethrough,
+  List,
+  ListOrdered,
+  Heading1,
+  Heading2,
+  Heading3,
+  Quote,
+  Code,
+  Undo,
+  Redo,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import "./RichTextEditor.css";
@@ -14,7 +27,11 @@ interface RichTextEditorProps {
   placeholder?: string;
 }
 
-export function RichTextEditor({ value, onChange, placeholder = "Start typing..." }: RichTextEditorProps) {
+export function RichTextEditor({
+  value,
+  onChange,
+  placeholder = "Start typing...",
+}: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -29,19 +46,25 @@ export function RichTextEditor({ value, onChange, placeholder = "Start typing...
     },
   });
 
+  useEffect(() => {
+    if (editor && editor.getHTML() !== value) {
+      editor.commands.setContent(value, { emitUpdate: false });
+    }
+  }, [editor, value]);
+
   if (!editor) {
     return null;
   }
 
-  const ToolbarButton = ({ 
-    onClick, 
-    isActive, 
-    icon: Icon, 
-    title 
-  }: { 
-    onClick: () => void; 
-    isActive?: boolean; 
-    icon: any; 
+  const ToolbarButton = ({
+    onClick,
+    isActive,
+    icon: Icon,
+    title,
+  }: {
+    onClick: () => void;
+    isActive?: boolean;
+    icon: any;
     title: string;
   }) => (
     <Button
@@ -50,6 +73,7 @@ export function RichTextEditor({ value, onChange, placeholder = "Start typing...
       size="sm"
       className="h-8 w-8 p-0"
       title={title}
+      aria-label={title}
     >
       <Icon className="w-4 h-4" />
     </Button>
@@ -84,19 +108,25 @@ export function RichTextEditor({ value, onChange, placeholder = "Start typing...
         {/* Headings */}
         <div className="flex gap-1 border-r border-border pr-2">
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 1 }).run()
+            }
             isActive={editor.isActive("heading", { level: 1 })}
             icon={Heading1}
             title="Heading 1"
           />
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            }
             isActive={editor.isActive("heading", { level: 2 })}
             icon={Heading2}
             title="Heading 2"
           />
           <ToolbarButton
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+            }
             isActive={editor.isActive("heading", { level: 3 })}
             icon={Heading3}
             title="Heading 3"

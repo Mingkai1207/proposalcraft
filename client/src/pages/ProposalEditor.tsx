@@ -21,7 +21,12 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
 
   const isDirty = content !== savedContent;
 
-  const { data: proposal, isLoading, isError: proposalError, refetch } = trpc.proposals.get.useQuery(
+  const {
+    data: proposal,
+    isLoading,
+    isError: proposalError,
+    refetch,
+  } = trpc.proposals.get.useQuery(
     { id: proposalId },
     { enabled: isAuthenticated }
   );
@@ -32,23 +37,24 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
       setSavedContent(content);
       setIsSaving(false);
     },
-    onError: (err) => {
+    onError: err => {
       toast.error(err.message || "Failed to save proposal");
       setIsSaving(false);
     },
   });
 
   const exportPdfMutation = trpc.proposals.exportPdf.useMutation({
-    onSuccess: (data) => {
+    onSuccess: data => {
       const link = document.createElement("a");
-      link.href = data.url; link.download = data.fileName;
-      document.body.appendChild(link); link.click(); document.body.removeChild(link);
+      link.href = data.url;
+      link.download = data.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
       toast.success("PDF downloaded!");
     },
-    onError: (err) => toast.error(err.message || "Failed to export PDF"),
+    onError: err => toast.error(err.message || "Failed to export PDF"),
   });
-
-
 
   useEffect(() => {
     if (proposal?.generatedContent) {
@@ -89,8 +95,12 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
           <AlertCircle className="w-10 h-10 text-destructive mx-auto mb-3" />
           <p className="text-muted-foreground mb-4">Failed to load proposal</p>
           <div className="flex gap-2 justify-center">
-            <Button variant="outline" onClick={() => refetch()}>Retry</Button>
-            <Button onClick={() => navigate("/dashboard")}>Back to Dashboard</Button>
+            <Button variant="outline" onClick={() => refetch()}>
+              Retry
+            </Button>
+            <Button onClick={() => navigate("/dashboard")}>
+              Back to Dashboard
+            </Button>
           </div>
         </div>
       </div>
@@ -101,7 +111,9 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <p className="text-muted-foreground mb-4">Proposal not found</p>
-          <Button onClick={() => navigate("/dashboard")}>Back to Dashboard</Button>
+          <Button onClick={() => navigate("/dashboard")}>
+            Back to Dashboard
+          </Button>
         </div>
       </div>
     );
@@ -122,9 +134,9 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <div className="bg-card border-b border-border workspace-toolbar">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex flex-wrap gap-4 items-center justify-between">
+          <div className="flex items-center gap-4 min-w-0 flex-1 basis-full sm:basis-auto">
             <Button
               variant="ghost"
               size="sm"
@@ -135,14 +147,16 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
               Back
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-foreground">{proposal.title}</h1>
+              <h1 className="text-xl font-bold text-foreground">
+                {proposal.title}
+              </h1>
               <p className="text-sm text-muted-foreground">
                 Client: {proposal.clientName || "N/A"}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant={isPreviewMode ? "default" : "outline"}
               size="sm"
@@ -190,10 +204,11 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
         ) : (
           // Edit Mode
           <div className="space-y-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-900">
-                💡 <strong>Tip:</strong> Edit your proposal freely using the formatting tools. 
-                Click "Preview" to see how it will look, then "Export PDF" to download the final version.
+            <div className="bg-secondary border border-border rounded-lg p-4">
+              <p className="text-sm text-foreground">
+                <strong>Tip:</strong> Edit your proposal freely using the
+                formatting tools. Click "Preview" to see how it will look, then
+                "Export PDF" to download the final version.
               </p>
             </div>
             <RichTextEditor

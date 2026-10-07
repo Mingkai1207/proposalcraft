@@ -26,8 +26,9 @@ export default function LanguageSwitcher({
 }: LanguageSwitcherProps) {
   const { i18n } = useTranslation();
 
-  const currentLang = LANGUAGES.find((l) => l.code === i18n.language) ??
-    LANGUAGES.find((l) => i18n.language.startsWith(l.code)) ??
+  const currentLang =
+    LANGUAGES.find(l => l.code === i18n.language) ??
+    LANGUAGES.find(l => i18n.language.startsWith(l.code)) ??
     LANGUAGES[0];
 
   const handleChange = (code: string) => {
@@ -37,7 +38,12 @@ export default function LanguageSwitcher({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant={variant} size={size} className="gap-1.5 font-medium">
+        <Button
+          variant={variant}
+          size={size}
+          className="gap-1.5 font-medium"
+          aria-label={`Language: ${currentLang.label}`}
+        >
           <Globe className="w-4 h-4 shrink-0" />
           {showLabel && (
             <span className="hidden sm:inline">{currentLang.label}</span>
@@ -45,7 +51,7 @@ export default function LanguageSwitcher({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[130px]">
-        {LANGUAGES.map((lang) => (
+        {LANGUAGES.map(lang => (
           <DropdownMenuItem
             key={lang.code}
             onClick={() => handleChange(lang.code)}
@@ -53,7 +59,6 @@ export default function LanguageSwitcher({
               currentLang.code === lang.code ? "font-semibold bg-accent" : ""
             }`}
           >
-            <span>{lang.flag}</span>
             <span>{lang.label}</span>
           </DropdownMenuItem>
         ))}

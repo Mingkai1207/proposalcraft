@@ -66,7 +66,7 @@ export function TemplateQuickCreate({ form, setForm }: TemplateQuickCreateProps)
   const hasUserTemplates = savedTemplates && savedTemplates.length > 0;
 
   return (
-    <Card className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+    <Card className="p-4 bg-background border-blue-200">
       <div className="flex items-start gap-3">
         <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
           <LayoutTemplate className="w-4 h-4 text-blue-600" />

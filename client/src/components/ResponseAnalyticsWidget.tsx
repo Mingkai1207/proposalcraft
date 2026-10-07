@@ -57,7 +57,7 @@ export function ResponseAnalyticsWidget() {
         </Card>
         <Card className="p-4">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-4 h-4 text-purple-600" />
+            <TrendingUp className="w-4 h-4 text-primary" />
             <span className="text-xs font-medium text-muted-foreground">Acceptance Rate</span>
           </div>
           <p className="text-2xl font-bold text-foreground">{acceptanceRate}%</p>
