@@ -85,15 +85,14 @@ export default function ResetPassword() {
                 <Alert className="border-red-500/50 bg-red-500/10">
                   <AlertDescription className="text-destructive text-sm">
                     {error}
-                    {error.includes("expired") && (
-                      <span className="block mt-1">
-                        <Link href="/forgot-password">
-                          <span className="text-primary hover:text-primary underline font-medium cursor-pointer">
-                            Request a new link →
-                          </span>
-                        </Link>
-                      </span>
-                    )}
+                    <span className="block mt-1">
+                      <Link
+                        href="/forgot-password"
+                        className="text-primary underline font-medium"
+                      >
+                        Request a new reset link
+                      </Link>
+                    </span>
                   </AlertDescription>
                 </Alert>
               )}
