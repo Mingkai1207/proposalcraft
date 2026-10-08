@@ -40,7 +40,7 @@ export default function ResetPassword() {
   const resetMutation = trpc.auth.resetPassword.useMutation({
     onSuccess: async () => {
       setSuccess(true);
-      await utils.auth.me.invalidate();
+      await utils.auth.me.fetch(undefined, { staleTime: 0 });
       setTimeout(() => navigate("/dashboard"), 2000);
     },
     onError: err =>
