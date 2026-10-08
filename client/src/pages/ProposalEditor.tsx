@@ -6,6 +6,8 @@ import { RichTextEditor } from "@/components/RichTextEditor";
 import { toast } from "sonner";
 import { Download, Save, Eye, ArrowLeft, AlertCircle } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { Streamdown } from "streamdown";
+import { isHtmlProposalContent } from "@/lib/proposalEditorContent";
 
 interface ProposalEditorProps {
   proposalId: number;
@@ -191,15 +193,21 @@ export default function ProposalEditor({ proposalId }: ProposalEditorProps) {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-8">
         {isPreviewMode ? (
-          // Preview Mode — use sandboxed iframe to avoid XSS from raw HTML content
+          // Keep HTML sandboxed; use the same safe Markdown renderer as proposal detail.
           <div className="bg-card border border-border rounded-lg overflow-hidden">
-            <iframe
-              srcDoc={content}
-              title="Proposal Preview"
-              className="w-full border-0"
-              style={{ height: "600px" }}
-              sandbox=""
-            />
+            {isHtmlProposalContent(content) ? (
+              <iframe
+                srcDoc={content}
+                title="Proposal Preview"
+                className="w-full border-0"
+                style={{ height: "600px" }}
+                sandbox=""
+              />
+            ) : (
+              <div className="prose prose-sm max-w-none text-foreground p-6">
+                <Streamdown>{content}</Streamdown>
+              </div>
+            )}
           </div>
         ) : (
           // Edit Mode

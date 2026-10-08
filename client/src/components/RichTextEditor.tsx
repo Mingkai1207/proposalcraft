@@ -1,5 +1,5 @@
 import { useEditor, EditorContent } from "@tiptap/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import StarterKit from "@tiptap/starter-kit";
 import {
   Bold,
@@ -20,6 +20,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import "./RichTextEditor.css";
+import { proposalTableExtensions } from "./proposalTable";
+import {
+  proposalToEditorHtml,
+  serializeProposalEditorContent,
+} from "@/lib/proposalEditorContent";
 
 interface RichTextEditorProps {
   value: string;
@@ -32,23 +37,33 @@ export function RichTextEditor({
   onChange,
   placeholder = "Start typing...",
 }: RichTextEditorProps) {
+  const lastEmittedContent = useRef<string | null>(null);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
         heading: {
-          levels: [1, 2, 3],
+          levels: [1, 2, 3, 4, 5, 6],
         },
       }),
+      ...proposalTableExtensions,
     ],
-    content: value,
+    content: proposalToEditorHtml(value),
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const next = serializeProposalEditorContent(
+        value,
+        editor.state.doc,
+        editor.getHTML()
+      );
+      lastEmittedContent.current = next;
+      onChange(next);
     },
   });
 
   useEffect(() => {
-    if (editor && editor.getHTML() !== value) {
-      editor.commands.setContent(value, { emitUpdate: false });
+    if (editor && value !== lastEmittedContent.current) {
+      editor.commands.setContent(proposalToEditorHtml(value), {
+        emitUpdate: false,
+      });
     }
   }, [editor, value]);
 
