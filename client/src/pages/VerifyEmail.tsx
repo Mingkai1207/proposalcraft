@@ -2,6 +2,12 @@ import AuthShell from "@/components/AuthShell";
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import {
+  authReturnUrl,
+  clearPendingAuthReturn,
+  getAuthReturn,
+  readPendingAuthReturn,
+} from "@/lib/authReturn";
 import { FileText, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -14,6 +20,10 @@ export default function VerifyEmail() {
 
   const params = new URLSearchParams(window.location.search);
   const token = params.get("token") ?? "";
+  const returnTo = getAuthReturn(
+    window.location.search,
+    readPendingAuthReturn()
+  );
 
   const utils = trpc.useUtils();
 
@@ -21,9 +31,9 @@ export default function VerifyEmail() {
     onSuccess: async data => {
       setStatus("success");
       setMessage(data.message);
-      // Refresh auth state then redirect to dashboard
       await utils.auth.me.invalidate();
-      setTimeout(() => navigate("/dashboard"), 2000);
+      clearPendingAuthReturn();
+      setTimeout(() => navigate(returnTo), 2000);
     },
     onError: err => {
       setStatus("error");
@@ -80,7 +90,7 @@ export default function VerifyEmail() {
           </h1>
           <p className="text-muted-foreground text-sm mb-6">{message}</p>
           <p className="text-muted-foreground text-xs">
-            Redirecting you to the dashboard…
+            Taking you back to your requested page…
           </p>
         </>
       )}
@@ -93,14 +103,14 @@ export default function VerifyEmail() {
           <div className="flex flex-col gap-3">
             <Button
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold"
-              onClick={() => navigate("/register")}
+              onClick={() => navigate(authReturnUrl("/register", returnTo))}
             >
               Create a new account
             </Button>
             <Button
               variant="outline"
               className="w-full border-border text-muted-foreground hover:bg-card"
-              onClick={() => navigate("/login")}
+              onClick={() => navigate(authReturnUrl("/login", returnTo))}
             >
               Back to sign in
             </Button>

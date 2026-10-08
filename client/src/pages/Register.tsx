@@ -2,6 +2,12 @@ import AuthShell from "@/components/AuthShell";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import {
+  authReturnUrl,
+  clearPendingAuthReturn,
+  getAuthReturn,
+  rememberPendingAuthReturn,
+} from "@/lib/authReturn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,16 +31,17 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null);
 
   const utils = trpc.useUtils();
+  const returnTo = getAuthReturn(window.location.search);
 
   const registerMutation = trpc.auth.register.useMutation({
-    onSuccess: data => {
+    onSuccess: async data => {
       if (data.autoVerified) {
-        // SMTP not configured — user is already verified and logged in, go straight to dashboard
-        utils.auth.me.invalidate();
-        navigate("/dashboard");
+        await utils.auth.me.invalidate();
+        clearPendingAuthReturn();
+        navigate(returnTo);
       } else {
-        // SMTP configured — ask user to check email first
-        navigate(`/check-your-email?email=${encodeURIComponent(email)}`);
+        rememberPendingAuthReturn(returnTo);
+        navigate(authReturnUrl("/check-your-email", returnTo, { email }));
       }
     },
     onError: err => {
@@ -232,7 +239,7 @@ export default function Register() {
           <div className="mt-6 text-center">
             <p className="text-muted-foreground text-sm">
               Already have an account?{" "}
-              <Link href="/login">
+              <Link href={authReturnUrl("/login", returnTo)}>
                 <span className="text-primary hover:text-primary font-medium cursor-pointer transition-colors">
                   Sign in
                 </span>

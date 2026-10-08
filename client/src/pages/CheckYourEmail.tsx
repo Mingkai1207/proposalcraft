@@ -2,6 +2,11 @@ import AuthShell from "@/components/AuthShell";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import {
+  authReturnUrl,
+  getAuthReturn,
+  readPendingAuthReturn,
+} from "@/lib/authReturn";
 import { Button } from "@/components/ui/button";
 import { FileText, Mail, RefreshCw, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -13,6 +18,10 @@ export default function CheckYourEmail() {
   // Read the email from query params (passed from Register page)
   const params = new URLSearchParams(window.location.search);
   const email = params.get("email") ?? "";
+  const returnTo = getAuthReturn(
+    window.location.search,
+    readPendingAuthReturn()
+  );
 
   const resendMutation = trpc.auth.resendVerification.useMutation({
     onSuccess: () => {
@@ -73,7 +82,10 @@ export default function CheckYourEmail() {
 
       <p className="text-muted-foreground text-xs">
         Already verified?{" "}
-        <Link href="/login" className="text-primary hover:text-primary">
+        <Link
+          href={authReturnUrl("/login", returnTo)}
+          className="text-primary hover:text-primary"
+        >
           Sign in
         </Link>
       </p>

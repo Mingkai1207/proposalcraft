@@ -2,6 +2,11 @@ import AuthShell from "@/components/AuthShell";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import {
+  authReturnUrl,
+  clearPendingAuthReturn,
+  getAuthReturn,
+} from "@/lib/authReturn";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,15 +31,12 @@ export default function Login() {
 
   const utils = trpc.useUtils();
 
-  // Read ?return= param and validate it's a safe relative path (no open redirect)
-  const returnTo = (() => {
-    const raw = new URLSearchParams(window.location.search).get("return") || "";
-    return raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
-  })();
+  const returnTo = getAuthReturn(window.location.search);
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: async () => {
       await utils.auth.me.invalidate();
+      clearPendingAuthReturn();
       navigate(returnTo);
     },
     onError: err => {
@@ -70,7 +72,7 @@ export default function Login() {
                   {showRegisterLink && (
                     <span className="block mt-1">
                       <Link
-                        href="/register"
+                        href={authReturnUrl("/register", returnTo)}
                         className="text-primary hover:text-primary underline font-medium"
                       >
                         Create a free account →
@@ -80,7 +82,9 @@ export default function Login() {
                   {showResendLink && (
                     <span className="block mt-1">
                       <Link
-                        href={`/check-your-email?email=${encodeURIComponent(email)}`}
+                        href={authReturnUrl("/check-your-email", returnTo, {
+                          email,
+                        })}
                         className="text-primary hover:text-primary underline font-medium"
                       >
                         Resend verification email →
@@ -170,7 +174,7 @@ export default function Login() {
           <div className="mt-6 text-center">
             <p className="text-muted-foreground text-sm">
               Don't have an account?{" "}
-              <Link href="/register">
+              <Link href={authReturnUrl("/register", returnTo)}>
                 <span className="text-primary hover:text-primary font-medium cursor-pointer transition-colors">
                   Create one free
                 </span>
