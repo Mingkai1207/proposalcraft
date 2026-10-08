@@ -36,7 +36,7 @@ export default function Register() {
   const registerMutation = trpc.auth.register.useMutation({
     onSuccess: async data => {
       if (data.autoVerified) {
-        await utils.auth.me.invalidate();
+        await utils.auth.me.fetch(undefined, { staleTime: 0 });
         clearPendingAuthReturn();
         navigate(returnTo);
       } else {

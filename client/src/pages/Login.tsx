@@ -35,7 +35,7 @@ export default function Login() {
 
   const loginMutation = trpc.auth.login.useMutation({
     onSuccess: async () => {
-      await utils.auth.me.invalidate();
+      await utils.auth.me.fetch(undefined, { staleTime: 0 });
       clearPendingAuthReturn();
       navigate(returnTo);
     },

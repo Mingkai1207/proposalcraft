@@ -31,7 +31,7 @@ export default function VerifyEmail() {
     onSuccess: async data => {
       setStatus("success");
       setMessage(data.message);
-      await utils.auth.me.invalidate();
+      await utils.auth.me.fetch(undefined, { staleTime: 0 });
       clearPendingAuthReturn();
       setTimeout(() => navigate(returnTo), 2000);
     },
