@@ -161,7 +161,7 @@ export default function Dashboard() {
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl font-semibold text-stone-900 tracking-tight">
+            <h1 className="text-2xl font-semibold text-foreground tracking-tight">
               {t("dashboard.title")}
             </h1>
             <p className="text-muted-foreground text-sm mt-0.5">
@@ -174,20 +174,20 @@ export default function Dashboard() {
             {proposals && proposals.length > 0 && (
               <button
                 onClick={handleBulkExport}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-card hover:bg-secondary text-foreground text-sm font-medium transition-colors"
               >
                 <Download className="w-4 h-4" /> {t("dashboard.exportAll")}
               </button>
             )}
             <button
               onClick={() => navigate("/templates")}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-border bg-card hover:bg-secondary text-foreground text-sm font-medium transition-colors"
             >
               <FileText className="w-4 h-4" /> {t("dashboard.myTemplates")}
             </button>
             <button
               onClick={() => navigate("/proposals/new")}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary hover:bg-primary/90 text-white text-sm font-bold transition-all  "
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold transition-all  "
             >
               <Plus className="w-4 h-4" /> {t("dashboard.newProposal")}
             </button>
@@ -230,13 +230,13 @@ export default function Dashboard() {
               ].map(({ label, value, accent, highlight }) => (
                 <div
                   key={label}
-                  className={`bg-white border border-stone-100 rounded-lg p-5 border-l-4 ${accent} shadow-none`}
+                  className={`bg-card border border-border rounded-lg p-5 border-l-4 ${accent} shadow-none`}
                 >
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                     {label}
                   </p>
                   <p
-                    className={`text-4xl font-semibold tracking-tight ${highlight ? "text-primary" : "text-stone-900"}`}
+                    className={`text-4xl font-semibold tracking-tight ${highlight ? "text-primary" : "text-foreground"}`}
                   >
                     {value}
                   </p>
@@ -246,10 +246,10 @@ export default function Dashboard() {
           </>
         )}
         {/* Proposals Table */}
-        <div className="bg-white border border-stone-100 rounded-lg overflow-hidden shadow-none">
-          <div className="px-6 py-4 border-b border-stone-100 flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="bg-card border border-border rounded-lg overflow-hidden shadow-none">
+          <div className="px-6 py-4 border-b border-border flex flex-col sm:flex-row sm:items-center gap-3">
             <div className="flex items-center justify-between flex-1">
-              <h2 className="font-bold text-stone-900">
+              <h2 className="font-bold text-foreground">
                 {t("dashboard.allProposals")}
               </h2>
               <span className="text-sm text-muted-foreground">
@@ -264,7 +264,7 @@ export default function Dashboard() {
                   placeholder="Search proposals..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="w-full pl-8 pr-3 py-2 rounded-md border border-stone-200 text-sm text-stone-800 placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  className="w-full pl-8 pr-3 py-2 rounded-md border border-border text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                 />
               </div>
             )}
@@ -281,17 +281,17 @@ export default function Dashboard() {
               </p>
               <button
                 onClick={() => refetch()}
-                className="px-4 py-2 rounded-md border border-stone-200 text-stone-700 text-sm font-medium hover:bg-stone-50 transition-colors"
+                className="px-4 py-2 rounded-md border border-border text-foreground text-sm font-medium hover:bg-secondary transition-colors"
               >
                 Retry
               </button>
             </div>
           ) : proposals?.length === 0 ? (
             <div className="p-12 text-center">
-              <div className="w-14 h-14 bg-stone-50 border border-stone-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <FileText className="w-7 h-7 text-stone-300" />
+              <div className="w-14 h-14 bg-secondary border border-border rounded-lg flex items-center justify-center mx-auto mb-4">
+                <FileText className="w-7 h-7 text-muted-foreground/40" />
               </div>
-              <h3 className="font-bold text-stone-900 mb-1">
+              <h3 className="font-bold text-foreground mb-1">
                 {t("dashboard.noProposals")}
               </h3>
               <p className="text-muted-foreground text-sm mb-6">
@@ -300,19 +300,19 @@ export default function Dashboard() {
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button
                   onClick={() => navigate("/templates")}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-stone-900 hover:bg-stone-800 text-white text-sm font-semibold transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold transition-colors"
                 >
                   <FileText className="w-4 h-4" /> {t("dashboard.myTemplates")}
                 </button>
                 <button
                   onClick={() => navigate("/proposals/new")}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md border border-border hover:bg-secondary text-foreground text-sm font-medium transition-colors"
                 >
                   <Plus className="w-4 h-4" /> {t("dashboard.createWithAI")}
                 </button>
                 <button
                   onClick={() => navigate("/import")}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md border border-stone-200 hover:bg-stone-50 text-stone-700 text-sm font-medium transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-md border border-border hover:bg-secondary text-foreground text-sm font-medium transition-colors"
                 >
                   <Upload className="w-4 h-4" /> {t("dashboard.importPast")}
                 </button>
@@ -322,7 +322,7 @@ export default function Dashboard() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-stone-100 bg-stone-50/60">
+                  <tr className="border-b border-border bg-secondary/60">
                     <th className="text-left text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-6 py-3">
                       {t("dashboard.colProposal")}
                     </th>
@@ -367,10 +367,10 @@ export default function Dashboard() {
                       return (
                         <tr
                           key={p.id}
-                          className="border-b border-stone-100 last:border-0 hover:bg-stone-50/60 transition-colors"
+                          className="border-b border-border last:border-0 hover:bg-secondary/60 transition-colors"
                         >
                           <td className="px-6 py-4">
-                            <p className="font-semibold text-sm text-stone-900 truncate max-w-[200px]">
+                            <p className="font-semibold text-sm text-foreground truncate max-w-[200px]">
                               {p.title}
                             </p>
                             {p.totalCost && (
@@ -385,7 +385,7 @@ export default function Dashboard() {
                             </span>
                           </td>
                           <td className="px-5 py-4">
-                            <span className="text-sm text-stone-700">
+                            <span className="text-sm text-foreground">
                               {p.clientName || "-"}
                             </span>
                             {p.clientEmail && (
@@ -413,7 +413,7 @@ export default function Dashboard() {
                                 onClick={() => navigate(`/proposals/${p.id}`)}
                                 title="View"
                                 aria-label={`View proposal: ${p.title}`}
-                                className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-stone-700 hover:bg-stone-100 transition-colors"
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                               >
                                 <Eye className="w-3.5 h-3.5" />
                               </button>
@@ -447,7 +447,7 @@ export default function Dashboard() {
             <>
               {/* Response Analytics */}
               <div className="mb-8">
-                <h2 className="text-lg font-semibold text-stone-900 tracking-tight mb-4">
+                <h2 className="text-lg font-semibold text-foreground tracking-tight mb-4">
                   {t("dashboard.proposalPerformance")}
                 </h2>
                 <ResponseAnalyticsWidget />
@@ -455,7 +455,7 @@ export default function Dashboard() {
 
               {/* Feedback Analytics */}
               <div className="mb-8">
-                <h2 className="text-lg font-semibold text-stone-900 tracking-tight mb-4">
+                <h2 className="text-lg font-semibold text-foreground tracking-tight mb-4">
                   {t("dashboard.clientFeedback")}
                 </h2>
                 <FeedbackAnalyticsWidget />
@@ -463,7 +463,7 @@ export default function Dashboard() {
 
               {/* Recommendations */}
               <div className="mb-8">
-                <h2 className="text-lg font-semibold text-stone-900 tracking-tight mb-4">
+                <h2 className="text-lg font-semibold text-foreground tracking-tight mb-4">
                   {t("dashboard.improvementRecs")}
                 </h2>
                 <RecommendationsWidget />
@@ -488,7 +488,7 @@ export default function Dashboard() {
           <AlertDialogFooter>
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-white hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() =>
                 deleteId && deleteMutation.mutate({ id: deleteId })
               }
