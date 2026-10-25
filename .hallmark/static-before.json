@@ -1,0 +1,1898 @@
+{
+  "summary": {
+    "fails": 109,
+    "reflex": 94,
+    "warns": 6,
+    "waived": 0,
+    "rejected": 0,
+    "answered": 0,
+    "dismissed": 0,
+    "notes": 0,
+    "files": 9,
+    "render": "off",
+    "before": "before: recorded 14 links, 0 fields, 22 handlers, 0 test hooks, 0 script hooks in .hallmark/before.json; --kept checks a redesign against it"
+  },
+  "findings": [
+    {
+      "gate": "10a",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Dashboard.tsx",
+      "line": 188,
+      "evidence": "transition-all on <button class=\"inline-flex items-center gap-2 …\">",
+      "fix": "Name the properties: transition-colors, transition-opacity or transition-transform"
+    },
+    {
+      "gate": "10a",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Dashboard.tsx",
+      "line": 262,
+      "evidence": "transition-all on <input class=\"w-full pl-8 pr-3 py-2 rounded-m…\">",
+      "fix": "Name the properties: transition-colors, transition-opacity or transition-transform"
+    },
+    {
+      "gate": "19",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/components/ProposalPreview.tsx",
+      "line": 21,
+      "evidence": "dash \"—\" in copy",
+      "fix": "A comma, a colon, a full stop or parentheses; never a dash"
+    },
+    {
+      "gate": "19",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/components/ProposalPreview.tsx",
+      "line": 31,
+      "evidence": "placeholder name: \"John Smith\"",
+      "fix": "Use plausible audience-fitting names"
+    },
+    {
+      "gate": "19",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Home.tsx",
+      "line": 268,
+      "evidence": "placeholder name: \"John Smith\"",
+      "fix": "Use plausible audience-fitting names"
+    },
+    {
+      "gate": "38i",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Home.tsx",
+      "line": 95,
+      "evidence": "<em>/<i> inside <h1>",
+      "fix": "Roman headers; emphasis via weight or accent"
+    },
+    {
+      "gate": "38i",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Home.tsx",
+      "line": 153,
+      "evidence": "<em>/<i> inside <h2>",
+      "fix": "Roman headers; emphasis via weight or accent"
+    },
+    {
+      "gate": "38i",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Home.tsx",
+      "line": 183,
+      "evidence": "<em>/<i> inside <h2>",
+      "fix": "Roman headers; emphasis via weight or accent"
+    },
+    {
+      "gate": "38i",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Home.tsx",
+      "line": 358,
+      "evidence": "<em>/<i> inside <h2>",
+      "fix": "Roman headers; emphasis via weight or accent"
+    },
+    {
+      "gate": "38i",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Home.tsx",
+      "line": 421,
+      "evidence": "<em>/<i> inside <h2>",
+      "fix": "Roman headers; emphasis via weight or accent"
+    },
+    {
+      "gate": "38i",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Pricing.tsx",
+      "line": 58,
+      "evidence": "<em>/<i> inside <h1>",
+      "fix": "Roman headers; emphasis via weight or accent"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 81,
+      "evidence": "colour literal #a3c1ad outside tokens (--primary on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 82,
+      "evidence": "colour literal #17251e outside tokens (--primary-foreground on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 83,
+      "evidence": "colour literal #17201b outside tokens (--background on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 84,
+      "evidence": "colour literal #eeeee5 outside tokens (--foreground on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 85,
+      "evidence": "colour literal #202b24 outside tokens (--card on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 86,
+      "evidence": "colour literal #eeeee5 outside tokens (--card-foreground on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 87,
+      "evidence": "colour literal #202b24 outside tokens (--popover on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 88,
+      "evidence": "colour literal #eeeee5 outside tokens (--popover-foreground on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 89,
+      "evidence": "colour literal #2a352c outside tokens (--secondary on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 90,
+      "evidence": "colour literal #eeeee5 outside tokens (--secondary-foreground on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 91,
+      "evidence": "colour literal #2a352c outside tokens (--muted on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 92,
+      "evidence": "colour literal #b0b9af outside tokens (--muted-foreground on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 93,
+      "evidence": "colour literal #2c4033 outside tokens (--accent on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 94,
+      "evidence": "colour literal #c3d8c7 outside tokens (--accent-foreground on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 95,
+      "evidence": "colour literal #3d4a3e outside tokens (--border on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 96,
+      "evidence": "colour literal #4c5b4d outside tokens (--input on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 97,
+      "evidence": "colour literal #a3c1ad outside tokens (--ring on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 98,
+      "evidence": "colour literal #1a261e outside tokens (--sidebar on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 99,
+      "evidence": "colour literal #eeeee5 outside tokens (--sidebar-foreground on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 100,
+      "evidence": "colour literal #2c4033 outside tokens (--sidebar-accent on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 101,
+      "evidence": "colour literal #c3d8c7 outside tokens (--sidebar-accent-foreground on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 102,
+      "evidence": "colour literal #3d4a3e outside tokens (--sidebar-border on .dark)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 111,
+      "evidence": "font-family literal \"\"DM Sans\", system-ui, sans-serif\" on body",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 249,
+      "evidence": "font-family literal \"\"Instrument Serif\", Georgia, serif\" on .brand-mark",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 255,
+      "evidence": "colour literal #7d947b outside tokens (color on .brand-mark span)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 258,
+      "evidence": "colour literal #f7f5ef outside tokens (color on .brand-light)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 335,
+      "evidence": "font-family literal \"\"Instrument Serif\", Georgia, serif\" on .editorial-site h1, .editorial-site h2, .auth-story h2, .le…",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 393,
+      "evidence": "colour literal #e6e9de outside tokens (background on .hero-document)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 402,
+      "evidence": "colour literal #626b63 outside tokens (color on .document-caption)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 409,
+      "evidence": "colour literal #fffefa outside tokens (background on .proposal-paper)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 410,
+      "evidence": "colour literal #202a24 outside tokens (color on .proposal-paper)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 412,
+      "evidence": "colour literal #202a2412 outside tokens (box-shadow on .proposal-paper)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 418,
+      "evidence": "colour literal #244c3a outside tokens (border-bottom on .paper-letterhead)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 423,
+      "evidence": "colour literal #244c3a outside tokens (color on .paper-letterhead)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 443,
+      "evidence": "colour literal #626b63 outside tokens (color on .paper-heading .eyebrow)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 446,
+      "evidence": "font-family literal \"\"Instrument Serif\", Georgia, serif\" on .paper-heading h3",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 453,
+      "evidence": "colour literal #626b63 outside tokens (color on .paper-heading > p)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 460,
+      "evidence": "colour literal #dcded5 outside tokens (border-block on .paper-client)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 465,
+      "evidence": "colour literal #626b63 outside tokens (color on .paper-client span)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 475,
+      "evidence": "colour literal #626b63 outside tokens (color on .paper-client p)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 487,
+      "evidence": "colour literal #626b63 outside tokens (color on .paper-scope p)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 495,
+      "evidence": "colour literal #ebece5 outside tokens (border-bottom on .paper-costs dl > div)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 504,
+      "evidence": "colour literal #244c3a outside tokens (color on .paper-costs dl > .paper-total)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 517,
+      "evidence": "colour literal #dcded5 outside tokens (border-top on .paper-foot)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 520,
+      "evidence": "colour literal #626b63 outside tokens (color on .paper-foot)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 556,
+      "evidence": "font-family literal \"\"Instrument Serif\", Georgia, serif\" on .process-number",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 558,
+      "evidence": "colour literal #7d897a outside tokens (color on .process-number)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 620,
+      "evidence": "font-family literal \"\"Instrument Serif\", Georgia, serif\" on .demo-detail h3",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 674,
+      "evidence": "colour literal #244c3a outside tokens (background on .workspace-feature-section)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 675,
+      "evidence": "colour literal #f7f5ef outside tokens (color on .workspace-feature-section)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 684,
+      "evidence": "colour literal #c0cabb outside tokens (color on .feature-layout > div > .eyeb…)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 688,
+      "evidence": "colour literal #d1dcc9 outside tokens (color on .feature-layout h2 em)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 692,
+      "evidence": "colour literal #d0d9ce outside tokens (color on .feature-layout > div > p)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 698,
+      "evidence": "colour literal #f7f5ef outside tokens (color on .feature-layout [data-slot=\"b…)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 699,
+      "evidence": "colour literal #8fa290 outside tokens (border-color on .feature-layout [data-slot=\"b…)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 703,
+      "evidence": "colour literal #345d49 outside tokens (background on .feature-layout [data-slot=\"b…)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 709,
+      "evidence": "colour literal #ffffff30 outside tokens (border-bottom on .feature-item)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 715,
+      "evidence": "colour literal #bac9b5 outside tokens (color on .feature-item > span)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 726,
+      "evidence": "colour literal #d0d9ce outside tokens (color on .feature-item p)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 872,
+      "evidence": "colour literal #e0e7dc outside tokens (background on .workspace-nav a[aria-current…)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 873,
+      "evidence": "colour literal #244c3a outside tokens (color on .workspace-nav a[aria-current…)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 910,
+      "evidence": "colour literal #dce4d7 outside tokens (background on .workspace-avatar)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 911,
+      "evidence": "colour literal #244c3a outside tokens (color on .workspace-avatar)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 972,
+      "evidence": "font-family literal \"\"Instrument Serif\", Georgia, serif\" on .workspace-content h1",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 985,
+      "evidence": "font-family literal \"\"DM Sans\", system-ui, sans-serif\" on .workspace-toolbar h1",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1031,
+      "evidence": "colour literal #244c3a outside tokens (background on .auth-story)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1032,
+      "evidence": "colour literal #f7f5ef outside tokens (color on .auth-story)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1043,
+      "evidence": "colour literal #c0cabb outside tokens (color on .auth-story-copy > .eyebrow)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1051,
+      "evidence": "colour literal #d0d9ce outside tokens (color on .auth-story-copy > p)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1061,
+      "evidence": "colour literal #ffffff35 outside tokens (border-top on .auth-story-note)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1064,
+      "evidence": "font-family literal \"\"Instrument Serif\", Georgia, serif\" on .auth-story-note > span",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1066,
+      "evidence": "colour literal #bac9b5 outside tokens (color on .auth-story-note > span)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1070,
+      "evidence": "colour literal #d0d9ce outside tokens (color on .auth-story-note p)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1076,
+      "evidence": "colour literal #c0cabb outside tokens (color on .auth-story-footer)",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1108,
+      "evidence": "font-family literal \"\"Instrument Serif\", Georgia, serif\" on .auth-form [data-slot=\"card-title\"], .auth-form h1",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1190,
+      "evidence": "font-family literal \"\"DM Sans\", system-ui, sans-serif\" on .pricing-plan h2",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1205,
+      "evidence": "font-family literal \"\"Instrument Serif\", Georgia, serif\" on .plan-price",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1208,
+      "evidence": "font-family literal \"\"DM Sans\", system-ui, sans-serif\" on .plan-price span",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1569,
+      "evidence": "font-family literal \"\"Songti SC\", \"Noto Serif CJK SC\", s…\" on html[lang=\"zh\"] .editorial-site h1, html[lang=\"zh\"] .edit…",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "48",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1609,
+      "evidence": "font-family literal \"\"DM Sans\", system-ui, sans-serif\" on .workspace-content .ProseMirror h1",
+      "fix": "Lift the value into the token block"
+    },
+    {
+      "gate": "54",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Home.tsx",
+      "line": 150,
+      "evidence": "eyebrow \"01 /\" before <h2>",
+      "fix": "Cut it; the heading already says this (craft.md § 7 has twelve other openings)"
+    },
+    {
+      "gate": "54",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Home.tsx",
+      "line": 180,
+      "evidence": "eyebrow \"02 /\" before <h2>",
+      "fix": "Cut it; the heading already says this (craft.md § 7 has twelve other openings)"
+    },
+    {
+      "gate": "54",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Home.tsx",
+      "line": 355,
+      "evidence": "eyebrow \"03 /\" before <h2>",
+      "fix": "Cut it; the heading already says this (craft.md § 7 has twelve other openings)"
+    },
+    {
+      "gate": "54",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Pricing.tsx",
+      "line": 82,
+      "evidence": "eyebrow \"0 /\" before <h2>",
+      "fix": "Cut it; the heading already says this (craft.md § 7 has twelve other openings)"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 260,
+      "evidence": ".eyebrow: letter-spaced tracked 0.16em at 10px in a label role",
+      "fix": "Labels, captions, table heads, nav links and meta are the body face (or the theme's label face), a step smaller, sentence case, untracked"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 396,
+      "evidence": ".document-caption: letter-spaced tracked 0.15em at 8px in a label role",
+      "fix": "Labels, captions, table heads, nav links and meta are the body face (or the theme's label face), a step smaller, sentence case, untracked"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 415,
+      "evidence": ".paper-letterhead: letter-spaced tracked 0.16666666666666666em at 12px in a label role",
+      "fix": "Labels, captions, table heads, nav links and meta are the body face (or the theme's label face), a step smaller, sentence case, untracked"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 425,
+      "evidence": ".paper-letterhead-sub: letter-spaced tracked 0.17142857142857143em at 7px in a label role",
+      "fix": "Labels, captions, table heads, nav links and meta are the body face (or the theme's label face), a step smaller, sentence case, untracked"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 440,
+      "evidence": ".paper-heading .eyebrow: letter-spaced tracked 0.18571428571428572em at 7px in a label role",
+      "fix": "Labels, captions, table heads, nav links and meta are the body face (or the theme's label face), a step smaller, sentence case, untracked"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 463,
+      "evidence": ".paper-client span: letter-spaced tracked 0.16666666666666666em at 6px in a label role",
+      "fix": "Labels, captions, table heads, nav links and meta are the body face (or the theme's label face), a step smaller, sentence case, untracked"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/index.css",
+      "line": 1352,
+      "evidence": ".hero-kicker: letter-spaced tracked 0.125em at 8px in a label role",
+      "fix": "Labels, captions, table heads, nav links and meta are the body face (or the theme's label face), a step smaller, sentence case, untracked"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Dashboard.tsx",
+      "line": 235,
+      "evidence": "uppercase at 12px tracked 0.05em on <p class=\"text-xs font-semibold text-mute…\">",
+      "fix": "Sentence case in the body face, a step smaller, untracked: drop uppercase and the tracking-* class"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Dashboard.tsx",
+      "line": 326,
+      "evidence": "uppercase at 11px tracked 0.05em on <th class=\"text-left text-[11px] font-bold…\">",
+      "fix": "Sentence case in the body face, a step smaller, untracked: drop uppercase and the tracking-* class"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Dashboard.tsx",
+      "line": 329,
+      "evidence": "uppercase at 11px tracked 0.05em on <th class=\"text-left text-[11px] font-bold…\">",
+      "fix": "Sentence case in the body face, a step smaller, untracked: drop uppercase and the tracking-* class"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Dashboard.tsx",
+      "line": 332,
+      "evidence": "uppercase at 11px tracked 0.05em on <th class=\"text-left text-[11px] font-bold…\">",
+      "fix": "Sentence case in the body face, a step smaller, untracked: drop uppercase and the tracking-* class"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Dashboard.tsx",
+      "line": 335,
+      "evidence": "uppercase at 11px tracked 0.05em on <th class=\"text-left text-[11px] font-bold…\">",
+      "fix": "Sentence case in the body face, a step smaller, untracked: drop uppercase and the tracking-* class"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Dashboard.tsx",
+      "line": 338,
+      "evidence": "uppercase at 11px tracked 0.05em on <th class=\"text-left text-[11px] font-bold…\">",
+      "fix": "Sentence case in the body face, a step smaller, untracked: drop uppercase and the tracking-* class"
+    },
+    {
+      "gate": "67",
+      "grade": "FAIL",
+      "tier": "floor",
+      "file": "client/src/pages/Dashboard.tsx",
+      "line": 341,
+      "evidence": "uppercase at 11px tracked 0.05em on <th class=\"text-right text-[11px] font-bol…\">",
+      "fix": "Sentence case in the body face, a step smaller, untracked: drop uppercase and the tracking-* class"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 232,
+      "evidence": "gap: 10px (off the 4px scale) on .brand",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 294,
+      "evidence": "gap: 18px (off the 4px scale) on .site-header-actions",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 342,
+      "evidence": "margin: 0 0 26px (off the 4px scale) on .hero-copy h1",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 359,
+      "evidence": "gap: 22px (off the 4px scale) on .hero-actions",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 365,
+      "evidence": "padding-inline: 22px (off the 4px scale) on .hero-actions [data-slot=\"button\"], .launch-copy [data-slot=\"button\"]",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 370,
+      "evidence": "gap: 10px (off the 4px scale) on .text-link",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 379,
+      "evidence": "margin-top: 14px (off the 4px scale) on .hero-fineprint",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 384,
+      "evidence": "gap: 22px (off the 4px scale) on .hero-trades",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 387,
+      "evidence": "margin-top: 50px (off the 4px scale) on .hero-trades",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 394,
+      "evidence": "padding: 22px 28px (off the 4px scale) on .hero-document",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 403,
+      "evidence": "margin-bottom: 18px (off the 4px scale) on .document-caption",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 406,
+      "evidence": "margin: 18px 0 0 (off the 4px scale) on .document-caption-bottom",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 419,
+      "evidence": "padding-bottom: 13px (off the 4px scale) on .paper-letterhead",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 438,
+      "evidence": "margin-block: 25px 20px (off the 4px scale) on .paper-heading",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 459,
+      "evidence": "padding: 13px 0 (off the 4px scale) on .paper-client",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 478,
+      "evidence": "padding-block: 18px 15px (off the 4px scale) on .paper-scope",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 483,
+      "evidence": "margin-bottom: 9px (off the 4px scale) on .proposal-paper h4",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 494,
+      "evidence": "padding: 6px 0 (off the 4px scale) on .paper-costs dl > div",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 519,
+      "evidence": "margin-top: 10px (off the 4px scale) on .paper-foot",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 535,
+      "evidence": "margin-bottom: 18px (off the 4px scale) on .section-heading .eyebrow",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 586,
+      "evidence": "gap: 14px (off the 4px scale) on .demo-tabs",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 592,
+      "evidence": "gap: 7px (off the 4px scale) on .demo-tabs button",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 595,
+      "evidence": "padding: 14px 0 (off the 4px scale) on .demo-tabs button",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 617,
+      "evidence": "margin-bottom: 14px (off the 4px scale) on .demo-detail .eyebrow",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 622,
+      "evidence": "margin-bottom: 18px (off the 4px scale) on .demo-detail h3",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 627,
+      "evidence": "gap: 42px (off the 4px scale) on .demo-detail dl",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 633,
+      "evidence": "margin-bottom: 3px (off the 4px scale) on .demo-detail dt",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 643,
+      "evidence": "margin-bottom: 22px (off the 4px scale) on .demo-detail p",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 660,
+      "evidence": "padding: 26px 38px 20px (off the 4px scale) on .walkthrough-document",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 671,
+      "evidence": "margin-top: 18px (off the 4px scale) on .sample-note",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 681,
+      "evidence": "gap: 105px (off the 4px scale) on .feature-layout",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 685,
+      "evidence": "margin-bottom: 25px (off the 4px scale) on .feature-layout > div > .eyebrow",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 691,
+      "evidence": "margin: 25px 0 (off the 4px scale) on .feature-layout > div > p",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 707,
+      "evidence": "gap: 25px (off the 4px scale) on .feature-item",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 722,
+      "evidence": "margin-bottom: 10px (off the 4px scale) on .feature-item h3",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 734,
+      "evidence": "gap: 110px (off the 4px scale) on .launch-section",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 749,
+      "evidence": "margin-bottom: 25px (off the 4px scale) on .launch-copy p",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 752,
+      "evidence": "margin-top: 14px (off the 4px scale) on .launch-copy .text-link",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 764,
+      "evidence": "margin-bottom: 18px (off the 4px scale) on .faq-section .eyebrow",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 779,
+      "evidence": "padding: 22px 0 (off the 4px scale) on .faq-item h3 button",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 795,
+      "evidence": "padding-block: 40px 22px (off the 4px scale) on .site-footer",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 813,
+      "evidence": "padding-top: 10px (off the 4px scale) on .footer-top nav",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 822,
+      "evidence": "padding-top: 18px (off the 4px scale) on .footer-bottom",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 842,
+      "evidence": "padding: 27px 24px (off the 4px scale) on .workspace-brand",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 848,
+      "evidence": "padding: 25px 24px 12px (off the 4px scale) on .workspace-nav-label",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 862,
+      "evidence": "padding: 10px 12px (off the 4px scale) on .workspace-nav a",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 878,
+      "evidence": "padding: 24px 16px 18px (off the 4px scale) on .workspace-bottom",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 902,
+      "evidence": "gap: 9px (off the 4px scale) on .workspace-user",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 958,
+      "evidence": "gap: 5px (off the 4px scale) on .workspace-site-link",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1033,
+      "evidence": "padding: 42px 56px 28px (off the 4px scale) on .auth-story",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1039,
+      "evidence": "padding-block: 70px (off the 4px scale) on .auth-story-copy",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1045,
+      "evidence": "margin-bottom: 30px (off the 4px scale) on .auth-story-copy > .eyebrow",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1054,
+      "evidence": "margin-top: 26px (off the 4px scale) on .auth-story-copy > p",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1059,
+      "evidence": "margin-top: 42px (off the 4px scale) on .auth-story-note",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1079,
+      "evidence": "padding: 28px 50px 50px (off the 4px scale) on .auth-main",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1094,
+      "evidence": "padding-block: 50px (off the 4px scale) on .auth-form",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1114,
+      "evidence": "margin-top: 10px (off the 4px scale) on .auth-form [data-slot=\"card-description\"]",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1133,
+      "evidence": "margin-bottom: 18px (off the 4px scale) on .legal-content > h1",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1144,
+      "evidence": "padding-block: 74px 56px (off the 4px scale) on .pricing-intro",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1149,
+      "evidence": "margin-block: 22px (off the 4px scale) on .pricing-intro h1",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1161,
+      "evidence": "padding: 25px 0 (off the 4px scale) on .pricing-notice",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1163,
+      "evidence": "margin-bottom: 42px (off the 4px scale) on .pricing-notice",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1197,
+      "evidence": "margin-block: 10px 24px (off the 4px scale) on .plan-description",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1201,
+      "evidence": "gap: 10px (off the 4px scale) on .plan-price",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1215,
+      "evidence": "margin-bottom: 30px (off the 4px scale) on .plan-note",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1226,
+      "evidence": "gap: 10px (off the 4px scale) on .pricing-plan li",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1228,
+      "evidence": "margin-bottom: 13px (off the 4px scale) on .pricing-plan li",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1235,
+      "evidence": "margin-top: 3px (off the 4px scale) on .pricing-plan li svg",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1240,
+      "evidence": "margin-bottom: 14px (off the 4px scale) on .pricing-plan .eyebrow",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1245,
+      "evidence": "padding-bottom: 70px (off the 4px scale) on .pricing-footnote",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1254,
+      "evidence": "gap: 18px (off the 4px scale) on .site-links",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1257,
+      "evidence": "gap: 10px (off the 4px scale) on .site-header-actions",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1274,
+      "evidence": "padding-inline: 38px (off the 4px scale) on .auth-story",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1304,
+      "evidence": "gap: 42px (off the 4px scale) on .section-heading",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1314,
+      "evidence": "margin-left: 210px (off the 4px scale) on .workspace-main",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1320,
+      "evidence": "padding: 24px 18px (off the 4px scale) on .pricing-plan",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1349,
+      "evidence": "padding-block: 46px 50px (off the 4px scale) on .home-hero",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1350,
+      "evidence": "gap: 38px (off the 4px scale) on .home-hero",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1355,
+      "evidence": "margin-bottom: 22px (off the 4px scale) on .hero-kicker",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1378,
+      "evidence": "padding: 26px (off the 4px scale) on .proposal-paper",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1391,
+      "evidence": "gap: 25px (off the 4px scale) on .section-heading, .feature-layout, .launch-section, .faq-section",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1394,
+      "evidence": "margin-bottom: 30px (off the 4px scale) on .section-heading",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1405,
+      "evidence": "gap: 8px 18px (off the 4px scale) on .process-row",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1406,
+      "evidence": "padding-block: 22px (off the 4px scale) on .process-row",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1437,
+      "evidence": "gap: 30px (off the 4px scale) on .faq-section",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1455,
+      "evidence": "gap: 10px (off the 4px scale) on .workspace-header",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1480,
+      "evidence": "gap: 10px (off the 4px scale) on .workspace-toolbar",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1511,
+      "evidence": "padding-block: 50px 30px (off the 4px scale) on .auth-form",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1514,
+      "evidence": "padding-block: 48px 30px (off the 4px scale) on .pricing-intro",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1521,
+      "evidence": "gap: 10px (off the 4px scale) on .pricing-notice",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "24b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1529,
+      "evidence": "padding: 30px 24px (off the 4px scale) on .pricing-plan",
+      "fix": "Use the 4px spacing scale"
+    },
+    {
+      "gate": "26b",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 1,
+      "evidence": "no :active styling anywhere",
+      "fix": "All eight states; guard: not a form control, no aria-disabled anywhere"
+    },
+    {
+      "gate": "38iii",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 345,
+      "evidence": "accented word inside a heading (.editorial-site h1 em, .editorial-site h2 em)",
+      "fix": "Set the whole head one way: a line break, a second line at a second size, or the whole head in the accent. Guard: the theme names the coloured word as its signature and it appears once on the page, in the hero"
+    },
+    {
+      "gate": "38iii",
+      "grade": "REFLEX",
+      "tier": "reflex",
+      "file": "client/src/index.css",
+      "line": 687,
+      "evidence": "accented word inside a heading (.feature-layout h2 em)",
+      "fix": "Set the whole head one way: a line break, a second line at a second size, or the whole head in the accent. Guard: the theme names the coloured word as its signature and it appears once on the page, in the hero"
+    },
+    {
+      "gate": "74",
+      "grade": "WARN",
+      "tier": "reflex",
+      "file": "client/src/pages/Dashboard.tsx",
+      "line": 231,
+      "evidence": "default palette instead of theme tokens: 12 distinct palette classes (text-stone-900 border-stone-200 bg-stone-50 text-…",
+      "fix": "Extend the Tailwind theme with the Hallmark tokens and use those names"
+    },
+    {
+      "gate": "F3",
+      "grade": "WARN",
+      "tier": "finish",
+      "file": "client/src/index.css",
+      "line": 200,
+      "evidence": "no text-wrap: balance on any display head (25 head rule(s), e.g. h1, h2, h3, h4, p)",
+      "fix": "Add text-wrap: balance to h1/h2-level heads"
+    },
+    {
+      "gate": "F6",
+      "grade": "WARN",
+      "tier": "finish",
+      "file": "client/src/index.css",
+      "line": 557,
+      "evidence": "numeric selector .process-number at display size without tabular figures",
+      "fix": "Add font-variant-numeric: tabular-nums"
+    },
+    {
+      "gate": "F6",
+      "grade": "WARN",
+      "tier": "finish",
+      "file": "client/src/index.css",
+      "line": 1204,
+      "evidence": "numeric selector .plan-price at display size without tabular figures",
+      "fix": "Add font-variant-numeric: tabular-nums"
+    },
+    {
+      "gate": "F15",
+      "grade": "WARN",
+      "tier": "finish",
+      "file": "client/src/index.css",
+      "line": 1,
+      "evidence": "6 different column gaps across multi-column sections (96px, 32px, 72px, 105px, 110px, 100px)",
+      "fix": "One column gap for every multi-column section"
+    },
+    {
+      "gate": "F16",
+      "grade": "WARN",
+      "tier": "finish",
+      "file": "client/src/index.css",
+      "line": 1,
+      "evidence": "browser surfaces unthemed: ::selection, scrollbar-color",
+      "fix": "Theme the parts you did not draw from the palette"
+    }
+  ]
+}

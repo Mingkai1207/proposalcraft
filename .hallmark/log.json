@@ -1,0 +1,100 @@
+[
+  {
+    "date": "2026-10-25",
+    "mode": "redesign",
+    "depth": "polish",
+    "scope": "site",
+    "theme": "Existing restrained editorial (locked DESIGN.md)",
+    "prompt": "use hallmark skill to polish the two sites (ProposAI portion)",
+    "before": {
+      "fails": 109,
+      "reflex": 94,
+      "warns": 6,
+      "waived": 0,
+      "rejected": 0,
+      "answered": 0,
+      "dismissed": 0,
+      "notes": 0,
+      "files": 9,
+      "render": "off",
+      "before": "before: recorded 14 links, 0 fields, 22 handlers, 0 test hooks, 0 script hooks in .hallmark/before.json; --kept checks a redesign against it"
+    },
+    "after": {
+      "fails": 3,
+      "reflex": 0,
+      "warns": 1,
+      "waived": 0,
+      "rejected": 0,
+      "answered": 0,
+      "dismissed": 0,
+      "notes": 91,
+      "files": 9,
+      "render": "off",
+      "kept": "kept: links 14/14, handlers 22/22; before 109 FAIL, 94 REFLEX, now 3 FAIL, 0 REFLEX"
+    },
+    "kept": {
+      "links": "14/14 static unique signatures",
+      "handlers": "22/22 static unique signatures",
+      "ids": "6/6 static literal IDs",
+      "formLimit": "No dynamic form fields captured by this parser; shared primitive props/handlers preserved. Parent browser verification is separate."
+    },
+    "unresolvedStaticMaterialFindings": [
+      {
+        "gate": "19",
+        "file": "client/src/components/ProposalPreview.tsx",
+        "material": "Existing P\u2014024 document reference and John Smith sample client"
+      },
+      {
+        "gate": "19",
+        "file": "client/src/pages/Home.tsx",
+        "material": "Existing John Smith sample client matches existing sample PDF"
+      }
+    ],
+    "disposition": "Three raw copy-lint findings retained because existing document material must be preserved; they are not a claimed zero-Floor pass.",
+    "layoutFinding": "F15 varied existing section gaps retained under polish depth; 91 spacing notes likewise preserve the locked layout.",
+    "copyChanges": "copy-changes.patch contains every changed copy line with its before/after source.",
+    "verification": {
+      "typecheck": "pnpm check passed",
+      "build": "pnpm build passed with existing large-chunk advisory",
+      "static": "Static only, render off",
+      "browser": {
+        "tool": "CUA",
+        "result": "passed scoped public-page checks",
+        "widths": [
+          375,
+          1280,
+          1440,
+          1920
+        ],
+        "checks": [
+          "homepage desktop/mobile",
+          "walkthrough stages",
+          "FAQ expansion",
+          "mobile navigation",
+          "pricing English/Chinese",
+          "login layout and visible keyboard focus",
+          "auth field border rgb(125,137,122)",
+          "1200px max container at1920px"
+        ],
+        "limits": "Authenticated workspace was source-reviewed and typechecked, not exercised with a live account; no mail sent."
+      }
+    },
+    "dropped": "Decorative labels folded into their headings; no route, component, link, field, action, section, fact or legal copy dropped.",
+    "materialAsk": "No new imagery, logos, testimonials or metrics added. Existing sample remains explicitly illustrative.",
+    "finishReview": {
+      "reviewer": "fresh-context subagent",
+      "decision": "fix",
+      "finding": "Decorative CTA and frame arrows",
+      "resolved": 1,
+      "confirmation": "Recaptured final desktop/mobile; decorative suffixes gone, functional walkthrough navigation retained",
+      "scores": {
+        "P": 4,
+        "H": 4,
+        "E": 4,
+        "S": 4,
+        "R": 4,
+        "V": 4
+      }
+    }
+  }
+]

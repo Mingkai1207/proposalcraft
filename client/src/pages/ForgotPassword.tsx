@@ -85,7 +85,7 @@ export default function ForgotPassword() {
                   onChange={e => setEmail(e.target.value)}
                   required
                   autoComplete="email"
-                  className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11"
+                  className="bg-card border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11"
                 />
               </div>
               <Button

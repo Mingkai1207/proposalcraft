@@ -110,7 +110,7 @@ export default function Login() {
                 onChange={e => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11"
+                className="bg-card border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11"
               />
             </div>
 
@@ -138,7 +138,7 @@ export default function Login() {
                   required
                   maxLength={128}
                   autoComplete="current-password"
-                  className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11 pr-10"
+                  className="bg-card border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11 pr-10"
                 />
                 <button
                   type="button"

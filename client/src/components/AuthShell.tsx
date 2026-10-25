@@ -10,16 +10,10 @@ export default function AuthShell({ children }: { children: ReactNode }) {
       <aside className="auth-story">
         <Brand light />
         <div className="auth-story-copy">
-          <span className="eyebrow">
-            {c(
-              "FROM THE FIRST DETAIL TO THE FINAL SEND",
-              "从第一处细节，到最后一次发送"
-            )}
-          </span>
           <h2>
             {c(
-              "Good work deserves a good proposal.",
-              "好工程，值得一份好提案。"
+              "From job details to a good proposal.",
+              "从工程细节，到一份好提案。"
             )}
           </h2>
           <p>

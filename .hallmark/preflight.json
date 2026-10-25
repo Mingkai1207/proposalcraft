@@ -1,0 +1,59 @@
+{
+  "scanned": "2026-10-25",
+  "project": "ProposAI",
+  "baseline": "485357f3db18d49752de1393ae3e3397a57b4ff4",
+  "findings": {
+    "fonts": "Instrument Serif + DM Sans, Chinese system CJK fallback; locked DESIGN.md:13–17 and original client/src/index.css:111,335.",
+    "palette": "Locked forest #244c3a, cream #f7f5ef, ink #202a24 and semantic colors; DESIGN.md:21–25; original client/src/index.css:45–102.",
+    "motion": "Existing 150ms color transitions and reduced-motion override; DESIGN.md:37 and original client/src/index.css:185–192,1535–1547.",
+    "spacing": "Existing section spacing, grid ratios and responsive layout; DESIGN.md:29; preserved as polish scope.",
+    "framework": "React 19, Vite 7 and Tailwind 4; package.json; check/build scripts at package.json:8–10.",
+    "material": "Existing live product, supplied proposal example, existing PDF and sample prices/business details. Parent records before/after through CUA."
+  },
+  "preserve": [
+    "Approved editorial direction, font families, palette and layout",
+    "All routes, forms, handlers, analytics, translations and data calls",
+    "All sample names, reference numbers, prices and business facts",
+    "All legal, consent and disclaimer content",
+    "Existing unrelated untracked docs/, scripts/_archive/, tests/"
+  ],
+  "introduce": [
+    "Named theme and fixed-document tokens",
+    "Descriptive single-style headings and sentence-case labels",
+    "Stronger field boundaries, instant focus and disabled cursor states",
+    "Safe shrinking grid tracks and tabular numeric labels"
+  ],
+  "mode": "redesign",
+  "depth": "polish",
+  "scope": "site",
+  "browser": "CUA managed by parent; no automated render-lint claimed",
+  "plannedFiles": [
+    "DESIGN.md",
+    "client/src/index.css",
+    "client/src/pages/Home.tsx",
+    "client/src/pages/Pricing.tsx",
+    "client/src/pages/Dashboard.tsx",
+    "client/src/components/AuthShell.tsx",
+    "client/src/components/WorkspaceLayout.tsx",
+    "client/src/components/ui/button.tsx",
+    "client/src/components/ui/input.tsx",
+    "client/src/components/ui/textarea.tsx",
+    "client/src/components/ui/select.tsx",
+    "client/src/components/ui/tabs.tsx",
+    ".hallmark/",
+    "client/src/pages/Login.tsx",
+    "client/src/pages/Register.tsx",
+    "client/src/pages/ForgotPassword.tsx",
+    "client/src/pages/ResetPassword.tsx",
+    "client/src/components/SiteHeader.tsx"
+  ],
+  "pages": [
+    "/",
+    "/pricing",
+    "/login",
+    "/register",
+    "/dashboard",
+    "Shared workspace and form controls"
+  ],
+  "finishReviewExpansion": "Parent CUA verification found explicit auth-page border-border overrides; source-only field-class correction added for login/register/forgot/reset. Fresh reviewer requested Gate63 decorative CTA suffix removal."
+}

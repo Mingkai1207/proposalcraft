@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { useState } from "react";
-import { Menu, X, ArrowUpRight } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useEditorialCopy } from "@/lib/editorial";
 import Brand from "./Brand";
@@ -34,7 +34,6 @@ export default function SiteHeader() {
           <Button asChild className="site-start">
             <Link href={isAuthenticated ? "/proposals/new" : "/register"}>
               {c("Get started", "开始使用")}
-              <ArrowUpRight />
             </Link>
           </Button>
           <Button

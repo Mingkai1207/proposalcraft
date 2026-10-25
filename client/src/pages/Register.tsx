@@ -117,7 +117,7 @@ export default function Register() {
                 onChange={e => setName(e.target.value)}
                 required
                 autoComplete="name"
-                className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11"
+                className="bg-card border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11"
               />
             </div>
 
@@ -136,7 +136,7 @@ export default function Register() {
                 onChange={e => setEmail(e.target.value)}
                 required
                 autoComplete="email"
-                className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11"
+                className="bg-card border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11"
               />
             </div>
 
@@ -157,7 +157,7 @@ export default function Register() {
                   required
                   maxLength={72}
                   autoComplete="new-password"
-                  className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11 pr-10"
+                  className="bg-card border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11 pr-10"
                 />
                 <button
                   type="button"
@@ -212,7 +212,7 @@ export default function Register() {
                 onChange={e => setConfirmPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className={`bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11 ${
+                className={`bg-card border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11 ${
                   confirmPassword && confirmPassword !== password
                     ? "border-red-500/60"
                     : ""

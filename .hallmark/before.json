@@ -1,0 +1,188 @@
+{
+ "v": 1,
+ "at": "2026-10-25T09:50:19.617Z",
+ "scope": "page",
+ "summary": {
+  "fails": 109,
+  "reflex": 94,
+  "warns": 6
+ },
+ "files": {
+  "client/src/pages/Home.tsx": {
+   "handlers": [
+    "onClick={() => demoStep < 2 ? setDemoStep(d => d + 1) : start() }",
+    "onClick={() => setOpenFaq(openFaq === i ? null : i)}",
+    "onClick={() => start()}",
+    "onClick={() => trackPdfDownload(\"editorial_sample\")}",
+    "onClick={() => { setDemoStep(i); trackWalkthroughStep( i === 0 ? \"form_start\" : i === 1 ? \"form_complete\" : \"pdf_view\", { sample: true } ); }}",
+    "onKeyDown={event => { const direction = event.key === \"ArrowRight\" ? 1 : event.key === \"ArrowLeft\" ? -1 : 0; if (!direction) return; event.preventDefault(); const next = (i + direction + 3) % 3; setDemoStep(next); document.getElementById(`demo-tab-${next}`)?.focus(); }}"
+   ],
+   "links": [
+    "#walkthrough",
+    "/pricing",
+    "{SAMPLE_PDF}"
+   ],
+   "fields": [],
+   "hooks": [],
+   "ids": [
+    "demo-panel",
+    "faq",
+    "features",
+    "how-it-works",
+    "pricing",
+    "walkthrough"
+   ],
+   "scripts": []
+  },
+  "client/src/pages/Pricing.tsx": {
+   "handlers": [],
+   "links": [
+    "mailto:hello@proposai.org",
+    "{isAuthenticated ? \"/dashboard\" : \"/register\"}"
+   ],
+   "fields": [],
+   "hooks": [],
+   "ids": [],
+   "scripts": []
+  },
+  "client/src/pages/Dashboard.tsx": {
+   "handlers": [
+    "onChange={e => setSearchQuery(e.target.value)}",
+    "onClick={() => deleteId && deleteMutation.mutate({ id: deleteId }) }",
+    "onClick={() => navigate(\"/import\")}",
+    "onClick={() => navigate(\"/proposals/new\")}",
+    "onClick={() => navigate(\"/templates\")}",
+    "onClick={() => navigate(`/proposals/${p.id}`)}",
+    "onClick={() => refetch()}",
+    "onClick={() => setDeleteId(p.id)}",
+    "onClick={handleBulkExport}",
+    "onClose={handleOnboardingClose}",
+    "onOpenChange={open => !open && setDeleteId(null)}"
+   ],
+   "links": [],
+   "fields": [],
+   "hooks": [],
+   "ids": [],
+   "scripts": []
+  },
+  "client/src/components/AuthShell.tsx": {
+   "handlers": [],
+   "links": [],
+   "fields": [],
+   "hooks": [],
+   "ids": [],
+   "scripts": []
+  },
+  "client/src/components/WorkspaceLayout.tsx": {
+   "handlers": [
+    "onClick={() => setOpen(false)}",
+    "onClick={() => setOpen(true)}",
+    "onClick={logout}",
+    "onOpenChange={setOpen}"
+   ],
+   "links": [
+    "/",
+    "/pricing",
+    "{href}"
+   ],
+   "fields": [],
+   "hooks": [],
+   "ids": [],
+   "scripts": []
+  },
+  "client/src/components/SiteHeader.tsx": {
+   "handlers": [
+    "onClick={() => setOpen(!open)}",
+    "onClick={() => setOpen(false)}"
+   ],
+   "links": [
+    "/#features",
+    "/#how-it-works",
+    "/pricing",
+    "{href}",
+    "{isAuthenticated ? \"/dashboard\" : \"/login\"}",
+    "{isAuthenticated ? \"/proposals/new\" : \"/register\"}"
+   ],
+   "fields": [],
+   "hooks": [],
+   "ids": [],
+   "scripts": []
+  },
+  "client/src/components/Footer.tsx": {
+   "handlers": [],
+   "links": [
+    "/pricing",
+    "/privacy",
+    "/refund",
+    "/terms",
+    "mailto:hello@proposai.org"
+   ],
+   "fields": [],
+   "hooks": [],
+   "ids": [],
+   "scripts": []
+  },
+  "client/src/components/ProposalPreview.tsx": {
+   "handlers": [],
+   "links": [],
+   "fields": [],
+   "hooks": [],
+   "ids": [],
+   "scripts": []
+  }
+ },
+ "wiring": {
+  "handlers": [
+   "onChange={e => setSearchQuery(e.target.value)}",
+   "onClick={() => deleteId && deleteMutation.mutate({ id: deleteId }) }",
+   "onClick={() => demoStep < 2 ? setDemoStep(d => d + 1) : start() }",
+   "onClick={() => navigate(\"/import\")}",
+   "onClick={() => navigate(\"/proposals/new\")}",
+   "onClick={() => navigate(\"/templates\")}",
+   "onClick={() => navigate(`/proposals/${p.id}`)}",
+   "onClick={() => refetch()}",
+   "onClick={() => setDeleteId(p.id)}",
+   "onClick={() => setOpen(!open)}",
+   "onClick={() => setOpen(false)}",
+   "onClick={() => setOpen(true)}",
+   "onClick={() => setOpenFaq(openFaq === i ? null : i)}",
+   "onClick={() => start()}",
+   "onClick={() => trackPdfDownload(\"editorial_sample\")}",
+   "onClick={() => { setDemoStep(i); trackWalkthroughStep( i === 0 ? \"form_start\" : i === 1 ? \"form_complete\" : \"pdf_view\", { sample: true } ); }}",
+   "onClick={handleBulkExport}",
+   "onClick={logout}",
+   "onClose={handleOnboardingClose}",
+   "onKeyDown={event => { const direction = event.key === \"ArrowRight\" ? 1 : event.key === \"ArrowLeft\" ? -1 : 0; if (!direction) return; event.preventDefault(); const next = (i + direction + 3) % 3; setDemoStep(next); document.getElementById(`demo-tab-${next}`)?.focus(); }}",
+   "onOpenChange={open => !open && setDeleteId(null)}",
+   "onOpenChange={setOpen}"
+  ],
+  "links": [
+   "#walkthrough",
+   "/",
+   "/#features",
+   "/#how-it-works",
+   "/pricing",
+   "/privacy",
+   "/refund",
+   "/terms",
+   "mailto:hello@proposai.org",
+   "{SAMPLE_PDF}",
+   "{href}",
+   "{isAuthenticated ? \"/dashboard\" : \"/login\"}",
+   "{isAuthenticated ? \"/dashboard\" : \"/register\"}",
+   "{isAuthenticated ? \"/proposals/new\" : \"/register\"}"
+  ],
+  "fields": [],
+  "hooks": [],
+  "ids": [
+   "demo-panel",
+   "faq",
+   "features",
+   "how-it-works",
+   "pricing",
+   "walkthrough"
+  ]
+ },
+ "scripts": {},
+ "pages": {}
+}

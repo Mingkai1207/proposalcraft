@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { ArrowRight, ArrowUpRight, Plus, Minus, Download } from "lucide-react";
+import { ArrowRight, Plus, Minus, Download } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useEditorialCopy } from "@/lib/editorial";
 import {
@@ -85,32 +85,23 @@ export default function Home() {
       <main>
         <section className="site-width home-hero">
           <div className="hero-copy">
-            <div className="eyebrow hero-kicker">
-              <span className="small-rule" />
-              {c(
-                "THE PROPOSAL WORKSPACE FOR THE TRADES",
-                "面向工程行业的提案工作空间"
-              )}
-            </div>
             <h1>
-              {c("Your work,", "你的工程，")}
+              {c("Proposals for", "为工程行业")}
               <br />
-              <em>{c("well presented.", "值得好好呈现。")}</em>
+              {c("the trades.", "撰写提案。")}
             </h1>
             <p className="hero-description">
               {c(
-                "You know the job. Put it into a proposal that feels just as considered — clear scope, honest pricing, and your name on every page.",
+                "You know the job. Put it into a proposal that feels just as considered: clear scope, honest pricing, and your name on every page.",
                 "你了解每一项工程。用同样周全的提案呈现它：清晰的工作范围、透明的报价，以及每页属于你的署名。"
               )}
             </p>
             <div className="hero-actions">
               <Button size="lg" onClick={() => start()}>
                 {c("Write your first proposal", "撰写第一份提案")}
-                <ArrowUpRight />
               </Button>
               <a href="#walkthrough" className="text-link">
                 {c("Take a closer look", "进一步了解")}
-                <ArrowRight size={16} />
               </a>
             </div>
             <p className="hero-fineprint">
@@ -128,14 +119,13 @@ export default function Home() {
           </div>
           <div className="hero-document">
             <div className="document-caption">
-              <span>{c("A BETTER FIRST IMPRESSION", "更好的第一印象")}</span>
-              <span>↗</span>
+              <span>{c("A better first impression", "更好的第一印象")}</span>
             </div>
             <ProposalPreview />
             <div className="document-caption document-caption-bottom">
               <span>
                 {c(
-                  "ILLUSTRATIVE SAMPLE · HVAC REPLACEMENT",
+                  "Illustrative sample · HVAC replacement",
                   "示例 · 暖通系统更换"
                 )}
               </span>
@@ -147,14 +137,7 @@ export default function Home() {
           <div className="site-width">
             <div className="section-heading">
               <div>
-                <span className="eyebrow">
-                  01 / {c("THE PROCESS", "使用流程")}
-                </span>
-                <h2>
-                  {c("A little less paperwork.", "少一点文书工作。")}
-                  <br />
-                  <em>{c("A little more progress.", "多一点项目进展。")}</em>
-                </h2>
+                <h2>{c("The proposal process.", "提案撰写流程。")}</h2>
               </div>
               <p>
                 {c(
@@ -177,13 +160,10 @@ export default function Home() {
         <section id="walkthrough" className="site-width walkthrough-section">
           <div className="section-heading">
             <div>
-              <span className="eyebrow">
-                02 / {c("A CLOSER LOOK", "进一步了解")}
-              </span>
               <h2>
-                {c("The details become", "让项目细节")}
+                {c("A closer look", "进一步了解")}
                 <br />
-                <em>{c("the document.", "成为完整提案。")}</em>
+                {c("at a proposal.", "一份提案。")}
               </h2>
             </div>
             <p>
@@ -252,11 +232,11 @@ export default function Home() {
               >
                 {demoStep === 0 ? (
                   <>
-                    <span className="eyebrow">
-                      {c("THE JOB NOTES", "项目笔记")}
-                    </span>
                     <h3>
-                      {c("A new system for John.", "为 John 更换新系统。")}
+                      {c(
+                        "Job notes: a new system for John.",
+                        "项目笔记：为 John 更换新系统。"
+                      )}
                     </h3>
                     <dl>
                       <div>
@@ -281,10 +261,7 @@ export default function Home() {
                   </>
                 ) : demoStep === 1 ? (
                   <>
-                    <span className="eyebrow">{c("THE REVIEW", "审阅")}</span>
-                    <h3>
-                      {c("Every detail, in its place.", "让每个细节各就其位。")}
-                    </h3>
+                    <h3>{c("Review the details.", "审阅项目细节。")}</h3>
                     <p>
                       {c(
                         "The draft brings together scope, an itemized estimate, project duration, and business details. Check the assumptions and adjust the wording before it leaves your desk.",
@@ -299,12 +276,7 @@ export default function Home() {
                   </>
                 ) : (
                   <>
-                    <span className="eyebrow">
-                      {c("THE FINISHED DOCUMENT", "完成后的文档")}
-                    </span>
-                    <h3>
-                      {c("Ready for the next step.", "准备好迈向下一步。")}
-                    </h3>
+                    <h3>{c("The finished document.", "完成后的文档。")}</h3>
                     <p>
                       {c(
                         "Download an existing sample PDF to see the document output. Your own proposals can be exported or emailed from the workspace.",
@@ -352,13 +324,10 @@ export default function Home() {
         <section id="features" className="workspace-feature-section">
           <div className="site-width feature-layout">
             <div>
-              <span className="eyebrow">
-                03 / {c("YOUR WORKSPACE", "你的工作空间")}
-              </span>
               <h2>
-                {c("A place for", "让每份提案")}
+                {c("Your proposal", "你的提案")}
                 <br />
-                <em>{c("every proposal.", "都有归属。")}</em>
+                {c("workspace.", "工作空间。")}
               </h2>
               <p>
                 {c(
@@ -368,7 +337,6 @@ export default function Home() {
               </p>
               <Button variant="outline" onClick={() => start()}>
                 {c("Open your workspace", "打开工作空间")}
-                <ArrowUpRight />
               </Button>
             </div>
             <div className="feature-list">
@@ -415,13 +383,10 @@ export default function Home() {
         </section>
         <section id="pricing" className="site-width launch-section">
           <div>
-            <span className="eyebrow">
-              {c("AN OPEN INVITATION", "诚邀体验")}
-            </span>
             <h2>
               {c("Your next proposal", "你的下一份提案")}
               <br />
-              <em>{c("starts here.", "从这里开始。")}</em>
+              {c("starts here.", "从这里开始。")}
             </h2>
           </div>
           <div className="launch-copy">
@@ -433,20 +398,15 @@ export default function Home() {
             </p>
             <Button size="lg" onClick={() => start()}>
               {c("Get started, free", "免费开始")}
-              <ArrowUpRight />
             </Button>
             <Link href="/pricing" className="text-link">
               {c("See what's included", "查看包含的功能")}
-              <ArrowRight size={16} />
             </Link>
           </div>
         </section>
         <section id="faq" className="site-width faq-section">
           <div>
-            <span className="eyebrow">
-              {c("A FEW PRACTICAL QUESTIONS", "几个实用问题")}
-            </span>
-            <h2>{c("Before you begin.", "开始之前。")}</h2>
+            <h2>{c("Practical questions.", "实用问题。")}</h2>
           </div>
           <div className="faq-list">
             {faqs.map(([q, a], i) => (

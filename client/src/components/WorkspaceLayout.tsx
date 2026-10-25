@@ -42,8 +42,8 @@ export default function WorkspaceLayout({ children }: { children: ReactNode }) {
       <div className="workspace-brand">
         <Brand />
       </div>
-      <div className="workspace-nav-label eyebrow">
-        {c("YOUR WORKSPACE", "你的工作空间")}
+      <div className="workspace-nav-label">
+        {c("Your workspace", "你的工作空间")}
       </div>
       <nav
         aria-label={c("Workspace navigation", "工作空间导航")}
@@ -68,11 +68,9 @@ export default function WorkspaceLayout({ children }: { children: ReactNode }) {
       </nav>
       <div className="workspace-bottom">
         <div className="workspace-launch">
-          <span className="eyebrow">{c("LAUNCH ACCESS", "上线体验")}</span>
-          <p>{c("Room for your next job.", "为下一个项目做好准备。")}</p>
+          <p>{c("Launch access", "上线体验")}</p>
           <Link href="/pricing" onClick={() => setOpen(false)}>
             {c("All features, free for now", "上线期间，全部功能免费")}
-            <ArrowUpRight size={14} />
           </Link>
         </div>
         <div className="workspace-user">

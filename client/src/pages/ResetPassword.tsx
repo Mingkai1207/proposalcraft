@@ -114,7 +114,7 @@ export default function ResetPassword() {
                     minLength={8}
                     maxLength={72}
                     autoComplete="new-password"
-                    className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11 pr-10"
+                    className="bg-card border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11 pr-10"
                   />
                   <button
                     type="button"
@@ -148,7 +148,7 @@ export default function ResetPassword() {
                   required
                   maxLength={72}
                   autoComplete="new-password"
-                  className="bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11"
+                  className="bg-card border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary/20 h-11"
                 />
               </div>
               <Button

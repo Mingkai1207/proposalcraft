@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Check, ArrowUpRight } from "lucide-react";
+import { Check } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useEditorialCopy } from "@/lib/editorial";
 import { Button } from "@/components/ui/button";
@@ -54,12 +54,7 @@ export default function Pricing() {
       <SiteHeader />
       <main className="site-width">
         <div className="pricing-intro">
-          <span className="eyebrow">{c("PLANS & PRICING", "方案与价格")}</span>
-          <h1>
-            {c("Make room for", "为好工程")}
-            <br />
-            <em>{c("good work.", "留出更多空间。")}</em>
-          </h1>
+          <h1>{c("Plans and pricing.", "方案与价格。")}</h1>
           <p>
             {c(
               "A proposal workspace that grows with your business. During our launch, explore every plan at no cost.",
@@ -79,9 +74,6 @@ export default function Pricing() {
         <div className="pricing-grid">
           {plans.map((plan, i) => (
             <section className="pricing-plan" key={plan.name}>
-              <span className="eyebrow">
-                0{i + 1} / {c("THE PLAN", "方案")}
-              </span>
               <h2>{plan.name}</h2>
               <p className="plan-description">{plan.note}</p>
               <div className="plan-price">
@@ -104,7 +96,6 @@ export default function Pricing() {
                     isAuthenticated ? "Go to workspace" : "Get started free",
                     isAuthenticated ? "前往工作空间" : "免费开始"
                   )}
-                  <ArrowUpRight />
                 </Link>
               </Button>
             </section>
