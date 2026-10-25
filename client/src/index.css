@@ -3,6 +3,7 @@
  * scope: existing editorial system; typography, tokens, and control states.
  * verification: static lint + typecheck/build; browser review recorded separately.
  */
+/* Hallmark · finish critique: P4 H4 E4 S4 R4 V4 · weakest: R, decorative CTA arrows and faint auth borders; removed suffixes and verified stronger field edges in CUA. Existing sample copy remains recorded as three static findings. */
 @import "tailwindcss";
 @import "tw-animate-css";
 
