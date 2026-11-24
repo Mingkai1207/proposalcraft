@@ -369,9 +369,16 @@ p {
 .home-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.06fr) minmax(0, 1fr);
-  gap: 84px;
+  grid-template-areas:
+    "intro document"
+    "trades document";
+  gap: 32px 84px;
   align-items: center;
-  padding-block: 76px 88px;
+  padding-block: 76px 56px;
+}
+.hero-copy {
+  grid-area: intro;
+  align-self: end;
 }
 .hero-kicker {
   display: flex;
@@ -432,17 +439,30 @@ p {
   margin-top: 14px;
 }
 .hero-trades {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 22px;
-  font-size: 11px;
-  color: var(--muted-foreground);
-  margin-top: 50px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
-  max-width: 410px;
+  grid-area: trades;
+  align-self: start;
+  width: 100%;
+  max-width: 480px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.hero-trades img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 2 / 1;
+  object-fit: cover;
+  background: var(--secondary);
+}
+.hero-trades figcaption {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--foreground);
 }
 .hero-document {
+  grid-area: document;
   background: var(--document-surround);
   padding: 22px 28px;
 }
@@ -1398,6 +1418,10 @@ p {
   }
   .home-hero {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "intro"
+      "trades"
+      "document";
     padding-block: 46px 50px;
     gap: 38px;
   }
@@ -1417,8 +1441,10 @@ p {
     gap: 20px;
   }
   .hero-trades {
-    margin-top: 28px;
-    gap: 20px;
+    gap: 16px 12px;
+  }
+  .hero-trades img {
+    aspect-ratio: 3 / 2;
   }
   .hero-document {
     padding: 20px;

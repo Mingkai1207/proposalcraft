@@ -12,6 +12,10 @@ import { Button } from "@/components/ui/button";
 import SiteHeader from "@/components/SiteHeader";
 import ProposalPreview from "@/components/ProposalPreview";
 import Footer from "@/components/Footer";
+import hvacPhoto from "@/assets/trades/hvac.webp";
+import plumbingPhoto from "@/assets/trades/plumbing.webp";
+import electricalPhoto from "@/assets/trades/electrical.webp";
+import roofingPhoto from "@/assets/trades/roofing.webp";
 
 const SAMPLE_PDF =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/pasted_file_1SBXzL_HVAC_Replacement_Proposal_JohnSmith_edb68410.pdf";
@@ -26,6 +30,40 @@ export default function Home() {
     trackCtaClick("get_started");
     navigate(isAuthenticated ? "/proposals/new" : "/register");
   };
+  const trades = [
+    {
+      src: hvacPhoto,
+      caption: c("HVAC", "暖通"),
+      alt: c(
+        "A technician takes notes beside an outdoor air conditioning unit.",
+        "一位技师在空调室外机旁做记录。"
+      ),
+    },
+    {
+      src: plumbingPhoto,
+      caption: c("Plumbing", "管道"),
+      alt: c(
+        "Copper pipe fittings and a tubing cutter on a wooden workbench.",
+        "木工作台上放着铜管接头和切管器。"
+      ),
+    },
+    {
+      src: electricalPhoto,
+      caption: c("Electrical", "电气"),
+      alt: c(
+        "An electrician inspects metal conduit in an unfinished room.",
+        "一位电工在尚未完工的房间里检查金属线管。"
+      ),
+    },
+    {
+      src: roofingPhoto,
+      caption: c("Roofing", "屋面"),
+      alt: c(
+        "A roofing hammer rests on rows of gray shingles.",
+        "一把屋面锤搁在一排排灰色屋面瓦上。"
+      ),
+    },
+  ];
   const steps = [
     {
       name: c("Start with the job.", "从项目开始。"),
@@ -110,12 +148,21 @@ export default function Home() {
                 "上线期间免费，无需信用卡。"
               )}
             </p>
-            <div className="hero-trades">
-              <span>HVAC</span>
-              <span>{c("Plumbing", "管道")}</span>
-              <span>{c("Electrical", "电气")}</span>
-              <span>{c("Roofing", "屋面")}</span>
-            </div>
+          </div>
+          <div className="hero-trades">
+            {trades.map(trade => (
+              <figure key={trade.src}>
+                <img
+                  src={trade.src}
+                  alt={trade.alt}
+                  width={720}
+                  height={480}
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption>{trade.caption}</figcaption>
+              </figure>
+            ))}
           </div>
           <div className="hero-document">
             <div className="document-caption">
