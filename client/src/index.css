@@ -443,8 +443,20 @@ p {
   isolation: isolate;
 }
 .hero-photograph {
+  position: relative;
   overflow: hidden;
-  background: var(--document-surround);
+  background: var(--background);
+  mask-image:
+    linear-gradient(to right, transparent, rgb(0 0 0 / 78%) 7%, black 17%),
+    linear-gradient(to top, transparent, rgb(0 0 0 / 80%) 8%, black 22%);
+  mask-composite: intersect;
+}
+.hero-photograph::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(148deg, transparent 46%, rgb(20 38 28 / 24%));
 }
 .hero-photograph img {
   display: block;
@@ -714,6 +726,12 @@ html[lang="zh"] .sample-cover-title {
 .process-photo {
   overflow: hidden;
   aspect-ratio: 4 / 3;
+  mask-image: linear-gradient(
+    to right,
+    black 81%,
+    rgb(0 0 0 / 80%) 89%,
+    transparent
+  );
 }
 .process-photo img {
   width: 100%;
@@ -875,6 +893,10 @@ html[lang="zh"] .sample-cover-title {
   min-height: 0;
   object-fit: cover;
   object-position: 34% center;
+  mask-image:
+    linear-gradient(to right, transparent, rgb(0 0 0 / 78%) 9%, black 22%),
+    linear-gradient(to top, transparent, rgb(0 0 0 / 80%) 13%, black 35%);
+  mask-composite: intersect;
 }
 .feature-list {
   grid-area: features;
@@ -925,6 +947,12 @@ html[lang="zh"] .sample-cover-title {
   height: clamp(240px, 26vw, 340px);
   object-fit: cover;
   object-position: center 70%;
+  mask-image: linear-gradient(
+    to right,
+    black 58%,
+    rgb(0 0 0 / 76%) 71%,
+    transparent 93%
+  );
 }
 .launch-copy {
   grid-column: 8 / -1;
@@ -933,7 +961,6 @@ html[lang="zh"] .sample-cover-title {
   z-index: 1;
   margin-top: 48px;
   padding: 32px 0 0 clamp(24px, 3.4vw, 48px);
-  background: var(--background);
 }
 .launch-copy p {
   color: var(--muted-foreground);
@@ -1564,6 +1591,14 @@ html[lang="zh"] .sample-cover-title {
     padding: 0 12px 52px 0;
     justify-self: center;
   }
+  .hero-photograph {
+    mask-image: linear-gradient(
+      to top,
+      transparent,
+      rgb(0 0 0 / 80%) 11%,
+      black 26%
+    );
+  }
   .hero-photograph img {
     aspect-ratio: 1.4;
   }
@@ -1612,6 +1647,12 @@ html[lang="zh"] .sample-cover-title {
   .process-photo {
     aspect-ratio: 5 / 2;
     max-height: 200px;
+    mask-image: linear-gradient(
+      to top,
+      transparent,
+      rgb(0 0 0 / 82%) 9%,
+      black 19%
+    );
   }
   .process-row {
     grid-template-columns: 40px minmax(0, 1fr);
@@ -1641,6 +1682,12 @@ html[lang="zh"] .sample-cover-title {
   .feature-photo {
     height: clamp(160px, 38vw, 224px);
     object-position: center 35%;
+    mask-image: linear-gradient(
+      to top,
+      transparent,
+      rgb(0 0 0 / 72%) 15%,
+      black 34%
+    );
   }
   .feature-list {
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 216px), 1fr));
@@ -1653,6 +1700,12 @@ html[lang="zh"] .sample-cover-title {
   .launch-photo {
     grid-column: 1;
     height: clamp(148px, 36vw, 220px);
+    mask-image: linear-gradient(
+      to top,
+      transparent,
+      rgb(0 0 0 / 82%) 8%,
+      black 18%
+    );
   }
   .launch-copy {
     grid-column: 1;
