@@ -16,8 +16,8 @@ export default function SiteHeader() {
       <div className="site-width site-header-row">
         <Brand />
         <nav className="site-links" aria-label={c("Main navigation", "主导航")}>
-          <Link href="/#how-it-works">{c("The process", "使用流程")}</Link>
-          <Link href="/#features">{c("Your workspace", "工作空间")}</Link>
+          <a href="/#how-it-works">{c("The process", "使用流程")}</a>
+          <a href="/#features">{c("Your workspace", "工作空间")}</a>
           <Link href="/pricing">{c("Pricing", "价格")}</Link>
         </nav>
         <div className="site-header-actions">
@@ -67,11 +67,17 @@ export default function SiteHeader() {
                 isAuthenticated ? "工作空间" : "登录"
               ),
             ],
-          ].map(([href, label]) => (
-            <Link key={href} href={href} onClick={() => setOpen(false)}>
-              {label}
-            </Link>
-          ))}
+          ].map(([href, label]) =>
+            href.startsWith("/#") ? (
+              <a key={href} href={href} onClick={() => setOpen(false)}>
+                {label}
+              </a>
+            ) : (
+              <Link key={href} href={href} onClick={() => setOpen(false)}>
+                {label}
+              </Link>
+            )
+          )}
         </nav>
       )}
     </header>

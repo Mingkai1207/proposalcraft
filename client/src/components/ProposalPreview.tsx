@@ -1,4 +1,39 @@
 import { useEditorialCopy } from "@/lib/editorial";
+import { ArrowDownRight } from "lucide-react";
+
+function ProposalLetterhead() {
+  const c = useEditorialCopy();
+  return (
+    <div className="paper-letterhead">
+      <span>
+        NORTHLINE
+        <span className="paper-letterhead-sub">
+          {c("HEATING & AIR", "暖通与空调")}
+        </span>
+      </span>
+      <span className="paper-reference">P—024</span>
+    </div>
+  );
+}
+
+export function SampleProposalLink() {
+  const c = useEditorialCopy();
+  return (
+    <a href="#walkthrough" className="sample-cover">
+      <ProposalLetterhead />
+      <span className="sample-cover-title">
+        {c("Comfort, restored.", "舒适，再次回归。")}
+      </span>
+      <span className="sample-cover-subject">
+        {c("HVAC system replacement", "暖通空调系统更换")}
+      </span>
+      <span className="sample-cover-link">
+        {c("View sample proposal", "查看提案示例")}
+        <ArrowDownRight size={16} aria-hidden="true" />
+      </span>
+    </a>
+  );
+}
 
 export default function ProposalPreview({
   compact = false,
@@ -11,15 +46,7 @@ export default function ProposalPreview({
       className={`proposal-paper ${compact ? "proposal-paper-compact" : ""}`}
       aria-label={c("Sample HVAC proposal", "暖通工程提案示例")}
     >
-      <div className="paper-letterhead">
-        <span>
-          NORTHLINE
-          <span className="paper-letterhead-sub">
-            {c("HEATING & AIR", "暖通与空调")}
-          </span>
-        </span>
-        <span className="paper-reference">P—024</span>
-      </div>
+      <ProposalLetterhead />
       <div className="paper-heading">
         <span className="eyebrow">{c("PROJECT PROPOSAL", "工程提案")}</span>
         <h3>{c("Comfort, restored.", "舒适，再次回归。")}</h3>

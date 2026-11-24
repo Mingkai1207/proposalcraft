@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { ArrowRight, Plus, Minus, Download } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
@@ -10,12 +10,18 @@ import {
 } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import SiteHeader from "@/components/SiteHeader";
-import ProposalPreview from "@/components/ProposalPreview";
+import ProposalPreview, {
+  SampleProposalLink,
+} from "@/components/ProposalPreview";
 import Footer from "@/components/Footer";
 import hvacPhoto from "@/assets/trades/hvac.webp";
+import hvacPhotoLarge from "@/assets/trades/hvac-site-visit.webp";
 import plumbingPhoto from "@/assets/trades/plumbing.webp";
+import plumbingPhotoLarge from "@/assets/trades/plumbing-large.webp";
 import electricalPhoto from "@/assets/trades/electrical.webp";
+import electricalPhotoLarge from "@/assets/trades/electrical-large.webp";
 import roofingPhoto from "@/assets/trades/roofing.webp";
+import roofingPhotoLarge from "@/assets/trades/roofing-large.webp";
 
 const SAMPLE_PDF =
   "https://d2xsxph8kpxj0f.cloudfront.net/310519663464819175/TxoyTEEFMfksnn9C3wscL4/pasted_file_1SBXzL_HVAC_Replacement_Proposal_JohnSmith_edb68410.pdf";
@@ -30,40 +36,28 @@ export default function Home() {
     trackCtaClick("get_started");
     navigate(isAuthenticated ? "/proposals/new" : "/register");
   };
-  const trades = [
-    {
-      src: hvacPhoto,
-      caption: c("HVAC", "暖通"),
-      alt: c(
-        "A technician takes notes beside an outdoor air conditioning unit.",
-        "一位技师在空调室外机旁做记录。"
-      ),
-    },
-    {
-      src: plumbingPhoto,
-      caption: c("Plumbing", "管道"),
-      alt: c(
-        "Copper pipe fittings and a tubing cutter on a wooden workbench.",
-        "木工作台上放着铜管接头和切管器。"
-      ),
-    },
-    {
-      src: electricalPhoto,
-      caption: c("Electrical", "电气"),
-      alt: c(
-        "An electrician inspects metal conduit in an unfinished room.",
-        "一位电工在尚未完工的房间里检查金属线管。"
-      ),
-    },
-    {
-      src: roofingPhoto,
-      caption: c("Roofing", "屋面"),
-      alt: c(
-        "A roofing hammer rests on rows of gray shingles.",
-        "一把屋面锤搁在一排排灰色屋面瓦上。"
-      ),
-    },
-  ];
+  const processPhotoRef = useRef<HTMLDivElement>(null);
+  // A link from another page can arrive before React has mounted its section.
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (id)
+      document.getElementById(id)?.scrollIntoView({ behavior: "instant" });
+  }, []);
+
+  useEffect(() => {
+    const photo = processPhotoRef.current;
+    if (!photo || !("IntersectionObserver" in window)) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        photo.classList.add("is-in-view");
+        observer.disconnect();
+      },
+      { threshold: 0.25 }
+    );
+    observer.observe(photo);
+    return () => observer.disconnect();
+  }, []);
   const steps = [
     {
       name: c("Start with the job.", "从项目开始。"),
@@ -138,9 +132,6 @@ export default function Home() {
               <Button size="lg" onClick={() => start()}>
                 {c("Write your first proposal", "撰写第一份提案")}
               </Button>
-              <a href="#walkthrough" className="text-link">
-                {c("Take a closer look", "进一步了解")}
-              </a>
             </div>
             <p className="hero-fineprint">
               {c(
@@ -148,35 +139,30 @@ export default function Home() {
                 "上线期间免费，无需信用卡。"
               )}
             </p>
+            <p className="hero-disciplines">
+              {c(
+                "HVAC · Plumbing · Electrical · Roofing",
+                "暖通 · 管道 · 电气 · 屋面"
+              )}
+            </p>
           </div>
-          <div className="hero-trades">
-            {trades.map(trade => (
-              <figure key={trade.src}>
-                <img
-                  src={trade.src}
-                  alt={trade.alt}
-                  width={720}
-                  height={480}
-                  loading="lazy"
-                  decoding="async"
-                />
-                <figcaption>{trade.caption}</figcaption>
-              </figure>
-            ))}
-          </div>
-          <div className="hero-document">
-            <div className="document-caption">
-              <span>{c("A better first impression", "更好的第一印象")}</span>
-            </div>
-            <ProposalPreview />
-            <div className="document-caption document-caption-bottom">
-              <span>
-                {c(
-                  "Illustrative sample · HVAC replacement",
-                  "示例 · 暖通系统更换"
+          <div className="hero-fieldwork">
+            <div className="hero-photograph">
+              <img
+                src={hvacPhoto}
+                srcSet={`${hvacPhoto} 720w, ${hvacPhotoLarge} 1440w`}
+                sizes="(max-width: 767px) 100vw, (max-width: 900px) 60vw, (max-width: 1300px) 50vw, 650px"
+                alt={c(
+                  "A technician takes notes beside an outdoor air conditioning unit.",
+                  "暖通技师在室外机旁记录现场情况。"
                 )}
-              </span>
-              <span>01</span>
+                width={1440}
+                height={960}
+                fetchPriority="high"
+              />
+            </div>
+            <div className="hero-paper">
+              <SampleProposalLink />
             </div>
           </div>
         </section>
@@ -193,14 +179,31 @@ export default function Home() {
                 )}
               </p>
             </div>
-            <div className="process-rows">
-              {steps.map((step, i) => (
-                <div className="process-row" key={step.name}>
-                  <span className="process-number">0{i + 1}</span>
-                  <h3>{step.name}</h3>
-                  <p>{step.text}</p>
-                </div>
-              ))}
+            <div className="process-layout">
+              <div className="process-photo" ref={processPhotoRef}>
+                <img
+                  src={plumbingPhoto}
+                  srcSet={`${plumbingPhoto} 720w, ${plumbingPhotoLarge} 1296w`}
+                  sizes="(max-width: 767px) 100vw, (max-width: 1300px) 48vw, 600px"
+                  alt={c(
+                    "Copper fittings and a tubing cutter on a plumber’s workbench.",
+                    "管道工的木质工作台上放着铜管接头和切管器。"
+                  )}
+                  width={720}
+                  height={480}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
+              <div className="process-rows">
+                {steps.map((step, i) => (
+                  <div className="process-row" key={step.name}>
+                    <span className="process-number">0{i + 1}</span>
+                    <h3>{step.name}</h3>
+                    <p>{step.text}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
@@ -370,7 +373,7 @@ export default function Home() {
         </section>
         <section id="features" className="workspace-feature-section">
           <div className="site-width feature-layout">
-            <div>
+            <div className="feature-intro">
               <h2>
                 {c("Your proposal", "你的提案")}
                 <br />
@@ -386,6 +389,20 @@ export default function Home() {
                 {c("Open your workspace", "打开工作空间")}
               </Button>
             </div>
+            <img
+              className="feature-photo"
+              src={electricalPhoto}
+              srcSet={`${electricalPhoto} 720w, ${electricalPhotoLarge} 1296w`}
+              sizes="(max-width: 767px) 100vw, (max-width: 1300px) 50vw, 680px"
+              alt={c(
+                "An electrician studies the conduit in an unfinished room.",
+                "一位电工在尚未完工的房间里查看金属线管。"
+              )}
+              width={720}
+              height={480}
+              loading="lazy"
+              decoding="async"
+            />
             <div className="feature-list">
               {[
                 [
@@ -416,27 +433,36 @@ export default function Home() {
                     "发送提案、跟踪打开情况并查看客户回复，了解接下来需要跟进的项目。"
                   ),
                 ],
-              ].map(([title, text], i) => (
+              ].map(([title, text]) => (
                 <div className="feature-item" key={title}>
-                  <span>0{i + 1}</span>
-                  <div>
-                    <h3>{title}</h3>
-                    <p>{text}</p>
-                  </div>
+                  <h3>{title}</h3>
+                  <p>{text}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
         <section id="pricing" className="site-width launch-section">
-          <div>
+          <img
+            className="launch-photo"
+            src={roofingPhoto}
+            srcSet={`${roofingPhoto} 720w, ${roofingPhotoLarge} 1296w`}
+            sizes="(max-width: 767px) 100vw, (max-width: 1300px) 66vw, 800px"
+            alt={c(
+              "A roofer’s hammer rests beside a stack of gray shingles.",
+              "一把屋面锤搁在一摞灰色屋面瓦旁。"
+            )}
+            width={720}
+            height={480}
+            loading="lazy"
+            decoding="async"
+          />
+          <div className="launch-copy">
             <h2>
               {c("Your next proposal", "你的下一份提案")}
               <br />
               {c("starts here.", "从这里开始。")}
             </h2>
-          </div>
-          <div className="launch-copy">
             <p>
               {c(
                 "During our launch, every plan is free. Explore the workspace, bring a real job, and see how it fits your day.",

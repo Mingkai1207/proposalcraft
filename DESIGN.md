@@ -34,7 +34,7 @@ Restrained editorial. Minimal decoration, document-led composition, asymmetric m
 
 ## Motion/accessibility
 
-150ms color transitions, no ornamental movement. Focus outlines appear immediately; disabled controls retain a not-allowed cursor. Field boundaries use the existing green-gray #7d897a on paper (dark fields use #b0b9af). Respect reduced motion. Visible keyboard focus, real buttons for disclosures, proper labels, named icon controls, and document landmarks. Keep all existing product actions and validation.
+150ms color transitions, no ornamental movement. Focus outlines appear immediately; disabled controls retain a not-allowed cursor. Field boundaries use the existing green-gray #7d897a on paper (dark fields use #b0b9af). The public homepage pairs jobsite photography with proposal details. Its sample cover settles onto the opening photograph, the workbench crop opens once on entry, and switching walkthrough stages uses a short transition. Respect reduced motion. Visible keyboard focus, real buttons for disclosures, proper labels, named icon controls, and document landmarks. Keep all existing product actions and validation.
 
 ## Decision log
 
